@@ -147,16 +147,37 @@ button:disabled { opacity: 0.5; cursor: default; }
 .auth-box button[type="submit"] { height: 40px; font-size: 15px; margin-top: 4px; }
 .auth-switch { margin: 24px 0 0; color: var(--muted); font-size: 13px; }
 
-/* The moment: one movement on its way from the bank statement to an ERP voucher. */
-.journey { background: var(--surface); color: var(--ink); border-radius: 16px; padding: 8px; max-width: 480px; box-shadow: 0 24px 48px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.12); }
-.journey-step { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px; border-radius: 8px; }
-.journey-step + .journey-step { border-top: 1px dashed var(--line-strong); border-radius: 0 0 8px 8px; }
-.journey-step:first-child { background: var(--raised); }
-.journey-step .kind { font-size: 12px; color: var(--muted); }
-.journey-step .what { min-width: 0; }
-.journey-step .what b { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.journey-step .what span { font-size: 12px; color: var(--muted); }
-.journey-step .num { font-size: 13px; }
+/* The moment: a bank statement on continuous form paper, processed as you watch. */
+.statement { --paper: #f7f8f5; --stamp: #1f7a5a; position: relative; margin: 0; max-width: 520px; padding: 20px 40px 24px; color: var(--ink);
+  background: var(--paper); border-radius: 4px; box-shadow: 0 24px 48px rgba(0, 0, 0, 0.24), 0 2px 6px rgba(0, 0, 0, 0.14);
+  animation: sheet-in 500ms var(--ease) both; }
+/* Tractor-feed holes down both edges, as on the statements banks used to print. */
+.statement::before, .statement::after { content: ""; position: absolute; top: 12px; bottom: 12px; width: 8px;
+  background: radial-gradient(circle, #0b4a3e 2.6px, transparent 3px) center top / 8px 20px repeat-y; opacity: 0.9; }
+.statement::before { left: 12px; }
+.statement::after { right: 12px; }
+.statement-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); padding-bottom: 12px; border-bottom: 1px dashed rgba(23, 23, 23, 0.2); }
+.statement-lines { list-style: none; margin: 0; padding: 0; }
+.statement-lines li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; column-gap: 12px; row-gap: 2px; align-items: baseline;
+  padding: 12px 0; border-bottom: 1px dashed rgba(23, 23, 23, 0.12); animation: line-in 360ms var(--ease) both; animation-delay: calc(500ms + var(--i) * 420ms); }
+.statement-lines li:last-child { border-bottom: 0; padding-bottom: 0; }
+.statement .date { font-size: 12px; color: var(--muted); }
+.statement .who { font-weight: 500; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.statement .amount { font-size: 13px; text-align: right; }
+.statement .result { grid-column: 2; font-size: 12px; color: var(--ink-2); animation: line-in 300ms var(--ease) both; animation-delay: calc(2300ms + var(--i) * 380ms); }
+.statement .result.waiting { grid-column: 2 / -1; color: #8a5a00; display: flex; gap: 8px; align-items: baseline; }
+.statement .result.waiting::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #d99a06; flex: none; transform: translateY(-1px); }
+/* The voucher number, set like a rubber stamp in green ink, pressed down a moment after the match. */
+.statement .stamp { grid-column: 3; grid-row: 2; justify-self: end; display: inline-flex; align-items: baseline; gap: 4px; padding: 0 6px;
+  font-family: var(--mono); font-size: 12px; line-height: 20px; color: var(--stamp); border: 1.5px solid var(--stamp); border-radius: 4px;
+  transform: rotate(-4deg); opacity: 0.88; animation: stamp-in 260ms cubic-bezier(0.3, 1.4, 0.5, 1) both; animation-delay: calc(2650ms + var(--i) * 380ms); }
+.statement .stamp small { font-family: var(--sans); font-size: 10px; font-weight: 600; }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes line-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes stamp-in { from { opacity: 0; transform: rotate(-4deg) scale(1.6); } to { opacity: 0.88; transform: rotate(-4deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .statement, .statement-lines li, .statement .result, .statement .stamp { animation: none; }
+}
 
 @media (max-width: 1100px) {
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -167,7 +188,7 @@ button:disabled { opacity: 0.5; cursor: default; }
   .auth { grid-template-columns: 1fr; }
   .auth-brand { padding: 24px 16px; gap: 16px; }
   .auth-brand h1 { font-size: 22px; line-height: 28px; margin-bottom: 0; }
-  .auth-brand .lede, .journey, .auth-note { display: none; }
+  .auth-brand .lede, .statement, .auth-note { display: none; }
   .auth-form { place-items: start center; padding: 32px 16px; }
 }
 
