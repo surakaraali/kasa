@@ -3,6 +3,7 @@
 #   scripts/demo.sh         start (logs in .demo/logs)
 #   scripts/demo.sh reset   stop, empty the Kasa database, start again
 #   scripts/demo.sh stop    stop the .NET services and the web app (Docker keeps running)
+# With KASA_PUBLIC_URL=https://kasa.surakaraali.dev the open banking flow uses that address (see scripts/tunnel.sh).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 LOGS=.demo/logs
@@ -10,7 +11,8 @@ mkdir -p "$LOGS"
 
 stop() {
   pkill -f "Kasa\.(Api|MockBanks|MockErp|ErpExporter)" 2>/dev/null || true
-  pkill -f "next start --port 3000" 2>/dev/null || true
+  # Next renames its process to "next-server", so the web app is stopped by its port.
+  lsof -ti tcp:3000 -sTCP:LISTEN | xargs kill 2>/dev/null || true
 }
 
 case "${1:-start}" in
@@ -26,6 +28,15 @@ case "${1:-start}" in
   start) ;;
   *) echo "kullanım: scripts/demo.sh [start|reset|stop]"; exit 1 ;;
 esac
+
+# Behind a public address (scripts/tunnel.sh), the open banking flow must use it instead of localhost.
+if [[ -n "${KASA_PUBLIC_URL:-}" ]]; then
+  export Web__BaseUrl="$KASA_PUBLIC_URL"
+  export Banks__AcikBank__PublicUrl="$KASA_PUBLIC_URL/acikbank"
+  export Banks__AcikBank__RedirectUri="$KASA_PUBLIC_URL/api/bank-connections/acikbank/callback"
+  export MockBanks__RedirectUris__2="$KASA_PUBLIC_URL/api/bank-connections/acikbank/callback"
+  echo "Genel adres: $KASA_PUBLIC_URL"
+fi
 
 docker compose up -d --wait
 # No build servers: they would outlive the script and keep its output open.

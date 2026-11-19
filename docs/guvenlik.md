@@ -17,7 +17,9 @@ Her madde için Kasa'da ne yapıldığı, nerede olduğu ve neyin bilerek eksik 
 - API: `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Content-Security-Policy: default-src 'none'`;
   üretimde HSTS. Hata cevapları problem details, yığın izi yok.
 - Web: aynı başlıklar ve üretim derlemesinde CSP.
-- Swagger ve OpenAPI sadece Development'ta.
+- Swagger ve OpenAPI sadece Development'ta. Genel adreste (tünel) sadece web uygulaması açık; API'ye sadece `/api` ve `/hubs`
+  üzerinden, test servislerine sadece iki sayfa üzerinden ulaşılıyor. API, istemci adresini ve şemayı sadece yerel
+  vekillerden (tünel, web) gelen başlıklardan alıyor (`ForwardedHeaders`, en fazla iki atlama).
 - `/health` sadece durum ve kendi açıklamalarımızı veriyor; istisna metni ve sunucu adı yok.
 - **Eksik:** Web CSP'si betikler için `'unsafe-inline'` içeriyor (Next.js nonce'suz); nonce'lu CSP gerekli.
   Aspire paneli kimliksiz, sadece `127.0.0.1`'e bağlı; üretimde böyle açılmamalı.
@@ -54,7 +56,8 @@ Her madde için Kasa'da ne yapıldığı, nerede olduğu ve neyin bilerek eksik 
 - Bilinmeyen e-postaya da aynı sürede aynı cevap (sahte şifre özeti), hesap varlığı sızmıyor.
 - Yenileme anahtarı tek kullanımlık, rotasyonlu; tekrar kullanılırsa bütün oturum ailesi iptal. Çerez httpOnly, `SameSite=Strict`,
   sadece `/api/auth` yolunda. Erişim anahtarı tarayıcıda bellekte.
-- **Eksik:** İki adımlı doğrulama (MFA) yok. E-posta doğrulaması ve şifre sıfırlama yok.
+- **Eksik:** İki adımlı doğrulama (MFA) yok. E-posta doğrulaması ve şifre sıfırlama yok. Kayıt herkese açık; genel
+  adreste bu yüzden tünel sadece demo sırasında açılmalı.
 
 ## A08 Yazılım ve veri bütünlüğü
 - Mesajlar yayıncı onayıyla (publisher confirms) ve `mandatory` ile gönderiliyor; tüketici elle ack'liyor; ERP'ye idempotency anahtarı.

@@ -6,10 +6,28 @@
 scripts/demo.sh reset      # her şeyi durdurur, veritabanını boşaltır, üretim modunda yeniden başlatır (~30 sn)
 ```
 
-Tarayıcıda dört sekme: Kasa http://localhost:3000, test ERP fişleri http://localhost:5103, izleme paneli
+Tarayıcıda dört sekme: Kasa http://localhost:3000, test ERP fişleri http://localhost:3000/test-erp, izleme paneli
 http://localhost:18888, ikinci bir gizli pencerede Kasa (muhasebeci için). Bir terminal açık kalsın.
 
 Test bankası giriş bilgileri: kullanıcı `kasa`, şifre `klasik-dev-pass` (test bankasının sabit değerleri).
+
+## Genel adresten (kasa.surakaraali.dev)
+
+Demo kendi bilgisayarında çalışır; Cloudflare Tunnel sadece web uygulamasını (3000) dışarı açar. API, test servislerinin
+`/mock` kontrolleri, Swagger, RabbitMQ ve izleme paneli dışarıdan erişilemez. Bankanın onay sayfası (`/acikbank/authorize`)
+ve ERP'nin fiş sayfası (`/test-erp`) web uygulamasının arkasından sunulur.
+
+```bash
+KASA_PUBLIC_URL=https://kasa.surakaraali.dev scripts/demo.sh reset
+scripts/tunnel.sh          # Ctrl+C ile kapanır
+```
+
+Tünel açıkken adresi bilen herkes şirket kaydı açabilir; sadece demo sırasında açık tut. Asistan anahtarı tanımlıysa her
+kullanıcı saatte 30 soru sorabilir, ama kayıt sınırsız: demodan sonra tüneli kapat.
+
+Tek seferlik kurulum (yapıldı, 2026-11-19): `brew install cloudflared`, `cloudflared tunnel login` (Cloudflare hesabında
+surakaraali.dev onayı), `cloudflared tunnel create kasa`, `cloudflared tunnel route dns kasa kasa.surakaraali.dev`.
+Tünelin kimlik dosyası `~/.cloudflared/` altında; depoya girmez.
 
 ## Akış
 

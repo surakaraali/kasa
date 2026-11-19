@@ -6,6 +6,7 @@ using Kasa.Api.Data;
 using Kasa.Api.Erp;
 using Kasa.Api.Infrastructure;
 using Kasa.ServiceDefaults;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -55,6 +56,15 @@ if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
     using var scope = app.Services.CreateScope();
     scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
 }
+
+// Behind the web app's proxy (and a tunnel in front of it): take the client's address and scheme from the proxies'
+// headers, so the sign-in rate limit counts real clients and cookies are marked Secure on https. Only loopback
+// proxies are trusted (the default); two hops: the tunnel, then the web app.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    ForwardLimit = 2,
+});
 
 app.UseExceptionHandler(new ExceptionHandlerOptions
 {

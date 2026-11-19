@@ -6,7 +6,8 @@ import { canEdit, useSession } from "@/lib/session";
 import type { CurrentAccount } from "@/lib/types";
 import { useData } from "@/lib/useData";
 
-const erpPage = process.env.NEXT_PUBLIC_ERP_URL ?? "http://localhost:5103";
+// The test ERP's voucher page, served through this app (next.config.ts).
+const erpPage = "/test-erp";
 
 export default function Erp() {
   const { api, me } = useSession();

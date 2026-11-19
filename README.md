@@ -46,7 +46,7 @@ cp .env.example .env
 scripts/demo.sh            # durdurmak: scripts/demo.sh stop, sıfırdan başlatmak: scripts/demo.sh reset
 ```
 
-Demo akışı: [docs/demo.md](docs/demo.md). Geliştirirken servisleri ayrı ayrı çalıştırmak için:
+Demo akışı ve genel adresten (kasa.surakaraali.dev, Cloudflare Tunnel) açma: [docs/demo.md](docs/demo.md). Geliştirirken servisleri ayrı ayrı çalıştırmak için:
 
 ```bash
 cp .env.example .env

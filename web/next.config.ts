@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 // The browser only ever talks to this server. /api and /hubs are passed on to Kasa.Api, so the refresh cookie
 // (SameSite=Strict, Path=/api/auth) is a same-site cookie and the API needs no CORS.
 const api = process.env.KASA_API_URL ?? "http://localhost:5100";
+// Two pages of the test services are also served from here, so a demo behind one public address works:
+// the test bank's approval page and the test ERP's voucher page. Their /mock and API endpoints are not.
+const banks = process.env.KASA_BANKS_URL ?? "http://localhost:5102";
+const erp = process.env.KASA_ERP_URL ?? "http://localhost:5103";
 
 // Production only: the dev server needs eval for hot reload. Next's own inline bootstrap scripts need 'unsafe-inline'
 // without nonces. shortcut: nonce-based CSP (middleware) would drop 'unsafe-inline' for scripts.
@@ -24,6 +28,8 @@ const config: NextConfig = {
       { source: "/api/system/health", destination: `${api}/health` },
       { source: "/api/:path*", destination: `${api}/api/:path*` },
       { source: "/hubs/:path*", destination: `${api}/hubs/:path*` },
+      { source: "/acikbank/authorize", destination: `${banks}/acikbank/authorize` },
+      { source: "/test-erp", destination: `${erp}/` },
     ];
   },
   async headers() {

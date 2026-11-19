@@ -248,7 +248,7 @@ Her sprint şu adımlarla kapanır:
 - [x] Soru listesi: 75 soru ve ipucu ([sorular.md](sorular.md))
 - [ ] Teknik sunumun site hâli (sunum.surakaraali.dev'in teknik versiyonu)
 - [ ] Yedek video (ekran kaydı sende)
-- [ ] kasa.surakaraali.dev: Cloudflare Tunnel (`cloudflared` indirmek için onayın gerekiyor)
+- [x] kasa.surakaraali.dev: Cloudflare Tunnel (`scripts/tunnel.sh`); sadece web dışarıda, banka onay sayfası ve ERP fiş sayfası onun arkasında; genel adresten açık bankacılık akışı denendi
 - [ ] Prova: ben mülakatçı rolünde, sorular üzerinden
 - [ ] Medium yazıları; en sonda depoyu herkese açmak
 - **Çıktı:** mülakata hazırsın
