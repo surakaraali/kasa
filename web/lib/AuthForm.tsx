@@ -7,12 +7,13 @@ import { useSession } from "./session";
 interface Field { name: string; label: string; type?: string; autoComplete?: string; hint?: string; placeholder?: string }
 
 /** One form for sign in, sign up and joining by invitation: they differ only in fields and endpoint. */
-export function AuthForm({ path, fields, submit, extra, footer }: {
+export function AuthForm({ path, fields, submit, extra, footer, onError }: {
   path: "/api/auth/login" | "/api/auth/register" | "/api/auth/accept-invitation";
   fields: Field[];
   submit: string;
   extra?: Record<string, string>;
   footer?: ReactNode;
+  onError?: (status: number) => void;
 }) {
   const { signIn } = useSession();
   const router = useRouter();
@@ -29,6 +30,7 @@ export function AuthForm({ path, fields, submit, extra, footer }: {
     } catch (err) {
       setError((err as Error).message);
       setBusy(false);
+      onError?.((err as { status?: number }).status ?? 0);
     }
   }
 

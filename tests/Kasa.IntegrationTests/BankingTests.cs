@@ -16,6 +16,33 @@ namespace Kasa.IntegrationTests;
 public sealed class BankingTests(KasaFixture fixture)
 {
     [Fact]
+    public async Task The_statement_opens_in_excel_and_a_description_cannot_run_as_a_formula()
+    {
+        await using var banks = new MockBanksFactory();
+        await using var api = new KasaApiFactory(fixture, banks: banks);
+        var admin = await api.RegisterAsync();
+        await banks.AddMovementAsync("acikbank", 1250.5m, "=HYPERLINK(\"http://example.test\",\"Faturayı gör\")");
+        await admin.ConnectAsync(banks, "acikbank");
+
+        var response = await admin.Client.GetAsync("/api/transactions/export?direction=In");
+        await response.EnsureOkAsync();
+        Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
+        Assert.StartsWith("attachment; filename=\"kasa-hesap-ozeti-", response.Content.Headers.ContentDisposition?.ToString(), StringComparison.Ordinal);
+
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.Equal([0xEF, 0xBB, 0xBF], bytes[..3]); // without the BOM Excel shows "ş" as "ÅŸ"
+        var text = System.Text.Encoding.UTF8.GetString(bytes[3..]);
+        Assert.DoesNotContain("\n", text.Replace("\r\n", "", StringComparison.Ordinal), StringComparison.Ordinal);
+        var lines = text.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+        Assert.True(lines.Length > 2, "a header and the account's incoming movements");
+        Assert.StartsWith("Tarih;Hesap;IBAN;Karşı taraf;Açıklama;Tutar", lines[0], StringComparison.Ordinal);
+        var row = Assert.Single(lines, l => l.Contains("HYPERLINK", StringComparison.Ordinal));
+        Assert.Contains(";\"'=HYPERLINK(\"\"http://example.test\"\",\"\"Faturayı gör\"\")\";1250,50;TRY;", row, StringComparison.Ordinal);
+        // The direction filter applies, as in the list.
+        Assert.DoesNotContain(lines.Skip(1), l => l.Split(';')[5].StartsWith('-'));
+    }
+
+    [Fact]
     public async Task KlasikBank_connects_imports_and_a_second_sync_imports_only_what_is_new()
     {
         await using var banks = new MockBanksFactory();

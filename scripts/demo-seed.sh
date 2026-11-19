@@ -5,11 +5,12 @@
 set -euo pipefail
 BASE="${KASA_PUBLIC_URL:-http://localhost:3000}"   # through the web app, like a browser: the bank's state cookie must match
 PASSWORD="Demo-Password-2026"
+CODE=$(cat "$(dirname "$0")/../.demo/kayit-kodu" 2>/dev/null || true)   # set by scripts/demo.sh behind the public address
 JAR=$(mktemp); trap 'rm -f "$JAR"' EXIT
 json() { python3 -c "import sys,json; print(json.load(sys.stdin)$1)"; }
 
 TOKEN=$(curl -sf -c "$JAR" -b "$JAR" "$BASE/api/auth/register" -H 'content-type: application/json' \
-  -d "{\"companyName\":\"Anadolu Tekstil A.Ş.\",\"fullName\":\"Ayşe Demir\",\"email\":\"demo@kasa.test\",\"password\":\"$PASSWORD\"}" | json '["accessToken"]') \
+  -d "{\"companyName\":\"Anadolu Tekstil A.Ş.\",\"fullName\":\"Ayşe Demir\",\"email\":\"demo@kasa.test\",\"password\":\"$PASSWORD\",\"signUpCode\":\"$CODE\"}" | json '["accessToken"]') \
   || { echo "demo@kasa.test zaten var: önce scripts/demo.sh reset"; exit 1; }
 AUTH="authorization: Bearer $TOKEN"
 

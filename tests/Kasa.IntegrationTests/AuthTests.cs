@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kasa.IntegrationTests;
@@ -22,6 +23,22 @@ public sealed class AuthTests(KasaFixture fixture) : IDisposable
         Assert.Equal("Admin", me.GetProperty("role").GetString());
         Assert.Equal("Deniz Gıda A.Ş.", me.GetProperty("companyName").GetString());
         Assert.Equal(admin.Email, me.GetProperty("email").GetString());
+    }
+
+    [Fact]
+    public async Task With_a_sign_up_code_only_people_who_know_it_can_open_a_company()
+    {
+        await using var closed = new KasaApiFactory(fixture, b => b.UseSetting("Auth:SignUpCode", "c0de42"));
+        var client = closed.CreateClient();
+        Assert.True((await (await client.GetAsync("/api/auth/register")).JsonAsync()).GetProperty("codeRequired").GetBoolean());
+
+        object Body(string? code) => new { companyName = "Kod Deneme A.Ş.", fullName = "Test Admin", email = $"code-{Guid.NewGuid():N}@test.kasa", password = Api.Password, signUpCode = code };
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/auth/register", Body(null))).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/auth/register", Body("c0de43"))).StatusCode);
+        await (await client.PostAsJsonAsync("/api/auth/register", Body(" c0de42 "))).EnsureOkAsync();
+
+        // Without the setting, as on a developer's machine, nobody is asked.
+        Assert.False((await (await api.CreateClient().GetAsync("/api/auth/register")).JsonAsync()).GetProperty("codeRequired").GetBoolean());
     }
 
     [Fact]

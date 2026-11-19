@@ -196,6 +196,81 @@ public sealed class AccountsController(AppDbContext db) : ControllerBase
     [HttpGet("transactions")]
     public async Task<ActionResult<TransactionPage>> Transactions([FromQuery] TransactionQuery q, CancellationToken ct)
     {
+        var rows = Filtered(q);
+        if (q.Cursor is not null)
+        {
+            if (!TryReadCursor(q.Cursor, out var afterAt, out var afterId))
+            {
+                return Problem("Geçersiz sayfa imleci.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            rows = rows.Where(t => t.BookedAt < afterAt || (t.BookedAt == afterAt && t.Id < afterId));
+        }
+
+        var items = await rows.OrderByDescending(t => t.BookedAt).ThenByDescending(t => t.Id).Take(q.Limit + 1)
+            .Select(t => new TransactionDto(t.Id, t.BankAccountId, t.Account!.Connection!.Bank, t.Account.Name, t.BankReference, t.BookedAt,
+                t.Amount, t.Description, t.CounterpartyName, t.CounterpartyIban, t.CounterpartyTaxNumber,
+                t.MatchStatus, t.MatchRule, t.CurrentAccountId, t.CurrentAccount!.Code, t.CurrentAccount.Title,
+                t.ExportStatus, t.ErpVoucherNo, t.ExportError, t.RowVersion))
+            .ToListAsync(ct);
+        var next = items.Count > q.Limit ? Cursor(items[q.Limit - 1]) : null;
+        return new TransactionPage(items.Take(q.Limit).ToList(), next);
+    }
+
+    /// <summary>
+    /// The account statement: every movement the list's filters select, as a file Excel opens directly (UTF-8 with
+    /// a BOM, ";" between columns, decimal comma). Rows are written as SQL Server reads them, so a year of movements
+    /// never sits in memory at once.
+    /// </summary>
+    [HttpGet("transactions/export")]
+    public async Task Export([FromQuery] TransactionQuery q, CancellationToken ct)
+    {
+        var tr = CultureInfo.GetCultureInfo("tr-TR");
+        Response.ContentType = "text/csv; charset=utf-8";
+        Response.Headers.ContentDisposition = $"attachment; filename=\"kasa-hesap-ozeti-{BankData.TodayInTurkey(DateTimeOffset.UtcNow):yyyy-MM-dd}.csv\"";
+        // CRLF whatever the server's OS: the CSV standard, and what Excel expects.
+        await using var csv = new StreamWriter(Response.Body, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)) { NewLine = "\r\n" };
+        await csv.WriteLineAsync("Tarih;Hesap;IBAN;Karşı taraf;Açıklama;Tutar;Para birimi;Cari kodu;Cari;Eşleşme;ERP fiş no;Banka referansı");
+
+        var rows = Filtered(q).OrderByDescending(t => t.BookedAt).ThenByDescending(t => t.Id)
+            .Select(t => new
+            {
+                t.BookedAt, Account = t.Account!.Name, t.Account.Iban, t.CounterpartyName, t.Description, t.Amount, t.Account.Currency,
+                Code = t.CurrentAccount!.Code, Title = t.CurrentAccount.Title, t.MatchStatus, t.MatchRule, t.ErpVoucherNo, t.BankReference,
+            });
+        await foreach (var t in rows.AsAsyncEnumerable().WithCancellation(ct))
+        {
+            var match = t.MatchStatus switch
+            {
+                MatchStatus.Unmatched => "Eşleşmedi",
+                MatchStatus.Ignored => "ERP'ye gitmeyecek",
+                _ => t.MatchRule switch { MatchRule.Iban => "IBAN ile", MatchRule.TaxNumber => "Vergi no ile", _ => "Elle" },
+            };
+            await csv.WriteLineAsync(string.Join(';',
+                TimeZoneInfo.ConvertTime(t.BookedAt, BankData.Turkey).ToString("dd.MM.yyyy HH:mm", tr),
+                Text(t.Account), Text(t.Iban), Text(t.CounterpartyName), Text(t.Description),
+                t.Amount.ToString("0.00", tr), t.Currency, Text(t.Code), Text(t.Title), match, Text(t.ErpVoucherNo), Text(t.BankReference)));
+        }
+    }
+
+    /// <summary>
+    /// A text cell. Descriptions and names are written by whoever sent the money, so one starting with "=", "+", "-"
+    /// or "@" would run as a formula when the file is opened in Excel (CSV injection); a leading ' keeps it text.
+    /// </summary>
+    internal static string Text(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return "";
+        }
+
+        var safe = value[0] is '=' or '+' or '-' or '@' or '\t' or '\r' ? "'" + value : value;
+        return $"\"{safe.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+    }
+
+    /// <summary>The filters the list and the statement share.</summary>
+    private IQueryable<BankTransaction> Filtered(TransactionQuery q)
+    {
         var rows = db.BankTransactions.AsNoTracking();
         if (q.AccountId is { } accountId)
         {
@@ -238,24 +313,7 @@ public sealed class AccountsController(AppDbContext db) : ControllerBase
             rows = rows.Where(t => t.Description.Contains(search) || t.CounterpartyName!.Contains(search));
         }
 
-        if (q.Cursor is not null)
-        {
-            if (!TryReadCursor(q.Cursor, out var afterAt, out var afterId))
-            {
-                return Problem("Geçersiz sayfa imleci.", statusCode: StatusCodes.Status400BadRequest);
-            }
-
-            rows = rows.Where(t => t.BookedAt < afterAt || (t.BookedAt == afterAt && t.Id < afterId));
-        }
-
-        var items = await rows.OrderByDescending(t => t.BookedAt).ThenByDescending(t => t.Id).Take(q.Limit + 1)
-            .Select(t => new TransactionDto(t.Id, t.BankAccountId, t.Account!.Connection!.Bank, t.Account.Name, t.BankReference, t.BookedAt,
-                t.Amount, t.Description, t.CounterpartyName, t.CounterpartyIban, t.CounterpartyTaxNumber,
-                t.MatchStatus, t.MatchRule, t.CurrentAccountId, t.CurrentAccount!.Code, t.CurrentAccount.Title,
-                t.ExportStatus, t.ErpVoucherNo, t.ExportError, t.RowVersion))
-            .ToListAsync(ct);
-        var next = items.Count > q.Limit ? Cursor(items[q.Limit - 1]) : null;
-        return new TransactionPage(items.Take(q.Limit).ToList(), next);
+        return rows;
     }
 
     private static DateTimeOffset StartOfDay(DateOnly day)

@@ -4,7 +4,8 @@
 #   scripts/demo.sh reset   stop, empty the Kasa database, start again
 #   scripts/demo.sh stop    stop the .NET services and the web app (Docker keeps running)
 #   scripts/demo.sh web     rebuild and restart only the web app
-# With KASA_PUBLIC_URL=https://kasa.surakaraali.dev the open banking flow uses that address (see scripts/tunnel.sh).
+# With KASA_PUBLIC_URL=https://kasa.surakaraali.dev the open banking flow uses that address (see scripts/tunnel.sh),
+# and opening a new company needs the sign-up code in .demo/kayit-kodu.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 LOGS=.demo/logs
@@ -58,7 +59,10 @@ if [[ -n "${KASA_PUBLIC_URL:-}" ]]; then
   export Banks__AcikBank__PublicUrl="$KASA_PUBLIC_URL/acikbank"
   export Banks__AcikBank__RedirectUri="$KASA_PUBLIC_URL/api/bank-connections/acikbank/callback"
   export MockBanks__RedirectUris__2="$KASA_PUBLIC_URL/api/bank-connections/acikbank/callback"
-  echo "Genel adres: $KASA_PUBLIC_URL"
+  # Anyone who knows the address could open a company there; sign-up needs this code. Made once, kept across restarts.
+  [[ -s .demo/kayit-kodu ]] || openssl rand -hex 3 > .demo/kayit-kodu
+  export Auth__SignUpCode="$(cat .demo/kayit-kodu)"
+  echo "Genel adres: $KASA_PUBLIC_URL (kayıt kodu: $Auth__SignUpCode)"
 fi
 
 docker compose up -d --wait

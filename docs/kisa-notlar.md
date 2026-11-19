@@ -85,6 +85,14 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - Paneldeki sistem durumu noktaları: yeşil çalışıyor, sarı kısıtlı (sistem yine çalışıyor), kırmızı kapalı.
 - Tutarlar renkli değil, yönünü + ve − işareti söylüyor. Renk sadece karar gereken yerlerde.
 - Web güncellendiğinde açık sekme hata vermiyor, gerekirse kendini bir kez yeniliyor.
+- Telefonda da çalışıyor: menü üstte, kişi ve "Çıkış" menünün hemen altında.
+
+## Hesap özeti
+
+- Hareketler ekranında "Hesap özetini indir": seçili filtrelere (hesap, tarih aralığı, yön, eşleşme, arama) uyan hareketler iniyor.
+- Dosya CSV ama doğrudan Excel'de açılıyor: Türkçe harfler bozulmasın diye UTF-8 BOM, sütunlar ";" ile, tutarlar ondalık virgülle (1250,50).
+- Açıklamaları parayı gönderen yazıyor. "=" ile başlayan bir açıklama Excel'de formül olarak çalışabilirdi (CSV injection). Başına ' konuyor, düz metin kalıyor.
+- Dosya veritabanından okundukça satır satır yazılıyor; bir yıllık hareket bile sunucu belleğine tek seferde alınmıyor.
 
 ## Sayman (asistan)
 
@@ -105,7 +113,7 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - **RabbitMQ kapalı:** ERP'ye gidecek işler veritabanında bekliyor, açılınca gidiyor.
 - **Aktarım servisi kapalı:** işler kuyrukta bekliyor.
 - **SQL Server kapalı:** sistem çalışmıyor. Asıl veri orada; bu bilinçli.
-- 18 hata senaryosunun her birinin otomatik testi var. Toplam 80 test, gerçek veritabanlarına karşı çalışıyor.
+- 18 hata senaryosunun her birinin otomatik testi var. Toplam 82 test, gerçek veritabanlarına karşı çalışıyor.
 - İzleme panelinde tek bir tıklamanın API, kuyruk, aktarım servisi ve ERP'deki yolu tek bir iz olarak görünüyor.
 
 ## Demo için
@@ -113,7 +121,9 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - Sıfırdan başlatmak: `scripts/demo.sh reset`, sonra `scripts/demo-seed.sh` (hazır şirket: Anadolu Tekstil A.Ş.).
 - Hazır şirketin girişleri: demo@kasa.test, muhasebe@kasa.test, izleyici@kasa.test; şifre docs/demo.md içinde.
 - Test bankası girişi: kullanıcı `kasa`, şifre `klasik-dev-pass`. Bunlar test değerleri.
-- kasa.surakaraali.dev senin bilgisayarında çalışıyor; tünel açıkken adresi bilen herkes kayıt açabilir. Demodan sonra kapat.
+- kasa.surakaraali.dev senin bilgisayarında çalışıyor. Bu adreste yeni şirket açmak kayıt kodu istiyor; kod `.demo/kayit-kodu` dosyasında (her başlatmada aynı kalıyor). Bilgisayarında (localhost) kod sorulmuyor.
+- Kayıt kodu tahminle bulunamasın diye denemeler internet adresi başına dakikada 10 ile sınırlı.
+- Demodan sonra tüneli kapat.
 - Bankalar ve ERP test için kurgulandı; bütün veriler örnek.
 
 ## Bilerek bırakılan eksikler (sorulursa dürüstçe)

@@ -1,5 +1,6 @@
 "use client";
 
+import { Download } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { day } from "@/lib/format";
 import { useLive } from "@/lib/live";
@@ -9,10 +10,11 @@ import { Amount, Counterparty, ExportBadge, MatchBadge } from "@/lib/ui";
 import { useData } from "@/lib/useData";
 
 export default function Transactions() {
-  const { api } = useSession();
+  const { api, authFetch } = useSession();
   const { version } = useLive();
   const { data: accounts } = useData<Account[]>("/api/accounts");
-  const [filters, setFilters] = useState({ search: "", direction: "", match: "", accountId: "" });
+  const [filters, setFilters] = useState({ search: "", direction: "", match: "", accountId: "", from: "", to: "" });
+  const [downloading, setDownloading] = useState(false);
   const [rows, setRows] = useState<Transaction[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,25 @@ export default function Transactions() {
     if (after) q.set("cursor", after);
     return `/api/transactions?${q}`;
   }, [filters]);
+
+  /** The same filters as the list, as a file Excel opens. */
+  async function download() {
+    setDownloading(true);
+    try {
+      const q = new URLSearchParams(Object.entries(filters).filter(([, v]) => v));
+      // shortcut: the file passes through the browser's memory (fine to ~100 thousand rows); past that, a one-time link that streams to disk.
+      const response = await authFetch(`/api/transactions/export?${q}`);
+      const name = /filename="([^"]+)"/.exec(response.headers.get("content-disposition") ?? "")?.[1] ?? "kasa-hesap-ozeti.csv";
+      const url = URL.createObjectURL(await response.blob());
+      const link = Object.assign(document.createElement("a"), { href: url, download: name });
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   useEffect(() => {
     let current = true;
@@ -49,7 +70,15 @@ export default function Transactions() {
 
   return (
     <div className="stack">
-      <div className="head"><h1>Hareketler</h1></div>
+      <div className="head">
+        <div>
+          <h1>Hareketler</h1>
+          <p>Filtreleri seçip hesap özetini indirebilirsiniz; dosya Excel&apos;de açılır.</p>
+        </div>
+        <button className="icon-button" onClick={download} disabled={downloading}>
+          <Download size={16} strokeWidth={1.5} aria-hidden />{downloading ? "Hazırlanıyor…" : "Hesap özetini indir"}
+        </button>
+      </div>
       <div className="toolbar">
         <label>Ara<input type="search" placeholder="Açıklama ya da karşı taraf" value={filters.search} onChange={set("search")} /></label>
         <label>Yön
@@ -68,6 +97,8 @@ export default function Transactions() {
             {accounts?.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.bank})</option>)}
           </select>
         </label>
+        <label>Başlangıç<input type="date" value={filters.from} max={filters.to || undefined} onChange={set("from")} /></label>
+        <label>Bitiş<input type="date" value={filters.to} min={filters.from || undefined} onChange={set("to")} /></label>
       </div>
       {error && <p className="error">{error}</p>}
       <div className="card table-wrap">

@@ -44,8 +44,9 @@ KASA_PUBLIC_URL=https://kasa.surakaraali.dev scripts/demo.sh reset
 scripts/tunnel.sh          # Ctrl+C ile kapanır
 ```
 
-Tünel açıkken adresi bilen herkes şirket kaydı açabilir; sadece demo sırasında açık tut. Asistan anahtarı tanımlıysa her
-kullanıcı saatte 30 soru sorabilir, ama kayıt sınırsız: demodan sonra tüneli kapat.
+Genel adreste yeni şirket açmak kayıt kodu istiyor: `scripts/demo.sh` ilk genel başlatmada üretip `.demo/kayit-kodu`
+dosyasına yazıyor ve her başlatmada aynısını kullanıyor; seed de oradan okuyor. Kayıt canlı gösterilecekse kodu sen
+yazarsın. Yine de tüneli sadece demo sırasında açık tut.
 
 Tek seferlik kurulum (yapıldı, 2026-11-19): `brew install cloudflared`, `cloudflared tunnel login` (Cloudflare hesabında
 surakaraali.dev onayı), `cloudflared tunnel create kasa`, `cloudflared tunnel route dns kasa kasa.surakaraali.dev`.

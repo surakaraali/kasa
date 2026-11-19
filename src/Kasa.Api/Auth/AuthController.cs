@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using Kasa.Api.Common;
 using Kasa.Api.Data;
 using Kasa.Api.Domain;
@@ -18,6 +20,10 @@ public sealed class RegisterRequest
 
     [RegularExpression("^[0-9]{10}$", ErrorMessage = "Vergi numarası 10 haneli olmalı.")]
     public string? TaxNumber { get; set; }
+
+    /// <summary>Needed only when Auth:SignUpCode is set, as it is behind the public demo address.</summary>
+    [StringLength(100)]
+    public string? SignUpCode { get; set; }
 
     [Required(ErrorMessage = "Ad soyad gerekli."), StringLength(AppUser.FullNameMaxLength, MinimumLength = 2, ErrorMessage = "Ad soyad 2-200 karakter olmalı.")]
     public string FullName { get; set; } = "";
@@ -87,11 +93,37 @@ public sealed class AuthController(
     private static readonly Lazy<string> DummyHash = new(() =>
         new PasswordHasher<AppUser>().HashPassword(new AppUser { FullName = "" }, TokenService.NewSecret()));
 
+    /// <summary>Tells the sign-up page whether to ask for the sign-up code.</summary>
+    [AllowAnonymous]
+    [HttpGet("register")]
+    public object RegisterOptions([FromServices] IConfiguration config) => new { codeRequired = !string.IsNullOrEmpty(config["Auth:SignUpCode"]) };
+
     /// <summary>Creates a company and its first user, an admin, in one transaction.</summary>
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
+    public async Task<IActionResult> Register(RegisterRequest request, [FromServices] IConfiguration config, CancellationToken ct)
     {
+        // Behind a public address anyone could open a company; there sign-up needs a code, and guessing it is rate limited.
+        if (config["Auth:SignUpCode"] is { Length: > 0 } code)
+        {
+            var client = "signup:" + (HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+            if (await rateLimiter.CheckAsync(client) is { } wait)
+            {
+                Response.Headers.RetryAfter = ((int)Math.Ceiling(wait.TotalSeconds)).ToString();
+                return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "Çok fazla deneme. Biraz sonra tekrar deneyin.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.SignUpCode))
+            {
+                return Problem(statusCode: StatusCodes.Status403Forbidden, title: "Bu adreste yeni şirket kayıt koduyla açılıyor. Kodu demoyu yapan kişiden isteyin.");
+            }
+
+            if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(request.SignUpCode.Trim()), Encoding.UTF8.GetBytes(code)))
+            {
+                return Problem(statusCode: StatusCodes.Status403Forbidden, title: "Kayıt kodu hatalı.");
+            }
+        }
+
         var now = clock.GetUtcNow();
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
