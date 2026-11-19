@@ -3,11 +3,27 @@
 #   scripts/demo.sh         start (logs in .demo/logs)
 #   scripts/demo.sh reset   stop, empty the Kasa database, start again
 #   scripts/demo.sh stop    stop the .NET services and the web app (Docker keeps running)
+#   scripts/demo.sh web     rebuild and restart only the web app
 # With KASA_PUBLIC_URL=https://kasa.surakaraali.dev the open banking flow uses that address (see scripts/tunnel.sh).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 LOGS=.demo/logs
 mkdir -p "$LOGS"
+
+# Builds and starts the web app. Two things keep a tab that was open during a rebuild working:
+# - one id per build, shared by build and server (Next's version skew protection): such a tab reloads itself on
+#   its next page change instead of running old code against the new server;
+# - the previous builds' static files are put back next to the new ones, so until then the old code it asks for
+#   still exists instead of answering 404 ("This page couldn't load").
+start_web() {
+  local keep=.demo/static-keep
+  mkdir -p "$keep"
+  [[ -d web/.next/static ]] && cp -R web/.next/static/. "$keep/"
+  export NEXT_DEPLOYMENT_ID="kasa-$(date +%s)"
+  local ci="${1:-}"
+  (cd web && if [[ -n "$ci" ]]; then npm ci --silent; fi && npm run build \
+    && { cp -Rn "../$keep/." .next/static/ || true; } && exec npm start) > "$LOGS/web.log" 2>&1 &
+}
 
 stop() {
   pkill -f "Kasa\.(Api|MockBanks|MockErp|ErpExporter)" 2>/dev/null || true
@@ -17,6 +33,12 @@ stop() {
 
 case "${1:-start}" in
   stop) stop; echo "Durdu."; exit 0 ;;
+  web)
+    # Rebuild and restart only the web app; the services and the data stay as they are.
+    lsof -ti tcp:3000 -sTCP:LISTEN | xargs kill 2>/dev/null || true
+    start_web
+    until curl -sf http://localhost:3000/giris > /dev/null; do sleep 1; done
+    echo "Web yeniden başladı ($NEXT_DEPLOYMENT_ID)."; exit 0 ;;
   reset)
     stop
     set -a; source .env; set +a
@@ -26,7 +48,7 @@ case "${1:-start}" in
     docker compose exec -T redis redis-cli --scan --pattern 'kasa:*' | xargs -r docker compose exec -T redis redis-cli del >/dev/null || true
     echo "Veritabanı ve Redis temizlendi." ;;
   start) ;;
-  *) echo "kullanım: scripts/demo.sh [start|reset|stop]"; exit 1 ;;
+  *) echo "kullanım: scripts/demo.sh [start|reset|stop|web]"; exit 1 ;;
 esac
 
 # Behind a public address (scripts/tunnel.sh), the open banking flow must use it instead of localhost.
@@ -45,8 +67,8 @@ for service in MockBanks MockErp ErpExporter Api; do
   # The http launch profile: Development settings (local addresses) and telemetry to the Aspire dashboard.
   nohup dotnet run --project "src/Kasa.$service" -c Release --no-build --launch-profile http > "$LOGS/$service.log" 2>&1 &
 done
-# The whole chain in the background with its own log, so nothing keeps this script's output open.
-(cd web && npm ci --silent && npm run build && exec npm start) > "$LOGS/web.log" 2>&1 &
+# In the background with its own log, so nothing keeps this script's output open.
+start_web ci
 
 for url in http://localhost:5102/health http://localhost:5103/health http://localhost:5101/alive http://localhost:5100/alive; do
   until curl -sf "$url" > /dev/null; do sleep 1; done

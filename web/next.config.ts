@@ -22,6 +22,10 @@ const csp = [
 ].join("; ");
 
 const config: NextConfig = {
+  // The assistant moved from its own page into a panel on every screen; old links land on the dashboard.
+  async redirects() {
+    return [{ source: "/asistan", destination: "/panel", permanent: false }];
+  },
   async rewrites() {
     return [
       // The API's readiness report (anonymous, states only), for the dashboard's system card.

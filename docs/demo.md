@@ -66,7 +66,7 @@ Tünelin kimlik dosyası `~/.cloudflared/` altında; depoya girmez.
 | 9 | **ERP'yi kapat** (aşağıda), bir hareketi eşle → "ERP'ye gidiyor" bekliyor; ERP'yi aç → birkaç saniyede aktarılıyor | "İş kuyrukta bekledi. Aynı mesaj iki kez gelse de Idempotency-Key ile tek fiş." |
 | 10 | **Redis'i kapat** (aşağıda) → paneli yenile: sistem kartında Redis "kısıtlı", panel çalışıyor; Redis'i aç | "Redis hızlandırıcı, zorunluluk değil. Kilit yokken bile çift kaydı veritabanı engelliyor; bunun testi var." |
 | 11 | **İzleme paneli:** son "PUT api/transactions/.../match" izi | "Tek iz: tıklamadan ERP fişine kadar dört servis. İz outbox satırında saklanıp yayında devam ediyor." |
-| 12 | **Asistan:** "Bu ay en çok kim ödedi?", "Eşleşmeyenler en çok kimden?" (anahtar varsa) | "Model SQL yazmıyor; beş okuma aracı var, şirket token'dan, IBAN maskeli." |
+| 12 | **Asistan** (her ekranda sağ altta, ya da ⌘K): "Bu ay en çok kim ödedi?", "Eşleşmeyenler en çok kimden?" (anahtar varsa) | "Model SQL yazmıyor; beş okuma aracı var, şirket token'dan, IBAN maskeli." |
 | 13 | Muhasebeci yerine **izleyici** davet et, onunla gir: eşleme butonu yok | "Arayüzde yok, API'de de 403; yetki sunucuda." |
 
 ## Terminal komutları

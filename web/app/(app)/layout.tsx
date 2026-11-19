@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { AssistantDock } from "@/lib/AssistantDock";
 import { LiveProvider, useLive } from "@/lib/live";
 import { useSession } from "@/lib/session";
 
@@ -12,7 +13,6 @@ const nav = [
   { href: "/eslesmeyenler", label: "Eşleşmeyenler" },
   { href: "/baglantilar", label: "Banka bağlantıları" },
   { href: "/erp", label: "ERP ve cariler" },
-  { href: "/asistan", label: "Asistan" },
   { href: "/ekip", label: "Ekip" },
 ];
 
@@ -51,6 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
         <main className="main">{children}</main>
       </div>
+      <AssistantDock />
     </LiveProvider>
   );
 }

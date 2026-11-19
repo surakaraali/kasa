@@ -168,3 +168,30 @@ button:disabled { opacity: 0.5; cursor: default; }
 }
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Assistant: a quiet button on every screen and a panel from the right. */
+.dock-trigger { position: fixed; right: 24px; bottom: 24px; z-index: 40; height: 40px; padding: 0 12px 0 16px; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); }
+.dock-trigger[aria-expanded="true"] { opacity: 0; pointer-events: none; }
+kbd { font-family: var(--mono); font-size: 11px; line-height: 16px; padding: 0 6px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.32); color: rgba(255, 255, 255, 0.86); }
+.dock { position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; width: min(420px, 100vw); display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--surface); border-left: 1px solid var(--line); box-shadow: -16px 0 40px rgba(0, 0, 0, 0.08);
+  transform: translateX(100%); opacity: 0; transition: transform 300ms var(--ease), opacity 300ms var(--ease); }
+.dock[data-open="true"] { transform: none; opacity: 1; }
+.dock-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 20px 20px 16px; border-bottom: 1px solid var(--line); }
+.dock-head b { display: block; font-weight: 500; font-size: 15px; }
+.dock-head span { font-size: 13px; color: var(--muted); }
+.dock-close { height: 32px; padding: 0 12px; font-size: 13px; }
+.dock-body { overflow-y: auto; padding: 16px 20px; display: grid; gap: 16px; align-content: start; }
+.dock-examples { display: grid; gap: 8px; }
+.dock-examples button { height: auto; min-height: 36px; padding: 8px 12px; text-align: left; white-space: normal; font-weight: 400; }
+.dock-turn.user { justify-self: end; max-width: 85%; }
+.dock-turn .bubble { background: var(--raised); border-radius: 12px; padding: 8px 12px; }
+.dock-turn.assistant { max-width: 100%; }
+.dock-turn .step { font-size: 12px; color: var(--muted); }
+.dock-turn .answer { white-space: pre-wrap; margin-top: 4px; }
+.dock-form { display: flex; gap: 8px; padding: 12px 20px 20px; border-top: 1px solid var(--line); }
+.dock-form input { flex: 1; }
+@media (max-width: 800px) {
+  .dock-trigger { right: 16px; bottom: 16px; }
+  .dock-trigger kbd { display: none; }
+}
