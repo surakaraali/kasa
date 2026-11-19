@@ -1,14 +1,19 @@
 using System.Net;
-
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Kasa.IntegrationTests;
 
 /// <summary>Every service starts with its real configuration and answers /health.</summary>
-public class HealthTests
+[Collection("Kasa")]
+public class HealthTests(KasaFixture fixture)
 {
     [Fact]
-    public Task Api_is_healthy() => AssertHealthyAsync<Kasa.Api.AssemblyMarker>();
+    public async Task Api_is_healthy()
+    {
+        using var api = new KasaApiFactory(fixture);
+        var response = await api.CreateClient().GetAsync("/health");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 
     [Fact]
     public Task ErpExporter_is_healthy() => AssertHealthyAsync<Kasa.ErpExporter.AssemblyMarker>();

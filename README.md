@@ -6,7 +6,7 @@ sorulabiliyor.
 
 > Bu bir pratik projesi. Bankalar ve ERP test için kurgulandı, bütün veriler örnek veridir.
 
-**Durum:** Sprint 0 tamamlandı (iskelet, altyapı, CI). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
+**Durum:** Sprint 1 tamamlandı (kimlik, roller, şirket izolasyonu). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
 
 ## Mimari
 
@@ -57,3 +57,8 @@ Her teknoloji seçiminin gerekçesi `docs/kararlar/` altında: bağlam, seçenek
 
 - [0001: Modüler monolit, ERP aktarımı için tek mikroservis](docs/kararlar/0001-moduler-monolit-ve-tek-mikroservis.md)
 - [0002: .NET 10 (LTS) ve tek yerden sabitlenen paket sürümleri](docs/kararlar/0002-dotnet-10-ve-sabit-surumler.md)
+- [0003: Kimlik: Identity, kısa ömürlü JWT, rotasyonlu yenileme anahtarı](docs/kararlar/0003-kimlik-jwt-ve-yenileme-anahtari.md)
+- [0004: Şirket izolasyonu: sorgu filtresi ve yazma koruması](docs/kararlar/0004-sirket-izolasyonu.md)
+- [0005: Redis bir hızlandırıcı, zorunluluk değil](docs/kararlar/0005-redis-bir-hizlandirici.md)
+
+Sprint sonu soruları ve cevap ipuçları: [docs/sorular.md](docs/sorular.md). İş takibi: [GitHub Projects panosu](https://github.com/users/surakaraali/projects/1).

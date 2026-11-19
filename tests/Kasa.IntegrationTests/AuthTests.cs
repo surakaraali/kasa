@@ -1,0 +1,128 @@
+using System.Net;
+using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+
+namespace Kasa.IntegrationTests;
+
+[Collection("Kasa")]
+public sealed class AuthTests(KasaFixture fixture) : IDisposable
+{
+    private readonly KasaApiFactory api = new(fixture);
+
+    public void Dispose() => api.Dispose();
+
+    [Fact]
+    public async Task Registering_creates_the_company_and_its_admin()
+    {
+        var admin = await api.RegisterAsync("Deniz Gıda A.Ş.");
+
+        var me = await (await admin.Client.GetAsync("/api/me")).JsonAsync();
+
+        Assert.Equal("Admin", me.GetProperty("role").GetString());
+        Assert.Equal("Deniz Gıda A.Ş.", me.GetProperty("companyName").GetString());
+        Assert.Equal(admin.Email, me.GetProperty("email").GetString());
+    }
+
+    [Fact]
+    public async Task A_weak_password_is_refused_and_no_company_is_left_behind()
+    {
+        var name = $"Weak {Guid.NewGuid():N}"[..20];
+
+        var response = await api.CreateClient().PostAsJsonAsync("/api/auth/register",
+            new { companyName = name, fullName = "X Y", email = $"{Guid.NewGuid():N}@test.kasa", password = "short" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True((await response.JsonAsync()).GetProperty("errors").TryGetProperty("password", out _));
+        await using var db = fixture.CreateDbContext();
+        Assert.False(await db.Companies.AnyAsync(c => c.Name == name));
+    }
+
+    [Fact]
+    public async Task The_same_email_cannot_register_twice()
+    {
+        var admin = await api.RegisterAsync();
+
+        var response = await api.CreateClient().PostAsJsonAsync("/api/auth/register",
+            new { companyName = "Another Co", fullName = "X Y", email = admin.Email, password = Api.Password });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True((await response.JsonAsync()).GetProperty("errors").TryGetProperty("email", out _));
+    }
+
+    [Fact]
+    public async Task Five_wrong_passwords_lock_the_account_even_for_the_right_password()
+    {
+        var admin = await api.RegisterAsync();
+        var client = api.CreateClient();
+
+        for (var i = 0; i < 5; i++)
+        {
+            var wrong = await client.PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = "Wrong-Password-1" });
+            Assert.Equal(HttpStatusCode.Unauthorized, wrong.StatusCode);
+        }
+
+        var right = await client.PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = admin.Password });
+        Assert.Equal(HttpStatusCode.Locked, right.StatusCode);
+    }
+
+    [Fact]
+    public async Task An_unknown_email_gets_the_same_answer_as_a_wrong_password()
+    {
+        var response = await api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email = "nobody@test.kasa", password = "Wrong-Password-1" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("E-posta ya da şifre hatalı.", (await response.JsonAsync()).GetProperty("title").GetString());
+    }
+
+    [Fact]
+    public async Task The_refresh_cookie_is_httponly_strict_and_limited_to_the_auth_path()
+    {
+        var response = await api.CreateClient().PostAsJsonAsync("/api/auth/register",
+            new { companyName = "Cookie Co", fullName = "X Y", email = $"{Guid.NewGuid():N}@test.kasa", password = Api.Password });
+
+        var cookie = response.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("kasa_refresh=", StringComparison.Ordinal)).ToLowerInvariant();
+        Assert.Contains("httponly", cookie);
+        Assert.Contains("samesite=strict", cookie);
+        Assert.Contains("path=/api/auth", cookie);
+    }
+
+    [Fact]
+    public async Task A_refresh_token_works_once_and_a_replayed_one_signs_the_whole_session_out()
+    {
+        var client = api.CreateClient();
+        var registered = await client.PostAsJsonAsync("/api/auth/register",
+            new { companyName = "Refresh Co", fullName = "X Y", email = $"{Guid.NewGuid():N}@test.kasa", password = Api.Password });
+        var stolen = registered.RefreshCookie();
+
+        // The real user refreshes: the stolen copy is now a used token.
+        var refreshed = await client.PostAsync("/api/auth/refresh", null);
+        Assert.Equal(HttpStatusCode.OK, refreshed.StatusCode);
+
+        // The attacker replays it.
+        var attacker = api.CreateClient(new() { HandleCookies = false });
+        var replay = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        replay.Headers.Add("Cookie", $"kasa_refresh={stolen}");
+        Assert.Equal(HttpStatusCode.Unauthorized, (await attacker.SendAsync(replay)).StatusCode);
+
+        // The replay revoked the family, so the real user's newest token stops working too.
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsync("/api/auth/refresh", null)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Logging_out_ends_the_session()
+    {
+        var client = api.CreateClient();
+        await (await client.PostAsJsonAsync("/api/auth/register",
+            new { companyName = "Logout Co", fullName = "X Y", email = $"{Guid.NewGuid():N}@test.kasa", password = Api.Password })).EnsureOkAsync();
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/logout", null)).StatusCode);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsync("/api/auth/refresh", null)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Without_a_token_the_api_is_closed()
+    {
+        Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().GetAsync("/api/me")).StatusCode);
+    }
+}

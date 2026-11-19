@@ -170,14 +170,15 @@ Her sprint şu adımlarla kapanır:
 - Bilerek ertelenenler: `Kasa.Contracts` (Sprint 3'te ilk mesajla), birim test projesi (Sprint 1'de ilk mantıkla). Boş proje açmadık.
 - **Çıktı:** dört servis `/health` cevabı veriyor, 4 test geçiyor, dört altyapı servisi sağlıklı
 
-### Sprint 1: Kimlik ve şirketler
-- [ ] Kayıt: şirket ve ilk yönetici birlikte oluşur
-- [ ] Giriş: JWT (15 dk) ve yenileme anahtarı (tek kullanımlık, rotasyonlu, çalınma tespiti)
-- [ ] Roller ve yetki politikaları; kullanıcı daveti
-- [ ] Şirket izolasyonu: EF Core sorgu filtresi ve testi
-- [ ] Giriş denemesi sınırı (Redis), şifre kuralları, hesap kilitleme
-- [ ] Testler: başka şirketin kaydı 404 döner, süresi dolmuş token reddedilir, yenileme anahtarı ikinci kez kullanılamaz
-- **Çıktı:** API üzerinden kayıt ve giriş, Swagger'da denenebilir
+### Sprint 1: Kimlik ve şirketler ✅ 2026-11-19
+- [x] Kayıt: şirket ve ilk yönetici tek işlemde oluşur; şifre zayıfsa şirket de geri alınır
+- [x] Giriş: JWT (15 dk) ve yenileme anahtarı (httpOnly çerez, tek kullanımlık, rotasyonlu, çalınma tespiti)
+- [x] Roller ve yetki politikaları; davet bağlantısıyla katılma (tek kullanımlık, 7 gün)
+- [x] Şirket izolasyonu: EF Core sorgu filtresi ve `SaveChanges` koruması, testleriyle
+- [x] Giriş denemesi sınırı (Redis), şifre kuralları, hesap kilitleme; Redis kapalıyken giriş çalışıyor
+- [x] Testler: 22 entegrasyon testi (gerçek SQL Server ve Redis)
+- Karar notları: 0003 kimlik, 0004 şirket izolasyonu, 0005 Redis bir hızlandırıcı
+- **Çıktı:** API üzerinden kayıt, giriş, davet; Swagger'da denenebilir (http://localhost:5100/swagger)
 
 ### Sprint 2: Banka entegrasyonu
 - [ ] `Kasa.MockBanks`: REST açık bankacılık (rıza, PKCE, token) ve SOAP banka (önceki projelerden taşınır, sadeleştirilir)
@@ -266,7 +267,7 @@ Her sprint şu adımlarla kapanır:
 | 6 | ERP kapalı | Mesajlar kuyrukta bekler, açılınca aktarılır |
 | 7 | ERP fişi yazar ama cevap vermez | Tekrar denemede tek fiş oluşur (idempotency) |
 | 8 | Bir mesaj sürekli hata verir | Belirli denemeden sonra ölü mektup kuyruğuna gider, panelde görünür |
-| 9 | Redis kapalı | Önbelleksiz devam edilir; kilit yoksa senkron güvenli şekilde atlanır |
+| 9 | Redis kapalı | Önbelleksiz devam edilir; kilit alınamazsa senkron kilitsiz çalışır, çift kaydı veritabanındaki benzersizlik kuralı engeller (karar 0005) |
 | 10 | RabbitMQ kapalı | Outbox mesajları veritabanında bekler, açılınca gönderilir |
 | 11 | Başka şirketin kaydının ID'si tahmin edilir | 404 |
 | 12 | İzleyici rolü eşleme yapmaya çalışır | 403 |
