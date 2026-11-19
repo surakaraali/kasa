@@ -1,7 +1,6 @@
 # Bir kuruşun bankadan ERP'ye yolculuğu: tek fiş garantisi
 
-*Medium'a aktarırken: metni yapıştır, her `![...]` satırının yerine `gorseller/` klasöründeki dosyayı sürükle; altındaki
-italik satır resmin yazısı. Diyagramların kaynağı `gorseller/kaynak/` içinde.*
+*Medium'da yayımlandı (19.11.2026): https://medium.com/p/6993870c0bd1. Diyagramların kaynağı `gorseller/kaynak/` içinde.*
 
 ---
 

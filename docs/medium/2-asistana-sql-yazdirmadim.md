@@ -1,7 +1,6 @@
 # Muhasebe asistanına SQL yazdırmadım
 
-*Medium'a aktarırken: metni yapıştır, her `![...]` satırının yerine `gorseller/` klasöründeki dosyayı sürükle; altındaki
-italik satır resmin yazısı. Diyagramların kaynağı `gorseller/kaynak/` içinde.*
+*Medium'da yayımlandı (19.11.2026): https://medium.com/p/f3fd7b07be02. Diyagramların kaynağı `gorseller/kaynak/` içinde.*
 
 ---
 
