@@ -125,4 +125,41 @@ public sealed class AuthTests(KasaFixture fixture) : IDisposable
     {
         Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().GetAsync("/api/me")).StatusCode);
     }
+
+    [Fact]
+    public async Task The_profile_changes_the_name_and_nothing_else()
+    {
+        var admin = await api.RegisterAsync();
+
+        var response = await admin.Client.PutAsJsonAsync("/api/me", new { fullName = "  Ayşe Demir  " });
+        await response.EnsureOkAsync();
+
+        var me = await response.JsonAsync();
+        Assert.Equal("Ayşe Demir", me.GetProperty("fullName").GetString());
+        Assert.Equal(admin.Email, me.GetProperty("email").GetString());
+        Assert.Equal("Admin", me.GetProperty("role").GetString());
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Client.PutAsJsonAsync("/api/me", new { fullName = "" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Changing_the_password_needs_the_current_one_and_signs_every_other_session_out()
+    {
+        var admin = await api.RegisterAsync();
+        var otherDevice = api.CreateClient();
+        await (await otherDevice.PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = admin.Password })).EnsureOkAsync();
+        const string newPassword = "New-Password-2027";
+
+        var wrong = await admin.Client.PostAsJsonAsync("/api/me/password", new { currentPassword = "Not-The-Password-1", newPassword });
+        Assert.Equal(HttpStatusCode.BadRequest, wrong.StatusCode);
+        Assert.Contains("Mevcut şifre hatalı.", await wrong.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+
+        var changed = await admin.Client.PostAsJsonAsync("/api/me/password", new { currentPassword = admin.Password, newPassword });
+        await changed.EnsureOkAsync();
+
+        // This session goes on with the new cookie; the other device's session is over.
+        Assert.Equal(HttpStatusCode.OK, (await admin.Client.PostAsync("/api/auth/refresh", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await otherDevice.PostAsync("/api/auth/refresh", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = admin.Password })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = newPassword })).StatusCode);
+    }
 }

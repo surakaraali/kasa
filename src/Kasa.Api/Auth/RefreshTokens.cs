@@ -82,6 +82,15 @@ public sealed class RefreshTokens(AppDbContext db, IOptions<JwtOptions> options,
         }
     }
 
+    /// <summary>Signs a user out everywhere: after a password change, no session opened with the old one goes on.</summary>
+    public Task<int> RevokeAllAsync(Guid userId, CancellationToken ct)
+    {
+        var now = clock.GetUtcNow();
+        return db.RefreshTokens
+            .Where(t => t.UserId == userId && t.RevokedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), ct);
+    }
+
     private Task<int> RevokeFamilyAsync(Guid familyId, CancellationToken ct)
     {
         var now = clock.GetUtcNow();

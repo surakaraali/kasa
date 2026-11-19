@@ -55,7 +55,8 @@ p { margin: 0 0 12px; }
 .side a[aria-current="page"] { background: var(--raised); color: var(--ink); font-weight: 500; box-shadow: inset 0 0 0 1px var(--line); }
 .side .foot { margin-top: auto; padding: 12px 12px 0; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: grid; gap: 2px; }
 .side .foot b { display: block; color: var(--ink); font-weight: 500; }
-.side .foot .who { display: flex; align-items: center; gap: 12px; }
+.side .foot .who { display: flex; align-items: center; gap: 12px; height: auto; padding: 8px; margin: 0 -8px; color: var(--muted); }
+.side .foot .who span { display: block; }
 .side .foot .initial { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #e8efec; color: #0f5c4c; font-weight: 600; font-size: 13px; flex: none; }
 .side .foot .row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
 .main { padding: 32px; max-width: 1440px; width: 100%; }
@@ -297,3 +298,8 @@ kbd { font-family: var(--mono); font-size: 11px; line-height: 18px; padding: 0 6
   .journey-row { grid-template-columns: 1fr; }
   .head-side { justify-items: start; }
 }
+
+/* Profile */
+.profile-form { display: grid; gap: 12px; max-width: 420px; }
+.profile-form input[readonly] { background: var(--raised); color: var(--ink-2); }
+.profile-form small { margin-top: -8px; font-size: 12px; line-height: 16px; }

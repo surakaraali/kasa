@@ -50,6 +50,21 @@ public sealed class AcceptInvitationRequest
     public string Password { get; set; } = "";
 }
 
+public sealed class ProfileRequest
+{
+    [Required(ErrorMessage = "Ad soyad gerekli."), StringLength(AppUser.FullNameMaxLength, MinimumLength = 2, ErrorMessage = "Ad soyad 2-200 karakter olmalı.")]
+    public string FullName { get; set; } = "";
+}
+
+public sealed class ChangePasswordRequest
+{
+    [Required(ErrorMessage = "Mevcut şifre gerekli."), StringLength(128)]
+    public string CurrentPassword { get; set; } = "";
+
+    [Required(ErrorMessage = "Yeni şifre gerekli."), StringLength(128)]
+    public string NewPassword { get; set; } = "";
+}
+
 /// <summary>Only the access token is in the body. The refresh token is set as an httpOnly cookie.</summary>
 public sealed record TokenResponse(string AccessToken, int ExpiresIn, string TokenType = "Bearer");
 
@@ -191,6 +206,44 @@ public sealed class AuthController(
             .Select(u => new MeResponse(u.Id, u.FullName, u.Email!, u.Role, u.CompanyId, u.Company!.Name))
             .SingleOrDefaultAsync(ct);
         return me is null ? Unauthorized() : me;
+    }
+
+    /// <summary>The user's own name. E-mail and role are not changed here: one needs a verified address, the other an admin.</summary>
+    [HttpPut("/api/me")]
+    public async Task<ActionResult<MeResponse>> UpdateProfile(ProfileRequest request, CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(User.FindFirstValue(KasaClaims.UserId)!);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        user.FullName = request.FullName.Trim();
+        await users.UpdateAsync(user);
+        return await Me(ct);
+    }
+
+    /// <summary>
+    /// Needs the current password, so a session left open on someone else's screen cannot take the account over.
+    /// Every other session is signed out; this one gets a fresh token pair and stays signed in.
+    /// </summary>
+    [HttpPost("/api/me/password")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(User.FindFirstValue(KasaClaims.UserId)!);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        var changed = await users.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!changed.Succeeded)
+        {
+            return IdentityProblem(changed);
+        }
+
+        await refreshTokens.RevokeAllAsync(user.Id, ct);
+        return await SignInAsync(user, ct);
     }
 
     private static AppUser NewUser(string email, string fullName, Guid companyId, UserRole role, DateTimeOffset now) => new()

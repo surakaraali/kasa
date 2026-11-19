@@ -46,6 +46,8 @@ interface Session {
   authFetch: (path: string, init?: RequestInit & { json?: unknown }) => Promise<Response>;
   signIn: (path: "/api/auth/login" | "/api/auth/register" | "/api/auth/accept-invitation", body: unknown) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Re-reads the signed-in user, with a new access token when the API handed one out (after a password change). */
+  reload: (accessToken?: string) => Promise<void>;
 }
 
 const SessionContext = createContext<Session | null>(null);
@@ -108,7 +110,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await loadMe(null);
   }, [loadMe]);
 
-  const value = useMemo(() => ({ ...state, api, authFetch, signIn, signOut }), [state, api, authFetch, signIn, signOut]);
+  const reload = useCallback((accessToken?: string) => loadMe(accessToken ?? token.current), [loadMe]);
+
+  const value = useMemo(() => ({ ...state, api, authFetch, signIn, signOut, reload }), [state, api, authFetch, signIn, signOut, reload]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 

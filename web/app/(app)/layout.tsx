@@ -48,10 +48,10 @@ function Shell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
           <div className="foot">
-            <div className="who">
+            <Link className="who" href="/profil" aria-current={path.startsWith("/profil") ? "page" : undefined} title="Profil">
               <span className="initial" aria-hidden>{me!.fullName.trim().charAt(0).toLocaleUpperCase("tr-TR")}</span>
               <div><b>{me!.fullName}</b><span>{{ Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" }[me!.role]}</span></div>
-            </div>
+            </Link>
             <div className="row">
               <LiveDot />
               <button className="secondary" style={{ height: 28, padding: "0 12px", fontSize: 13 }} onClick={() => signOut()}>Çıkış</button>
