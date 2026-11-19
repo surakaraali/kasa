@@ -1,13 +1,16 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Kasa.Api.Banking;
 using Kasa.Api.Common;
 using Kasa.Api.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Kasa.IntegrationTests;
 
@@ -21,6 +24,10 @@ public sealed class KasaFixture
         ?? "Server=localhost,14335;Database=Kasa_Test;User Id=sa;Password=LocalDev_2026_pw;TrustServerCertificate=True;Connect Timeout=5";
 
     public string Redis { get; } = Environment.GetEnvironmentVariable("TEST_REDIS") ?? "localhost:6379";
+
+    public string Mongo { get; } = Environment.GetEnvironmentVariable("TEST_MONGO") ?? "mongodb://kasa:LocalDev_2026_pw@localhost:27017/?authSource=admin";
+
+    public string MongoDatabase => "kasa_test";
 
     /// <summary>One prefix per run, so counters and locks of an earlier run never leak into this one.</summary>
     public string RedisPrefix { get; } = $"kasa-test-{Guid.NewGuid():N}:";
@@ -54,8 +61,11 @@ public sealed class KasaFixture
 [CollectionDefinition("Kasa")]
 public class KasaCollection : ICollectionFixture<KasaFixture>;
 
-/// <summary>The real API in memory, pointed at the test database and a per-run Redis prefix.</summary>
-public sealed class KasaApiFactory(KasaFixture fixture, Action<IWebHostBuilder>? configure = null)
+/// <summary>
+/// The real API in memory, pointed at the test database and a per-run Redis prefix. With <paramref name="banks"/>,
+/// its bank HttpClients talk to those in-memory test banks instead of the network.
+/// </summary>
+public sealed class KasaApiFactory(KasaFixture fixture, Action<IWebHostBuilder>? configure = null, MockBanksFactory? banks = null)
     : WebApplicationFactory<Kasa.Api.AssemblyMarker>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -67,6 +77,19 @@ public sealed class KasaApiFactory(KasaFixture fixture, Action<IWebHostBuilder>?
         builder.UseSetting("Redis:KeyPrefix", fixture.RedisPrefix);
         // Tests sign in many times from the same in-memory "IP"; the limit has its own test.
         builder.UseSetting("LoginRateLimit:AttemptsPerMinute", "100000");
+        builder.UseSetting("Mongo:ConnectionString", fixture.Mongo);
+        builder.UseSetting("Mongo:Database", fixture.MongoDatabase);
+        // Tests run syncs themselves; the 15-minute job stays off.
+        builder.UseSetting("BankSync:Schedule", "");
+        if (banks is not null)
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddHttpClient<AcikBankClient>().ConfigurePrimaryHttpMessageHandler(() => banks.Server.CreateHandler());
+                services.AddHttpClient<KlasikBankClient>().ConfigurePrimaryHttpMessageHandler(() => banks.Server.CreateHandler());
+            });
+        }
+
         configure?.Invoke(builder);
     }
 }
@@ -86,7 +109,8 @@ public static class Api
     public static async Task<Session> RegisterAsync(this KasaApiFactory factory, string? company = null)
     {
         var email = $"admin-{Guid.NewGuid():N}@test.kasa";
-        var client = factory.CreateClient();
+        // Redirects are checked by the tests, not followed.
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         var response = await client.PostAsJsonAsync("/api/auth/register", new
         {
             companyName = company ?? $"Test {Guid.NewGuid():N}"[..20],
@@ -107,7 +131,7 @@ public static class Api
         await invite.EnsureOkAsync();
         var token = (await invite.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString();
 
-        var client = factory.CreateClient();
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         var accepted = await client.PostAsJsonAsync("/api/auth/accept-invitation", new { token, fullName = $"Test {role}", password = Password });
         await accepted.EnsureOkAsync();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await accepted.AccessTokenAsync());

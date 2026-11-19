@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Kasa.Api.Auth;
+using Kasa.Api.Banking;
 using Kasa.Api.Common;
 using Kasa.Api.Data;
 using Kasa.Api.Infrastructure;
@@ -37,6 +38,7 @@ builder.Services.AddScoped<TenantContext>();
 builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(sql));
 KasaRedis.Add(builder.Services);
 builder.Services.AddKasaAuth();
+builder.Services.AddKasaBanking(builder.Configuration);
 
 var app = builder.Build();
 

@@ -180,14 +180,17 @@ Her sprint şu adımlarla kapanır:
 - Karar notları: 0003 kimlik, 0004 şirket izolasyonu, 0005 Redis bir hızlandırıcı
 - **Çıktı:** API üzerinden kayıt, giriş, davet; Swagger'da denenebilir (http://localhost:5100/swagger)
 
-### Sprint 2: Banka entegrasyonu
-- [ ] `Kasa.MockBanks`: REST açık bankacılık (rıza, PKCE, token) ve SOAP banka (önceki projelerden taşınır, sadeleştirilir)
-- [ ] Banka bağlama akışı: rıza, banka sayfası, geri dönüş
-- [ ] Quartz ile 15 dakikada bir senkron; elle "şimdi çek"
-- [ ] Tek kayıt garantisi: benzersizlik kuralı ve yarış durumu testi
-- [ ] Redis kilidi: aynı hesap aynı anda iki kez çekilmez
-- [ ] Ham cevaplar MongoDB'ye
-- [ ] Hata yönetimi: banka kapalıysa, token süresi dolduysa, cevap bozuksa ne olacağı açıkça tanımlı ve loglu
+### Sprint 2: Banka entegrasyonu ✅ 2026-11-19
+- [x] `Kasa.MockBanks`: REST açık bankacılık (rıza, onay sayfası, OAuth 2.0 + PKCE, rotasyonlu yenileme anahtarı) ve SOAP banka (Türkçe tutar ve tarih biçimi); `/mock` ile hata, yavaşlık, bozuk veri ve canlı hareket
+- [x] Banka bağlama akışı: rıza, banka sayfası, geri dönüş; state çerezle akışı başlatan tarayıcıya bağlı; sırlar Data Protection ile şifreli
+- [x] Quartz ile 15 dakikada bir senkron (Türkiye saati); elle "şimdi çek"
+- [x] Tek kayıt garantisi: `(hesap, banka referansı)` benzersiz (BIN2); Redis kapalıyken altı eşzamanlı senkron testi
+- [x] Redis kilidi: aynı bağlantı aynı anda iki kez çekilmez (409 "zaten çekiliyor")
+- [x] Ham cevaplar MongoDB'ye (TTL 90 gün; anahtar çağrıları, başlıklar ve şifre yazılmıyor); MongoDB kapalıyken senkron çalışıyor
+- [x] Hata yönetimi: ulaşılamıyor / reddedildi / bozuk veri, her birinin sonucu tanımlı ve testli; 401'de anahtar yenilenip tekrar deneniyor
+- [x] Hareketler listesi API'si: filtre, arama, keyset sayfalama
+- [x] Testler: 22 yeni entegrasyon testi, toplam 44
+- Karar notları: 0006 banka bağlantısı ve sırlar, 0007 senkron, 0008 ham cevap arşivi
 - **Çıktı:** iki banka bağlı, hareketler akıyor
 
 ### Sprint 3: Eşleştirme ve ERP aktarımı

@@ -6,7 +6,7 @@ sorulabiliyor.
 
 > Bu bir pratik projesi. Bankalar ve ERP test için kurgulandı, bütün veriler örnek veridir.
 
-**Durum:** Sprint 1 tamamlandı (kimlik, roller, şirket izolasyonu). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
+**Durum:** Sprint 2 tamamlandı (kimlik, şirket izolasyonu, iki banka entegrasyonu ve senkron). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
 
 ## Mimari
 
@@ -49,6 +49,10 @@ dotnet test
 | MongoDB | `localhost:27017` |
 | RabbitMQ | `localhost:5672`, yönetim paneli http://localhost:15672 |
 
+Bankaları denemek için `src/Kasa.MockBanks` ve `src/Kasa.Api` çalışırken Swagger'dan (http://localhost:5100/swagger) kayıt olun,
+sonra `POST /api/bank-connections/klasikbank` ile bağlanın (kullanıcı `kasa`, şifre `klasik-dev-pass`; test bankasının
+sabit değerleri). Açık bankacılık için `POST /api/bank-connections/acikbank` dönen adresi tarayıcıda açın.
+
 Bellek sınırları 8 GB RAM'li bir dizüstüne göre ayarlı; dört servis toplam yaklaşık 4 GB ile sınırlı.
 
 ## Kararlar
@@ -60,5 +64,8 @@ Her teknoloji seçiminin gerekçesi `docs/kararlar/` altında: bağlam, seçenek
 - [0003: Kimlik: Identity, kısa ömürlü JWT, rotasyonlu yenileme anahtarı](docs/kararlar/0003-kimlik-jwt-ve-yenileme-anahtari.md)
 - [0004: Şirket izolasyonu: sorgu filtresi ve yazma koruması](docs/kararlar/0004-sirket-izolasyonu.md)
 - [0005: Redis bir hızlandırıcı, zorunluluk değil](docs/kararlar/0005-redis-bir-hizlandirici.md)
+- [0006: Banka bağlantısı: açık bankacılık akışı ve sırların saklanması](docs/kararlar/0006-banka-baglantisi-ve-sirlar.md)
+- [0007: Banka senkronu: tek kayıt garantisi, kilit, zamanlama ve hatalar](docs/kararlar/0007-senkron-tek-kayit-ve-hatalar.md)
+- [0008: Ham banka cevaplarının MongoDB'de arşivlenmesi](docs/kararlar/0008-ham-cevap-arsivi-mongodb.md)
 
 Sprint sonu soruları ve cevap ipuçları: [docs/sorular.md](docs/sorular.md). İş takibi: [GitHub Projects panosu](https://github.com/users/surakaraali/projects/1).

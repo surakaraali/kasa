@@ -112,3 +112,93 @@ Kullanılabilirlik için kabul edilmiş bir ödünleşim; karar notunda yazılı
 Varsayılan politika (fallback) "giriş yapmış olmak". Unutulan uç nokta açık kalmaz; açık olması gerekenler `[AllowAnonymous]`
 ile bilerek açılıyor.
 </details>
+
+---
+
+## Sprint 2: Banka entegrasyonu
+
+**1. PKCE ne işe yarıyor? State zaten varken neden ikisi birden?**
+<details><summary>İpucu</summary>
+İkisi farklı şeyi koruyor. State, bankadan dönen cevabı bizim başlattığımız isteğe (ve tarayıcıya) bağlıyor; sahte bir
+geri dönüşü (CSRF) engelliyor. PKCE, bankanın verdiği kodu bizim sunucumuza bağlıyor: kodu kaydederken bankaya doğrulayıcının
+SHA-256 özetini verdik, kodu anahtara çevirirken doğrulayıcının kendisini veriyoruz. Kod yolda çalınsa doğrulayıcı olmadan
+işe yaramaz.
+</details>
+
+**2. Geri dönüş isteğinde kullanıcı oturumu yok. Şirketi nereden biliyorsun? Bu bir açık değil mi?**
+<details><summary>İpucu</summary>
+Şirketi state'in işaret ettiği bağlantıdan buluyorum; state'in sadece özeti veritabanında, tek kullanımlık. Ama state tek
+başına yetmez: saldırgan kendi şirketi için akışı başlatıp onay bağlantısını kurbana yollayabilir. Kurban onaylarsa kurbanın
+banka verisi saldırganın şirketine akar. Bu yüzden akışı başlatan tarayıcıya httpOnly bir çerez koyuyorum ve geri dönüşte
+state ile karşılaştırıyorum. Başka tarayıcıdan gelen geri dönüş reddediliyor (testi var).
+</details>
+
+**3. O çerez neden `SameSite=Strict` değil de `Lax`?**
+<details><summary>İpucu</summary>
+Bankadan Kasa'ya dönüş siteler arası bir üst seviye GET yönlendirmesi. `Strict` çerez siteler arası hiçbir istekte gitmez,
+çerez gelmezdi. `Lax` üst seviye GET'te gider, siteler arası POST ve gömülü isteklerde gitmez. Çerezin yolu da sadece geri
+dönüş adresi, süresi 15 dakika.
+</details>
+
+**4. Banka anahtarlarını ve SOAP şifresini nasıl saklıyorsun? Veritabanı yedeği çalınırsa ne olur?**
+<details><summary>İpucu</summary>
+ASP.NET Core Data Protection ile şifreli. Anahtar halkası da SQL Server'da ki birden fazla API örneği aynı veriyi çözebilsin.
+Dürüst cevap: halka şu an şifresiz, aynı veritabanında; yedeği alan ikisini birden alır. Üretimde halkayı bir sertifikayla ya
+da anahtar kasasıyla sarmak gerekir (`ProtectKeysWithCertificate`, Key Vault). Kodda `shortcut:` notu ve karar 0006'da yazıyor.
+</details>
+
+**5. Aynı hareketin iki kez kaydedilmeyeceğini nasıl garanti ediyorsun?**
+<details><summary>İpucu</summary>
+Veritabanında `(BankAccountId, BankReference)` benzersiz indeksi. Uygulama önce kayıtlı referanslara bakıp yenileri yazıyor;
+arada başka bir çalışma yazdıysa indeks hata veriyor (2601/2627), senkron tekrar okuyup kalanı yazıyor. Redis kilidi ek; asıl
+garanti indeks. Redis kapalıyken altı senkronu aynı anda çalıştıran test var.
+</details>
+
+**6. Referans sütununda neden ikili (BIN2) karşılaştırma?**
+<details><summary>İpucu</summary>
+SQL Server'ın varsayılan karşılaştırması büyük/küçük harfe duyarsız. Bankanın "ab12" ve "AB12" referansları iki ayrı hareket
+olabilir; duyarsız indeks ikincisini "zaten var" sayıp atlar, para kaybolur. BIN2 bayt bayt karşılaştırır. Uygulamadaki
+küme de `StringComparer.Ordinal`, ikisi aynı kuralda.
+</details>
+
+**7. Redis kilidini nasıl alıp bırakıyorsun? Neden bırakırken Lua betiği?**
+<details><summary>İpucu</summary>
+`SET anahtar rastgele-değer NX PX 300000`: yoksa koy, 5 dakika süreli. Bırakırken düz `DEL` tehlikeli: benim işim 5 dakikayı
+aştıysa kilit çoktan düştü, başka biri aldı; `DEL` onunkini siler. Betik "değer hâlâ benimse sil" kontrolünü tek adımda yapıyor.
+</details>
+
+**8. Banka kapalıysa, yavaşsa, bozuk veri gönderirse, rıza iptal edildiyse ne oluyor?**
+<details><summary>İpucu</summary>
+Üç tür. Ulaşılamıyor (503, 10 sn zaman aşımı): hata kaydedilir, bağlantı etkin kalır, sonraki çalışma telafi eder. Reddedildi
+(rıza iptal, şifre değişmiş): bağlantı "yeniden bağlanmalı" olur, zamanlayıcı artık denemez. Bozuk veri: o hesabın cevabının
+tamamı reddedilir, hiçbir satırı yazılmaz; yarım ekstre, eksiksiz görünen yanlış ekstredir. Erişim anahtarı süresi dolduysa
+(401) bir kez yenileyip tekrar deniyorum. Hepsinin testi var.
+</details>
+
+**9. "1250.50" tutarını neden kabul etmiyorsun? Sadece bir nokta.**
+<details><summary>İpucu</summary>
+KlasikBank Türkçe biçim gönderiyor: binlik ayırıcı nokta, ondalık virgül ("1.250,50"). "1250.50"yi bu kurala göre gevşek
+okursan nokta binlik ayırıcı sayılır, 125.050 TL olur. Bu yüzden tutar sadece katı kalıba uyuyorsa okunuyor. Regex'te `\d`
+değil `[0-9]`: .NET'te `\d` başka alfabelerin rakamlarını da kabul ediyor.
+</details>
+
+**10. Hareketler listesinde neden OFFSET değil de keyset sayfalama?**
+<details><summary>İpucu</summary>
+OFFSET 10000 veritabanına 10000 satırı okuyup atlatır; sayfa ilerledikçe yavaşlar. Arada yeni hareket gelirse satırlar
+sayfalar arasında kayar, biri iki kez görünür. Keyset "son gördüğümden sonrakiler" der: `(BookedAt, Id)` sırası, imleç son
+satırın değerleri. İndeks `(CompanyId, BookedAt, Id)`; 1000. sayfa 1. sayfa kadar hızlı.
+</details>
+
+**11. Quartz'ı neden bellek deposuyla kullandın? Üç API örneği olsa ne olur?**
+<details><summary>İpucu</summary>
+Her örnek kendi zamanlayıcısını çalıştırır, aynı bağlantıyı üçü birden çekmeye kalkar. Redis kilidi birini geçirir, diğerleri
+çekilmeden geçer; kilit yoksa bile benzersiz indeks çift kaydı önler. Kalıcı Quartz deposu (cluster) gerekmedi çünkü kaçan bir
+çalışma 15 dakika sonra telafi ediliyor. `[DisallowConcurrentExecution]` aynı örnekte işin üst üste binmesini önlüyor.
+</details>
+
+**12. Ham cevapları neden MongoDB'ye yazıyorsun, neden SQL Server'a değil? Arşive ne girmiyor?**
+<details><summary>İpucu</summary>
+Şekli bankadan bankaya değişen, bir kez yazılan, nadiren okunan ve 90 gün sonra kendiliğinden silinmesi gereken veri: belge
+veritabanı ve TTL indeksi tam buna göre. Ana SQL veritabanı ve yedekleri şişmiyor. Arşive girmeyen: anahtar çağrıları (cevapta
+anahtar var), istek başlıkları (Bearer orada) ve SOAP isteği (şifre orada). MongoDB kapalıysa senkron devam ediyor.
+</details>
