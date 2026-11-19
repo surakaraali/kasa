@@ -1,0 +1,82 @@
+# Infrastructure for local development and the integration tests:
+#   cp .env.example .env && docker compose up -d --wait
+# Memory limits keep the four services under about 4 GB, so they fit an 8 GB laptop next to the IDE and browser.
+name: kasa
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    # The official image is amd64 only. On Apple Silicon it runs under Rosetta.
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?copy .env.example to .env first}
+      MSSQL_MEMORY_LIMIT_MB: 1536
+    mem_limit: 2g
+    ports:
+      - "14335:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -b -Q "SELECT 1"
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 20s
+
+  redis:
+    image: redis:8-alpine
+    # A cache and short-lived locks: nothing here needs to survive a restart, so persistence is off.
+    # volatile-lru evicts only keys that have an expiry, so a full cache never evicts a lock early.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-lru"]
+    mem_limit: 256m
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  mongo:
+    image: mongo:8
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:?copy .env.example to .env first}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?copy .env.example to .env first}
+    mem_limit: 1g
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?copy .env.example to .env first}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?copy .env.example to .env first}
+    mem_limit: 512m
+    ports:
+      - "5672:5672"
+      # Management UI: http://localhost:15672
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 15s
+
+volumes:
+  sqlserver-data:
+  mongo-data:
+  rabbitmq-data:

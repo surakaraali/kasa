@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Kasa.Api\Kasa.Api.csproj" />
+    <ProjectReference Include="..\..\src\Kasa.ErpExporter\Kasa.ErpExporter.csproj" />
+    <ProjectReference Include="..\..\src\Kasa.MockBanks\Kasa.MockBanks.csproj" />
+    <ProjectReference Include="..\..\src\Kasa.MockErp\Kasa.MockErp.csproj" />
+  </ItemGroup>
+
+</Project>
