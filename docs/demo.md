@@ -24,9 +24,12 @@ hesapları (sadece bu demonun yerel veritabanında, örnek veri):
 
 | E-posta | Rol | Şifre |
 |---|---|---|
-| demo@kasa.test | Yönetici | Demo-Password-2026 |
-| muhasebe@kasa.test | Muhasebeci | Demo-Password-2026 |
-| izleyici@kasa.test | İzleyici | Demo-Password-2026 |
+| demo@kasa.test | Yönetici | `.demo/demo-sifresi` |
+| muhasebe@kasa.test | Muhasebeci | `.demo/demo-sifresi` |
+| izleyici@kasa.test | İzleyici | `.demo/demo-sifresi` |
+
+Üç hesabın şifresi aynı ve repoda değil: `scripts/demo-seed.sh` ilk çalıştığında rastgele üretip `.demo/demo-sifresi`
+dosyasına yazar (`cat .demo/demo-sifresi`). Repo herkese açık olduğu için genel adreste bilinen bir şifre kullanılmıyor.
 
 ## Demo videosu
 
@@ -43,6 +46,10 @@ ve ERP'nin fiş sayfası (`/test-erp`) web uygulamasının arkasından sunulur.
 KASA_PUBLIC_URL=https://kasa.surakaraali.dev scripts/demo.sh reset
 scripts/tunnel.sh          # Ctrl+C ile kapanır
 ```
+
+Repo herkese açık olduğu için genel modda bilinen hiçbir gizli değer kullanılmıyor: giriş anahtarları `.demo/jwt-key`
+ile imzalanıyor (repodaki geliştirme anahtarıyla değil), demo şifresi `.demo/demo-sifresi` dosyasında. Veritabanı, Redis ve
+RabbitMQ portları sadece `127.0.0.1`'de açık.
 
 Genel adreste yeni şirket açmak kayıt kodu istiyor: `scripts/demo.sh` ilk genel başlatmada üretip `.demo/kayit-kodu`
 dosyasına yazıyor ve her başlatmada aynısını kullanıyor; seed de oradan okuyor. Kayıt canlı gösterilecekse kodu sen

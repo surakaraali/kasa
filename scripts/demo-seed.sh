@@ -4,7 +4,11 @@
 # The accounts are test accounts of this demo only (fake data, local database).
 set -euo pipefail
 BASE="${KASA_PUBLIC_URL:-http://localhost:3000}"   # through the web app, like a browser: the bank's state cookie must match
-PASSWORD="Demo-Password-2026"
+# The demo accounts' password stays out of the public repo: made once, kept in .demo/demo-sifresi.
+SECRET="$(dirname "$0")/../.demo/demo-sifresi"
+mkdir -p "$(dirname "$SECRET")"
+[[ -s "$SECRET" ]] || printf 'Kasa-%s-9x' "$(openssl rand -hex 6)" > "$SECRET"
+PASSWORD=$(cat "$SECRET")
 CODE=$(cat "$(dirname "$0")/../.demo/kayit-kodu" 2>/dev/null || true)   # set by scripts/demo.sh behind the public address
 JAR=$(mktemp); trap 'rm -f "$JAR"' EXIT
 json() { python3 -c "import sys,json; print(json.load(sys.stdin)$1)"; }
@@ -36,4 +40,4 @@ done
 sleep 3
 MOVES=$(curl -sf "$BASE/api/transactions?limit=200" -H "$AUTH" | json '["items"].__len__()')
 echo "Demo şirketi hazır: Anadolu Tekstil A.Ş., $MOVES hareket, iki banka, ERP 001."
-echo "Girişler: demo@kasa.test (yönetici), muhasebe@kasa.test (muhasebeci), izleyici@kasa.test (izleyici); şifre docs/demo.md içinde."
+echo "Girişler: demo@kasa.test (yönetici), muhasebe@kasa.test (muhasebeci), izleyici@kasa.test (izleyici); şifre .demo/demo-sifresi dosyasında"

@@ -119,10 +119,12 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 ## Demo için
 
 - Sıfırdan başlatmak: `scripts/demo.sh reset`, sonra `scripts/demo-seed.sh` (hazır şirket: Anadolu Tekstil A.Ş.).
-- Hazır şirketin girişleri: demo@kasa.test, muhasebe@kasa.test, izleyici@kasa.test; şifre docs/demo.md içinde.
+- Hazır şirketin girişleri: demo@kasa.test, muhasebe@kasa.test, izleyici@kasa.test; şifre `.demo/demo-sifresi` dosyasında (`cat .demo/demo-sifresi`), repoda değil.
 - Test bankası girişi: kullanıcı `kasa`, şifre `klasik-dev-pass`. Bunlar test değerleri.
 - kasa.surakaraali.dev senin bilgisayarında çalışıyor. Bu adreste yeni şirket açmak kayıt kodu istiyor; kod `.demo/kayit-kodu` dosyasında (her başlatmada aynı kalıyor). Bilgisayarında (localhost) kod sorulmuyor.
 - Kayıt kodu tahminle bulunamasın diye denemeler internet adresi başına dakikada 10 ile sınırlı.
+- Repo herkese açık; genel adreste kullanılan gizli değerler repoda değil, `.demo/` klasöründe: kayıt kodu (`kayit-kodu`), demo şifresi (`demo-sifresi`), giriş anahtarlarını imzalayan anahtar (`jwt-key`). Repodaki geliştirme anahtarıyla üretilmiş bir giriş anahtarı genel adreste reddediliyor.
+- Veritabanları, Redis ve RabbitMQ sadece bu bilgisayardan erişilebiliyor. Repodaki `LocalDev_2026_pw` gibi geliştirme şifreleri bu yüzden dışarıdan işe yaramıyor.
 - Demodan sonra tüneli kapat.
 - Bankalar ve ERP test için kurgulandı; bütün veriler örnek.
 
