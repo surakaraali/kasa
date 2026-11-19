@@ -29,6 +29,23 @@ public sealed class KasaFixture
 
     public string MongoDatabase => "kasa_test";
 
+    public string Rabbit { get; } = Environment.GetEnvironmentVariable("TEST_RABBIT") ?? "localhost";
+
+    /// <summary>Queue names for tests that do not choose their own; ERP tests take a fresh prefix each.</summary>
+    public string RabbitPrefix { get; } = $"kasa-test-{Guid.NewGuid():N}-";
+
+    /// <summary>The RabbitMQ settings both the API and the exporter use in a test; the queues must be declared identically.</summary>
+    public void UseRabbit(IWebHostBuilder builder, string? prefix = null)
+    {
+        builder.UseSetting("RabbitMq:HostName", Rabbit);
+        builder.UseSetting("RabbitMq:UserName", "kasa");
+        builder.UseSetting("RabbitMq:Password", "LocalDev_2026_pw");
+        builder.UseSetting("RabbitMq:Prefix", prefix ?? RabbitPrefix);
+        builder.UseSetting("RabbitMq:RetryDelay", "00:00:00.300");
+        // Test queues delete themselves once unused.
+        builder.UseSetting("RabbitMq:QueueExpiry", "00:10:00");
+    }
+
     /// <summary>One prefix per run, so counters and locks of an earlier run never leak into this one.</summary>
     public string RedisPrefix { get; } = $"kasa-test-{Guid.NewGuid():N}:";
 
@@ -65,7 +82,8 @@ public class KasaCollection : ICollectionFixture<KasaFixture>;
 /// The real API in memory, pointed at the test database and a per-run Redis prefix. With <paramref name="banks"/>,
 /// its bank HttpClients talk to those in-memory test banks instead of the network.
 /// </summary>
-public sealed class KasaApiFactory(KasaFixture fixture, Action<IWebHostBuilder>? configure = null, MockBanksFactory? banks = null)
+public sealed class KasaApiFactory(
+    KasaFixture fixture, Action<IWebHostBuilder>? configure = null, MockBanksFactory? banks = null, MockErpFactory? erp = null, string? rabbitPrefix = null)
     : WebApplicationFactory<Kasa.Api.AssemblyMarker>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -81,6 +99,14 @@ public sealed class KasaApiFactory(KasaFixture fixture, Action<IWebHostBuilder>?
         builder.UseSetting("Mongo:Database", fixture.MongoDatabase);
         // Tests run syncs themselves; the 15-minute job stays off.
         builder.UseSetting("BankSync:Schedule", "");
+        builder.UseSetting("Outbox:PollInterval", "00:00:00.100");
+        fixture.UseRabbit(builder, rabbitPrefix);
+        if (erp is not null)
+        {
+            builder.ConfigureTestServices(services =>
+                services.AddHttpClient<Kasa.Api.Erp.ErpReader>().ConfigurePrimaryHttpMessageHandler(() => erp.Server.CreateHandler()));
+        }
+
         if (banks is not null)
         {
             builder.ConfigureTestServices(services =>

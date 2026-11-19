@@ -6,7 +6,7 @@ sorulabiliyor.
 
 > Bu bir pratik projesi. Bankalar ve ERP test için kurgulandı, bütün veriler örnek veridir.
 
-**Durum:** Sprint 2 tamamlandı (kimlik, şirket izolasyonu, iki banka entegrasyonu ve senkron). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
+**Durum:** Sprint 3 tamamlandı (kimlik, şirket izolasyonu, iki banka, eşleştirme ve RabbitMQ ile ERP aktarımı). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
 
 ## Mimari
 
@@ -28,7 +28,8 @@ Neden böyle: [docs/kararlar/0001](docs/kararlar/0001-moduler-monolit-ve-tek-mik
 | `src/Kasa.Api` | Ana uygulama | http://localhost:5100 |
 | `src/Kasa.ErpExporter` | ERP aktarım servisi | http://localhost:5101 |
 | `src/Kasa.MockBanks` | Test bankaları (REST ve SOAP) | http://localhost:5102 |
-| `src/Kasa.MockErp` | Test ERP'si | http://localhost:5103 |
+| `src/Kasa.MockErp` | Test ERP'si (fişler http://localhost:5103 sayfasında) | http://localhost:5103 |
+| `src/Kasa.Contracts` | API ile aktarım servisi arasındaki mesajlar ve kuyruklar | |
 | `tests/Kasa.IntegrationTests` | Entegrasyon testleri | |
 
 ## Çalıştırma
@@ -51,7 +52,8 @@ dotnet test
 
 Bankaları denemek için `src/Kasa.MockBanks` ve `src/Kasa.Api` çalışırken Swagger'dan (http://localhost:5100/swagger) kayıt olun,
 sonra `POST /api/bank-connections/klasikbank` ile bağlanın (kullanıcı `kasa`, şifre `klasik-dev-pass`; test bankasının
-sabit değerleri). Açık bankacılık için `POST /api/bank-connections/acikbank` dönen adresi tarayıcıda açın.
+sabit değerleri). ERP için önce `PUT /api/company/erp` (`{"firmCode":"001"}`), sonra `POST /api/current-accounts/import`;
+eşleşen hareketler birkaç saniye içinde http://localhost:5103 sayfasında fiş olarak görünür. Açık bankacılık için `POST /api/bank-connections/acikbank` dönen adresi tarayıcıda açın.
 
 Bellek sınırları 8 GB RAM'li bir dizüstüne göre ayarlı; dört servis toplam yaklaşık 4 GB ile sınırlı.
 
@@ -67,5 +69,7 @@ Her teknoloji seçiminin gerekçesi `docs/kararlar/` altında: bağlam, seçenek
 - [0006: Banka bağlantısı: açık bankacılık akışı ve sırların saklanması](docs/kararlar/0006-banka-baglantisi-ve-sirlar.md)
 - [0007: Banka senkronu: tek kayıt garantisi, kilit, zamanlama ve hatalar](docs/kararlar/0007-senkron-tek-kayit-ve-hatalar.md)
 - [0008: Ham banka cevaplarının MongoDB'de arşivlenmesi](docs/kararlar/0008-ham-cevap-arsivi-mongodb.md)
+- [0009: ERP aktarımı: outbox, RabbitMQ ve idempotent tüketici](docs/kararlar/0009-outbox-rabbitmq-ve-idempotent-aktarim.md)
+- [0010: Cari eşleştirme kuralları ve iyimser eşzamanlılık](docs/kararlar/0010-eslestirme-kurallari-ve-eszamanlilik.md)
 
 Sprint sonu soruları ve cevap ipuçları: [docs/sorular.md](docs/sorular.md). İş takibi: [GitHub Projects panosu](https://github.com/users/surakaraali/projects/1).

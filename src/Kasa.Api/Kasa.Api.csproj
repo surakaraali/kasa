@@ -21,4 +21,8 @@
     <InternalsVisibleTo Include="Kasa.UnitTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Kasa.Contracts\Kasa.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -21,6 +21,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
     public DbSet<BankConnection> BankConnections => Set<BankConnection>();
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
+    public DbSet<CurrentAccount> CurrentAccounts => Set<CurrentAccount>();
+    public DbSet<MatchAudit> MatchAudits => Set<MatchAudit>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     /// <summary>The ASP.NET Core Data Protection key ring, shared by every API instance.</summary>
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
@@ -113,6 +116,44 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
             e.HasIndex(t => new { t.CompanyId, t.BookedAt, t.Id });
             e.HasOne(t => t.Account).WithMany().HasForeignKey(t => t.BankAccountId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<Company>().WithMany().HasForeignKey(t => t.CompanyId).OnDelete(DeleteBehavior.Restrict);
+            e.Property(t => t.MatchStatus).HasConversion<string>().HasMaxLength(20);
+            e.Property(t => t.MatchRule).HasConversion<string>().HasMaxLength(20);
+            e.Property(t => t.ExportStatus).HasConversion<string>().HasMaxLength(20);
+            e.Property(t => t.ErpVoucherNo).HasMaxLength(30);
+            e.Property(t => t.ExportError).HasMaxLength(BankConnection.ErrorMaxLength);
+            e.HasOne(t => t.CurrentAccount).WithMany().HasForeignKey(t => t.CurrentAccountId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(t => t.ExportId).IsUnique().HasFilter("[ExportId] IS NOT NULL");
+            // The "unmatched" screen: one company, one status, newest first.
+            e.HasIndex(t => new { t.CompanyId, t.MatchStatus, t.BookedAt });
+        });
+
+        model.Entity<CurrentAccount>(e =>
+        {
+            e.Property(c => c.Code).HasMaxLength(30);
+            e.Property(c => c.Title).HasMaxLength(200);
+            e.Property(c => c.TaxNumber).HasMaxLength(11);
+            e.Property(c => c.Iban).HasMaxLength(34);
+            e.HasIndex(c => new { c.CompanyId, c.Code }).IsUnique();
+            e.HasIndex(c => new { c.CompanyId, c.Iban });
+            e.HasIndex(c => new { c.CompanyId, c.TaxNumber });
+            e.HasOne<Company>().WithMany().HasForeignKey(c => c.CompanyId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        model.Entity<MatchAudit>(e =>
+        {
+            e.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(a => a.Rule).HasConversion<string>().HasMaxLength(20);
+            e.HasIndex(a => a.BankTransactionId);
+            e.HasOne(a => a.BankTransaction).WithMany().HasForeignKey(a => a.BankTransactionId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Company>().WithMany().HasForeignKey(a => a.CompanyId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        model.Entity<OutboxMessage>(e =>
+        {
+            e.Property(m => m.Type).HasMaxLength(100);
+            e.Property(m => m.LastError).HasMaxLength(BankConnection.ErrorMaxLength);
+            // The publisher only ever looks for what is not sent yet.
+            e.HasIndex(m => m.CreatedAt).HasFilter("[PublishedAt] IS NULL").HasDatabaseName("IX_OutboxMessages_Unpublished");
         });
 
         // One filter per tenant entity, on whatever entities exist now and are added later.

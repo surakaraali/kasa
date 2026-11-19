@@ -16,7 +16,12 @@ public class HealthTests(KasaFixture fixture)
     }
 
     [Fact]
-    public Task ErpExporter_is_healthy() => AssertHealthyAsync<Kasa.ErpExporter.AssemblyMarker>();
+    public async Task ErpExporter_is_healthy()
+    {
+        await using var exporter = new ExporterFactory(fixture);
+        var response = await exporter.CreateClient().GetAsync("/health");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 
     [Fact]
     public Task MockBanks_is_healthy() => AssertHealthyAsync<Kasa.MockBanks.AssemblyMarker>();

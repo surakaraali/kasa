@@ -202,3 +202,88 @@ Her örnek kendi zamanlayıcısını çalıştırır, aynı bağlantıyı üçü
 veritabanı ve TTL indeksi tam buna göre. Ana SQL veritabanı ve yedekleri şişmiyor. Arşive girmeyen: anahtar çağrıları (cevapta
 anahtar var), istek başlıkları (Bearer orada) ve SOAP isteği (şifre orada). MongoDB kapalıysa senkron devam ediyor.
 </details>
+
+---
+
+## Sprint 3: Eşleştirme ve ERP aktarımı
+
+**1. Outbox deseni hangi sorunu çözüyor? Olmasaydı ne olurdu?**
+<details><summary>İpucu</summary>
+"Dual write" sorunu: veritabanına kayıt ve RabbitMQ'ya yayın iki ayrı sistem, tek işlemde yapılamaz. Kayıttan sonra çökersen
+mesaj hiç gitmez (eşleşti ama ERP'de fiş yok), yayından sonra kayıt geri alınırsa sahipsiz mesaj kalır. Outbox'ta mesaj
+eşleşmeyle aynı SQL işleminde bir tabloya yazılır; ayrı bir döngü onu RabbitMQ'ya taşır.
+</details>
+
+**2. Outbox "en az bir kez" teslim ediyor. Aynı mesaj iki kez gelirse ERP'de iki fiş olmaz mı?**
+<details><summary>İpucu</summary>
+Olmaz, çünkü tüketici idempotent. Her mesajın sabit bir `ExportId`'si var ve ERP'ye `Idempotency-Key` başlığı olarak gidiyor.
+ERP aynı anahtarı ikinci kez görünce ilk fişi dönüyor. Aynı anahtarla farklı içerik gelirse reddediyor (422). Testte outbox
+satırlarını "gönderilmedi"ye çekip hepsini tekrar yolluyorum, fiş sayısı değişmiyor.
+</details>
+
+**3. Birden fazla API örneği aynı outbox satırını iki kez yayınlamasın diye ne yaptın?**
+<details><summary>İpucu</summary>
+`SELECT TOP 50 ... WITH (UPDLOCK, READPAST, ROWLOCK)`. UPDLOCK okuduğum satırları işlem bitene kadar kilitler, READPAST başka
+birinin kilitlediği satırları beklemeden atlar. Örnekler işi paylaşır, birbirini beklemez. Yine de çifte yayın olursa
+idempotent tüketici korur.
+</details>
+
+**4. Mesajı ne zaman ack'liyorsun? Neden sonucu ack'ten önce yayınlıyorsun?**
+<details><summary>İpucu</summary>
+Elle onay (manual ack): ERP çağrısı bitip sonuç mesajı yayınlandıktan sonra. Ack önce gelseydi ve sonra çökseydim mesaj
+kaybolurdu. Bu sırayla çökersem mesaj tekrar gelir, ERP aynı fişi döner, sonuç tekrar yayınlanır; tekrar zararsız.
+</details>
+
+**5. Yeniden denemeyi nasıl yaptın? Neden mesajı direkt `nack requeue` etmedin?**
+<details><summary>İpucu</summary>
+`requeue` mesajı anında kuyruğun başına koyar: ERP kapalıyken saniyede yüzlerce deneme yapan sıcak bir döngü olur.
+Bunun yerine TTL'li bir bekleme kuyruğu (`erp.export.retry`) var. Mesaj orada 10 saniye bekliyor, süre dolunca dead-letter
+ayarıyla ana kuyruğa dönüyor. Deneme sayısı başlıkta. Hak bitince `erp.export.dead` kuyruğuna gidiyor ve kullanıcı "başarısız" görüyor.
+</details>
+
+**6. Geçici ve kalıcı hatayı nasıl ayırıyorsun?**
+<details><summary>İpucu</summary>
+5xx, 408, 429, zaman aşımı ve bağlantı hatası geçici: tekrar denemek işe yarayabilir. Diğer 4xx kalıcı, örneğin 422 "cari
+kart bulunamadı": kaç kez denersen dene aynı cevap. Kalıcı hata tekrar denenmeden ölü kuyruğa gidiyor. Okunamayan mesaj da öyle.
+</details>
+
+**7. Dead-letter kuyruğundaki mesajla ne yapılır?**
+<details><summary>İpucu</summary>
+Kişi inceler. Hata başlıkta ve harekette görünüyor. Kasa'da hareket "Başarısız" durumunda, eşleşmesi değiştirilebiliyor;
+kullanıcı düzeltip onaylayınca yeni bir `ExportId` ile yeni bir istek gidiyor. Eski mesajı körü körüne yeniden oynatmak
+yerine kararı yeniden almak daha güvenli.
+</details>
+
+**8. Eşleştirme kurallarını neden bu kadar katı yaptın?**
+<details><summary>İpucu</summary>
+Yanlış cariye yazılan para, henüz yazılmamış paradan kötü: müşteriye yanlış ekstre gider, mutabakat bozulur. Kural ancak tek
+bir cari kalıyorsa karar veriyor. IBAN bir cariyi, vergi numarası başka bir cariyi gösteriyorsa ikisinden biri yanlış;
+kişiye bırakıyorum. Unvan benzerliği gibi bulanık kurallar açıklanamaz.
+</details>
+
+**9. İki muhasebeci aynı hareketi aynı anda eşlerse ne oluyor?**
+<details><summary>İpucu</summary>
+İyimser eşzamanlılık: hareketin SQL Server `rowversion` sütunu var. İstek, kişinin gördüğü sürümü taşıyor; EF Core
+`UPDATE ... WHERE RowVersion = @gördüğün` yapıyor. İlki geçer, sürüm değişir; ikincisi 0 satır günceller ve 409 alır.
+Kilit tutulmadığı için kimse kimseyi beklemiyor. Testi var.
+</details>
+
+**10. Aktarılmış bir hareketin eşleşmesi neden değiştirilemiyor?**
+<details><summary>İpucu</summary>
+ERP'de fiş zaten var. Kasa'da cariyi değiştirmek ERP'yi düzeltmez; iki sistem birbirinden ayrılır. Muhasebede düzeltme ters
+fişle yapılır, o yüzden Kasa 409 dönüyor ve "düzeltme ERP'de yapılmalı" diyor. Aktarılmakta olan (Pending) hareket de
+kilitli: yolda bir mesaj var.
+</details>
+
+**11. Denetim kaydını neden MongoDB'ye değil SQL Server'a yazdın? Ham cevapları Mongo'ya yazmıştın.**
+<details><summary>İpucu</summary>
+Ham cevap arşivi kaybolabilir (Mongo kapalıysa sadece uyarı). Denetim kaydı kaybolamaz: "bu parayı bu cariye kim yazdı?"
+sorusunun cevabı olmalı. Eşleşmeyle aynı SQL işleminde yazılınca biri olup öteki olmaması imkânsız.
+</details>
+
+**12. RabbitMQ kapanırsa ne olur? Aktarım servisi kapanırsa?**
+<details><summary>İpucu</summary>
+RabbitMQ kapalıysa outbox satırları tabloda bekler; yayıncı her saniye tekrar dener, kapanış boyunca hiçbir şey kaybolmaz.
+Aktarım servisi kapalıysa mesajlar quorum kuyruğunda bekler, servis açılınca işler. İkisi için de test var. Kullanıcı bu sırada
+hareketleri "Aktarılıyor" görüyor.
+</details>

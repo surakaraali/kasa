@@ -69,7 +69,8 @@ public static class BankKit
             await response.EnsureOkAsync();
         }
 
-        return (await session.ConnectionsAsync()).Single().GetProperty("id").GetGuid();
+        var name = bank == "acikbank" ? "AcikBank" : "KlasikBank";
+        return (await session.ConnectionsAsync()).Single(c => c.GetProperty("bank").GetString() == name).GetProperty("id").GetGuid();
     }
 
     public static async Task<JsonElement[]> ConnectionsAsync(this Session session) =>

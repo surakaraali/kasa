@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Kasa.Api/Kasa.Api.csproj" />
+    <Project Path="src/Kasa.Contracts/Kasa.Contracts.csproj" />
     <Project Path="src/Kasa.ErpExporter/Kasa.ErpExporter.csproj" />
     <Project Path="src/Kasa.MockBanks/Kasa.MockBanks.csproj" />
     <Project Path="src/Kasa.MockErp/Kasa.MockErp.csproj" />

@@ -193,13 +193,17 @@ Her sprint şu adımlarla kapanır:
 - Karar notları: 0006 banka bağlantısı ve sırlar, 0007 senkron, 0008 ham cevap arşivi
 - **Çıktı:** iki banka bağlı, hareketler akıyor
 
-### Sprint 3: Eşleştirme ve ERP aktarımı
-- [ ] Cari eşleştirme kuralları: IBAN, sonra vergi numarası; belirsizse elle eşlemeye bırakılır
-- [ ] Elle eşleme ekranının API'si; karar kaydı ve denetim kaydı
-- [ ] Outbox: eşleşme kaydı ile "aktar" mesajı aynı veritabanı işleminde
-- [ ] `Kasa.ErpExporter`: RabbitMQ'dan okur, `Kasa.MockErp`'ye fiş yazar
-- [ ] İdempotent tüketici: aynı mesaj iki kez gelirse tek fiş oluşur
-- [ ] Yeniden deneme, ölü mektup kuyruğu (dead-letter), ERP zaman aşımı senaryosu
+### Sprint 3: Eşleştirme ve ERP aktarımı ✅ 2026-11-19
+- [x] `Kasa.MockErp`: Tiger tarzı cari kartlar, `Idempotency-Key` ile tahsilat/tediye fişi, hata modları, fişleri gösteren sayfa
+- [x] Cari eşleştirme kuralları: IBAN, sonra vergi numarası; çakışma ya da çift aday kişiye bırakılır (birim testli)
+- [x] Elle eşleme API'si: `rowversion` ile iyimser eşzamanlılık (409), "ERP'ye aktarılmayacak" kararı, denetim kaydı (SQL)
+- [x] Outbox: eşleşme, denetim kaydı ve "aktar" mesajı aynı veritabanı işleminde; `UPDLOCK, READPAST` ile yayıncı
+- [x] `Kasa.Contracts`: mesajlar ve RabbitMQ topolojisi (quorum kuyruklar, publisher confirms, mandatory)
+- [x] `Kasa.ErpExporter`: RabbitMQ'dan okur, `Kasa.MockErp`'ye fiş yazar, sonucu `erp.results` ile döner
+- [x] İdempotent tüketici: aynı mesaj iki kez gelirse tek fiş oluşur (testli)
+- [x] Yeniden deneme (TTL'li bekleme kuyruğu), ölü mektup kuyruğu, kalıcı hata ayrımı; ERP ve aktarım servisi kapalıyken iş bekliyor
+- [x] Testler: 16 yeni test, toplam 60
+- Karar notları: 0009 outbox ve RabbitMQ, 0010 eşleştirme kuralları ve eşzamanlılık
 - **Çıktı:** hareket eşleşiyor ve birkaç saniye içinde ERP'de fiş oluyor; ERP kapalıyken iş birikiyor, açılınca devam ediyor
 
 ### Sprint 4: Web arayüzü ve canlı panel

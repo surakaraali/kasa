@@ -1,5 +1,6 @@
 using Kasa.Api.Data;
 using Kasa.Api.Domain;
+using Kasa.Api.Erp;
 using Kasa.Api.Infrastructure;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Data.SqlClient;
@@ -42,7 +43,7 @@ public sealed class BankSecrets(IDataProtectionProvider provider)
 /// when Redis is down the unique index on (account, bank reference) still stores each movement once.
 /// </summary>
 public sealed class BankSync(
-    AppDbContext db, KasaRedis redis, BankSecrets secrets, AcikBankClient acik, KlasikBankClient klasik,
+    AppDbContext db, KasaRedis redis, BankSecrets secrets, AcikBankClient acik, KlasikBankClient klasik, Matching matching,
     TimeProvider clock, ILogger<BankSync> log)
 {
     /// <summary>How far back the first sync of a new connection reaches.</summary>
@@ -201,7 +202,7 @@ public sealed class BankSync(
             var account = known.FirstOrDefault(a => a.ExternalId == info.ExternalId);
             if (account is null)
             {
-                account = new BankAccount { BankConnectionId = connection.Id, ExternalId = info.ExternalId, Iban = info.Iban, Name = info.Name, Currency = info.Currency };
+                account = new BankAccount { CompanyId = connection.CompanyId, BankConnectionId = connection.Id, ExternalId = info.ExternalId, Iban = info.Iban, Name = info.Name, Currency = info.Currency };
                 db.BankAccounts.Add(account);
             }
 
@@ -239,6 +240,7 @@ public sealed class BankSync(
             var now = clock.GetUtcNow();
             var fresh = unique.Where(l => !known.Contains(l.Reference)).Select(l => new BankTransaction
             {
+                CompanyId = account.CompanyId,
                 Account = account,
                 BankReference = l.Reference,
                 BookedAt = l.BookedAt,
@@ -250,6 +252,8 @@ public sealed class BankSync(
                 ImportedAt = now,
             }).ToList();
             db.BankTransactions.AddRange(fresh);
+            // Matched in the same save: a stored movement and its export message exist together or not at all.
+            await matching.AutoMatchAsync(fresh, account.CompanyId, ct);
             try
             {
                 await db.SaveChangesAsync(ct);
@@ -258,9 +262,10 @@ public sealed class BankSync(
             catch (DbUpdateException ex) when (attempt < 3 && IsUniqueViolation(ex))
             {
                 // Another run stored some of these between our read and our write; read again and store the rest.
-                foreach (var row in fresh)
+                foreach (var entry in db.ChangeTracker.Entries()
+                             .Where(e => e is { State: EntityState.Added, Entity: BankTransaction or MatchAudit or OutboxMessage }).ToList())
                 {
-                    db.Entry(row).State = EntityState.Detached;
+                    entry.State = EntityState.Detached;
                 }
             }
         }

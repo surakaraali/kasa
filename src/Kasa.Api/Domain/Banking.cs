@@ -102,6 +102,21 @@ public sealed class BankTransaction : ITenantEntity
     public string? CounterpartyTaxNumber { get; set; }
     public DateTimeOffset ImportedAt { get; set; }
 
+    public MatchStatus MatchStatus { get; set; }
+    public MatchRule? MatchRule { get; set; }
+    public Guid? CurrentAccountId { get; set; }
+    public CurrentAccount? CurrentAccount { get; set; }
+    public DateTimeOffset? MatchedAt { get; set; }
+
+    public ExportStatus ExportStatus { get; set; }
+
+    /// <summary>The current export's id, and the ERP's Idempotency-Key. A result for an older id is ignored.</summary>
+    public Guid? ExportId { get; set; }
+
+    public string? ErpVoucherNo { get; set; }
+    public string? ExportError { get; set; }
+    public DateTimeOffset? ExportedAt { get; set; }
+
     /// <summary>SQL Server rowversion: two people changing the same movement at once cannot both win.</summary>
     public byte[] RowVersion { get; set; } = [];
 

@@ -25,7 +25,9 @@ public sealed record KlasikBankRequest(
 
 public sealed record TransactionDto(
     long Id, Guid AccountId, BankCode Bank, string AccountName, string BankReference, DateTimeOffset BookedAt, decimal Amount,
-    string Description, string? CounterpartyName, string? CounterpartyIban, string? CounterpartyTaxNumber);
+    string Description, string? CounterpartyName, string? CounterpartyIban, string? CounterpartyTaxNumber,
+    MatchStatus MatchStatus, MatchRule? MatchRule, Guid? CurrentAccountId, string? CurrentAccountCode, string? CurrentAccountTitle,
+    ExportStatus ExportStatus, string? ErpVoucherNo, string? ExportError, byte[] RowVersion);
 
 public sealed record TransactionPage(IReadOnlyList<TransactionDto> Items, string? NextCursor);
 
@@ -46,6 +48,10 @@ public sealed class TransactionQuery
     public DateOnly? To { get; init; }
 
     public Direction? Direction { get; init; }
+
+    public MatchStatus? Match { get; init; }
+
+    public ExportStatus? Export { get; init; }
 
     [MaxLength(100)]
     public string? Search { get; init; }
@@ -215,6 +221,16 @@ public sealed class AccountsController(AppDbContext db) : ControllerBase
             _ => rows,
         };
 
+        if (q.Match is { } match)
+        {
+            rows = rows.Where(t => t.MatchStatus == match);
+        }
+
+        if (q.Export is { } export)
+        {
+            rows = rows.Where(t => t.ExportStatus == export);
+        }
+
         if (!string.IsNullOrWhiteSpace(q.Search))
         {
             // shortcut: LIKE '%...%' scans the company's movements; fine to a few hundred thousand rows, then full-text search.
@@ -234,7 +250,9 @@ public sealed class AccountsController(AppDbContext db) : ControllerBase
 
         var items = await rows.OrderByDescending(t => t.BookedAt).ThenByDescending(t => t.Id).Take(q.Limit + 1)
             .Select(t => new TransactionDto(t.Id, t.BankAccountId, t.Account!.Connection!.Bank, t.Account.Name, t.BankReference, t.BookedAt,
-                t.Amount, t.Description, t.CounterpartyName, t.CounterpartyIban, t.CounterpartyTaxNumber))
+                t.Amount, t.Description, t.CounterpartyName, t.CounterpartyIban, t.CounterpartyTaxNumber,
+                t.MatchStatus, t.MatchRule, t.CurrentAccountId, t.CurrentAccount!.Code, t.CurrentAccount.Title,
+                t.ExportStatus, t.ErpVoucherNo, t.ExportError, t.RowVersion))
             .ToListAsync(ct);
         var next = items.Count > q.Limit ? Cursor(items[q.Limit - 1]) : null;
         return new TransactionPage(items.Take(q.Limit).ToList(), next);
