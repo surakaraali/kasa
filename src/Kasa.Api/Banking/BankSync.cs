@@ -43,7 +43,7 @@ public sealed class BankSecrets(IDataProtectionProvider provider)
 /// when Redis is down the unique index on (account, bank reference) still stores each movement once.
 /// </summary>
 public sealed class BankSync(
-    AppDbContext db, KasaRedis redis, BankSecrets secrets, AcikBankClient acik, KlasikBankClient klasik, Matching matching,
+    AppDbContext db, KasaRedis redis, BankSecrets secrets, AcikBankClient acik, KlasikBankClient klasik, Matching matching, Dashboard.CompanyEvents events,
     TimeProvider clock, ILogger<BankSync> log)
 {
     /// <summary>How far back the first sync of a new connection reaches.</summary>
@@ -96,6 +96,7 @@ public sealed class BankSync(
         connection.LastSyncOutcome = outcome == SyncRunOutcome.Succeeded ? SyncOutcome.Succeeded : SyncOutcome.Failed;
         await db.SaveChangesAsync(ct);
 
+        await events.ChangedAsync(connection.CompanyId, "sync");
         if (imported > 0)
         {
             log.LogInformation("Imported {Count} movements from {Bank} for company {CompanyId}", imported, connection.Bank, connection.CompanyId);

@@ -287,3 +287,71 @@ RabbitMQ kapalıysa outbox satırları tabloda bekler; yayıncı her saniye tekr
 Aktarım servisi kapalıysa mesajlar quorum kuyruğunda bekler, servis açılınca işler. İkisi için de test var. Kullanıcı bu sırada
 hareketleri "Aktarılıyor" görüyor.
 </details>
+
+---
+
+## Sprint 4: Web arayüzü ve canlı panel
+
+**1. Erişim anahtarını neden localStorage'da değil de bellekte tutuyorsun?**
+<details><summary>İpucu</summary>
+localStorage'ı sayfadaki her betik okur; bir XSS açığı anahtarı alıp başka yerden kullanır. Bellekteki anahtar sayfa
+kapanınca gider. Sayfa yenilenince httpOnly yenileme çereziyle yenisi alınıyor; o çerezi betikler okuyamıyor. Anahtar 15 dakika
+geçerli, çalınsa bile kısa.
+</details>
+
+**2. Next.js neden API'ye istekleri aktarıyor (rewrite)? Tarayıcı doğrudan 5100'e gitse ne olurdu?**
+<details><summary>İpucu</summary>
+Farklı köken olurdu: CORS ayarı, `credentials: include` ve yenileme çerezi için `SameSite=None; Secure` gerekirdi. `SameSite=None`
+çerezi siteler arası isteklere açar (CSRF yüzeyi). Aynı adresin arkasında çerez `Strict` kalıyor, CORS hiç yok.
+</details>
+
+**3. Aynı anda iki istek 401 alırsa ne olur? Nasıl çözdün?**
+<details><summary>İpucu</summary>
+İkisi de yenileme isterse ikinci istek kullanılmış yenileme anahtarını gönderir. Sunucu bunu çalınma sayıp bütün oturum
+ailesini kapatır, kullanıcı atılır. React geliştirme modunda efektler iki kez çalıştığı için bu hemen görülür. Çözüm: sayfa
+genelinde tek bir yenileme sözü (promise); ikinci isteyen aynı sonucu bekler.
+</details>
+
+**4. SignalR'da kullanıcı başka şirketin mesajlarını nasıl alamıyor?**
+<details><summary>İpucu</summary>
+Bağlanınca hub, şirketi JWT'deki `company_id`'den okuyup bağlantıyı `company:{id}` grubuna koyuyor. İstemci grup seçemiyor.
+Mesaj da veri taşımıyor, sadece "değişti" diyor; ekran veriyi normal, yetkili API isteğiyle alıyor. Başka şirketin mesaj
+almadığını gösteren test var.
+</details>
+
+**5. Tarayıcı WebSocket'te başlık gönderemiyor. JWT'yi hub'a nasıl iletiyorsun? Riski ne?**
+<details><summary>İpucu</summary>
+Sorgu dizgisinde `access_token` olarak. API sadece `/hubs` yolunda oradan okuyor. Risk: adres loglara düşebilir. Anahtar 15
+dakikalık olduğu için zarar sınırlı; üretimde erişim loglarında sorgu dizgisi maskelenmeli.
+</details>
+
+**6. Bağlantı koparken gelen değişiklikleri nasıl kaçırmıyorsun?**
+<details><summary>İpucu</summary>
+Kaçırıyorum, ama telafi ediyorum: SignalR otomatik yeniden bağlanıyor, bağlanınca ekran bir kez yeniden veri çekiyor. Mesajlar
+durum taşımadığı için kaçan mesajın içeriği önemli değil, sadece "yenile" anlamı var.
+</details>
+
+**7. Panel önbelleğini neden silerek değil de sürümleyerek geçersiz kılıyorsun?**
+<details><summary>İpucu</summary>
+Silme yarışı: A isteği eski veriyle hesaplamaya başlar, bu sırada değişiklik olur ve anahtar silinir, A bitince eski sonucu
+önbelleğe yazar; panel eski kalır. Sürüm anahtarında değişiklik sayacı artırır, A eski sürümün anahtarına yazar ve kimse onu
+okumaz. Eski anahtarlar süresi dolunca gider.
+</details>
+
+**8. Önbelleğin faydasını nasıl ölçtün?**
+<details><summary>İpucu</summary>
+Cevaba `X-Cache` ve `X-Compute-Ms` başlıkları koydum. Küçük veride önbelleksiz 28 ms, önbellekten 2 ms. Asıl ölçüm 500 bin
+hareketle Sprint 6'da. "Önbellek ekledim, hızlandı" demek yerine sayı vermek.
+</details>
+
+**9. Hareketler listesinde "daha eski hareketler" nasıl çalışıyor? Arada yeni hareket gelirse?**
+<details><summary>İpucu</summary>
+Keyset imleç: son satırın (tarih, id) değeri. Sonraki sayfa "bundan eskiler". Arada yeni hareket gelirse en üste eklenir,
+sayfalar kaymaz; OFFSET'te bir satır iki sayfada görünürdü. Canlı mesaj gelince ilk sayfa yeniden çekiliyor.
+</details>
+
+**10. İki muhasebeci aynı ekranda aynı hareketi eşlerse arayüz ne gösteriyor?**
+<details><summary>İpucu</summary>
+Her satır gördüğü `rowVersion`'ı gönderiyor. İkinci kişi 409 alıyor ve "siz bakarken başka biri değiştirdi" mesajını görüyor;
+liste yenileniyor, güncel hali çıkıyor. Kimse kimsenin kararını sessizce ezmiyor.
+</details>

@@ -41,6 +41,8 @@ KasaRedis.Add(builder.Services);
 builder.Services.AddKasaAuth();
 builder.Services.AddKasaBanking(builder.Configuration);
 builder.Services.AddKasaErp();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<Kasa.Api.Dashboard.CompanyEvents>();
 
 var app = builder.Build();
 
@@ -67,6 +69,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<Kasa.Api.Dashboard.KasaHub>("/hubs/kasa");
 // Liveness for now. Checks for SQL Server, Redis, MongoDB and RabbitMQ join it as each one arrives.
 app.MapHealthChecks("/health").AllowAnonymous();
 

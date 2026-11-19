@@ -20,7 +20,7 @@ public enum CallbackResult
 
 /// <summary>Connecting a company to a bank and disconnecting it.</summary>
 public sealed class BankConnections(
-    AppDbContext db, TenantContext tenant, BankSecrets secrets, AcikBankClient acik, KlasikBankClient klasik, BankSync sync,
+    AppDbContext db, TenantContext tenant, BankSecrets secrets, AcikBankClient acik, KlasikBankClient klasik, BankSync sync, Dashboard.CompanyEvents events,
     TimeProvider clock, ILogger<BankConnections> log)
 {
     /// <summary>How long the customer's consent lasts at the bank. Open banking consents are limited to 180 days.</summary>
@@ -168,6 +168,7 @@ public sealed class BankConnections(
         (connection.UsernameProtected, connection.PasswordProtected) = (null, null);
         (connection.StateHash, connection.CodeVerifierProtected, connection.AuthorizationUrl) = (null, null, null);
         await db.SaveChangesAsync(ct);
+        await events.ChangedAsync(connection.CompanyId, "connections");
         return true;
     }
 

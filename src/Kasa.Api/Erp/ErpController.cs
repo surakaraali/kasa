@@ -26,7 +26,8 @@ public sealed record MatchHistoryDto(DateTimeOffset At, MatchStatus Status, Matc
 
 [ApiController]
 [Route("api")]
-public sealed class ErpController(AppDbContext db, TenantContext tenant, ErpReader erp, Matching matching, TimeProvider clock, ILogger<ErpController> log)
+public sealed class ErpController(
+    AppDbContext db, TenantContext tenant, ErpReader erp, Matching matching, Dashboard.CompanyEvents events, TimeProvider clock, ILogger<ErpController> log)
     : ControllerBase
 {
     [HttpPut("company/erp")]
@@ -96,6 +97,7 @@ public sealed class ErpController(AppDbContext db, TenantContext tenant, ErpRead
         var unmatched = await db.BankTransactions.Include(t => t.Account).Where(t => t.MatchStatus == MatchStatus.Unmatched).ToListAsync(ct);
         var matched = await matching.AutoMatchAsync(unmatched, companyId, ct);
         await db.SaveChangesAsync(ct);
+        await events.ChangedAsync(companyId, "transactions");
         return new ImportResult(added, updated, matched);
     }
 
@@ -144,6 +146,7 @@ public sealed class ErpController(AppDbContext db, TenantContext tenant, ErpRead
             return Conflict409();
         }
 
+        await events.ChangedAsync(transaction.CompanyId, "transactions");
         return NoContent();
     }
 

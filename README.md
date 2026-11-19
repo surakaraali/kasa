@@ -6,7 +6,7 @@ sorulabiliyor.
 
 > Bu bir pratik projesi. Bankalar ve ERP test için kurgulandı, bütün veriler örnek veridir.
 
-**Durum:** Sprint 3 tamamlandı (kimlik, şirket izolasyonu, iki banka, eşleştirme ve RabbitMQ ile ERP aktarımı). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
+**Durum:** Sprint 4 tamamlandı (iki banka, eşleştirme, RabbitMQ ile ERP aktarımı, web arayüzü ve canlı panel). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
 
 ## Mimari
 
@@ -30,6 +30,7 @@ Neden böyle: [docs/kararlar/0001](docs/kararlar/0001-moduler-monolit-ve-tek-mik
 | `src/Kasa.MockBanks` | Test bankaları (REST ve SOAP) | http://localhost:5102 |
 | `src/Kasa.MockErp` | Test ERP'si (fişler http://localhost:5103 sayfasında) | http://localhost:5103 |
 | `src/Kasa.Contracts` | API ile aktarım servisi arasındaki mesajlar ve kuyruklar | |
+| `web` | Web arayüzü (Next.js) | http://localhost:3000 |
 | `tests/Kasa.IntegrationTests` | Entegrasyon testleri | |
 
 ## Çalıştırma
@@ -39,7 +40,8 @@ Gerekenler: .NET 10 SDK ve Docker.
 ```bash
 cp .env.example .env
 docker compose up -d --wait        # SQL Server, Redis, MongoDB, RabbitMQ
-dotnet run --project src/Kasa.Api  # her servis için ayrı bir terminalde
+dotnet run --project src/Kasa.Api  # her servis için ayrı bir terminalde (Api, MockBanks, MockErp, ErpExporter)
+cd web && npm ci && npm run dev    # http://localhost:3000
 dotnet test
 ```
 
@@ -71,5 +73,7 @@ Her teknoloji seçiminin gerekçesi `docs/kararlar/` altında: bağlam, seçenek
 - [0008: Ham banka cevaplarının MongoDB'de arşivlenmesi](docs/kararlar/0008-ham-cevap-arsivi-mongodb.md)
 - [0009: ERP aktarımı: outbox, RabbitMQ ve idempotent tüketici](docs/kararlar/0009-outbox-rabbitmq-ve-idempotent-aktarim.md)
 - [0010: Cari eşleştirme kuralları ve iyimser eşzamanlılık](docs/kararlar/0010-eslestirme-kurallari-ve-eszamanlilik.md)
+- [0011: Web arayüzü: oturum, API'ye geçiş ve canlı güncelleme](docs/kararlar/0011-web-arayuzu-oturum-ve-canli-guncelleme.md)
+- [0012: Panel önbelleği: sürüm anahtarıyla Redis](docs/kararlar/0012-panel-onbellegi.md)
 
 Sprint sonu soruları ve cevap ipuçları: [docs/sorular.md](docs/sorular.md). İş takibi: [GitHub Projects panosu](https://github.com/users/surakaraali/projects/1).

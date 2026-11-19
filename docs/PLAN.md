@@ -206,14 +206,17 @@ Her sprint şu adımlarla kapanır:
 - Karar notları: 0009 outbox ve RabbitMQ, 0010 eşleştirme kuralları ve eşzamanlılık
 - **Çıktı:** hareket eşleşiyor ve birkaç saniye içinde ERP'de fiş oluyor; ERP kapalıyken iş birikiyor, açılınca devam ediyor
 
-### Sprint 4: Web arayüzü ve canlı panel
-- [ ] Next.js: kayıt, giriş, oturum yenileme
-- [ ] Panel: nakit akışı grafiği (giriş/çıkış, günlük), banka bazında bakiye, eşleşme oranı
-- [ ] Hareketler listesi: filtre, sayfalama (keyset), arama
-- [ ] Eşleşmeyenler ekranı ve elle eşleme
-- [ ] SignalR: yeni hareket ve aktarım durumu ekrana anında düşer
-- [ ] Panel önbelleği (Redis): önce/sonra ölçümü yapılıp not edilir
-- **Çıktı:** demo senaryosunun görsel kısmı çalışıyor
+### Sprint 4: Web arayüzü ve canlı panel ✅ 2026-11-19
+- [x] Next.js 16: kayıt, giriş, davetle katılma, oturum yenileme (anahtar bellekte, tek paylaşılan yenileme isteği)
+- [x] API aynı adresin arkasında (rewrites): yenileme çerezi `Strict` kalıyor, CORS yok
+- [x] Panel: toplam bakiye, bugün giren/çıkan, eşleşme oranı, ERP aktarımı, 30 günlük nakit akışı grafiği, hesaplar
+- [x] Hareketler: filtre, arama, keyset ile "daha eski hareketler"
+- [x] Eşleşmeyenler ve elle eşleme (409 mesajı), aktarılamayanları yeniden gönderme; banka bağlantıları, ERP ve cariler, ekip ve davet ekranları
+- [x] SignalR: senkron, eşleşme ve ERP sonucu ekrana anında düşer; şirket grubu anahtardan
+- [x] Panel önbelleği (Redis, sürüm anahtarı); ilk ölçüm: önbelleksiz 28 ms, önbellekten 2 ms (60 hareket)
+- [x] Testler: 4 yeni test (panel önbelleği, Redis kapalıyken panel, canlı mesajın şirkete özel olması, anahtarsız hub), toplam 64; CI'da web için lint, tip kontrolü ve derleme
+- Karar notları: 0011 web arayüzü ve canlı güncelleme, 0012 panel önbelleği
+- **Çıktı:** demo senaryosunun görsel kısmı çalışıyor; tarayıcıda kayıt, ERP, iki banka, elle eşleme ve canlı panel denendi
 
 ### Sprint 5: Yapay zekâ asistanı
 - [ ] Arayüzde sohbet paneli; cevaplar akışlı (kelime kelime) geliyor

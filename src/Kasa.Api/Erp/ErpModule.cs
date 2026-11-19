@@ -194,6 +194,7 @@ public sealed class ExportResultConsumer(RabbitConnection rabbit, IServiceScopeF
                 }
 
                 await db.SaveChangesAsync(ct);
+                await scope.ServiceProvider.GetRequiredService<Dashboard.CompanyEvents>().ChangedAsync(transaction.CompanyId, "exports");
             }
         }
         else
