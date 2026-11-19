@@ -62,6 +62,9 @@ if [[ -n "${KASA_PUBLIC_URL:-}" ]]; then
   # Anyone who knows the address could open a company there; sign-up needs this code. Made once, kept across restarts.
   [[ -s .demo/kayit-kodu ]] || openssl rand -hex 3 > .demo/kayit-kodu
   export Auth__SignUpCode="$(cat .demo/kayit-kodu)"
+  # The development signing key is in the public repo; behind the public address tokens are signed with one that is not.
+  [[ -s .demo/jwt-key ]] || openssl rand -base64 48 > .demo/jwt-key
+  export Jwt__SigningKey="$(cat .demo/jwt-key)"
   echo "Genel adres: $KASA_PUBLIC_URL (kayıt kodu: $Auth__SignUpCode)"
 fi
 
