@@ -1,7 +1,12 @@
 "use client";
 
+import { X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { tl } from "./format";
+import { SaymanMark } from "./marks";
 import { useSession } from "./session";
+import type { Dashboard } from "./types";
 import { useData } from "./useData";
 
 interface Turn { role: "user" | "assistant"; text: string; steps?: string[]; error?: string }
@@ -33,18 +38,67 @@ async function* events(response: Response) {
 }
 
 /**
+ * Once per visit Sayman says hello with the day's one finding, read from the dashboard (no model call), and offers
+ * the one step it leads to. It goes away by itself, sooner if dismissed, and never covers the page for long.
+ */
+function Greeting({ dashboard, firstName, onAsk, onClose }: { dashboard: Dashboard; firstName: string; onAsk: () => void; onClose: () => void }) {
+  const waiting = dashboard.unmatched + dashboard.exportFailed;
+  const [hold, setHold] = useState(false);
+  useEffect(() => {
+    if (hold) return;
+    const t = setTimeout(onClose, 14_000);
+    return () => clearTimeout(t);
+  }, [hold, onClose]);
+
+  return (
+    <div className="greeting" role="status" onMouseEnter={() => setHold(true)} onFocus={() => setHold(true)}>
+      <button className="greeting-close" onClick={onClose} aria-label="Kapat"><X size={14} strokeWidth={1.5} /></button>
+      <div className="greeting-who"><SaymanMark size={28} /><div><b>Sayman</b><span>Kasa&apos;nın asistanı</span></div></div>
+      <p>
+        Merhaba {firstName}, ben Sayman.{" "}
+        {dashboard.accounts.length === 0
+          ? "Bir banka bağladığınızda hareketleri sizin için takip ederim."
+          : waiting > 0
+            ? <>Şu an <b>{waiting} hareket</b> kararınızı bekliyor; bugün {tl(dashboard.todayIn)} girdi.</>
+            : <>Bütün hareketler karara bağlı; bugün {tl(dashboard.todayIn)} girdi.</>}
+        {" "}Size nasıl yardımcı olabilirim?
+      </p>
+      <div className="toolbar">
+        {waiting > 0 && <Link className="button" href="/eslesmeyenler" onClick={onClose}>Bekleyenlere bak</Link>}
+        <button className="secondary" onClick={onAsk}>Bir şey sor</button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * The assistant on every screen: a button at the bottom right, a panel from the right. It lives in the app layout,
  * so the conversation stays while the person moves between pages.
  */
-export function AssistantDock() {
+export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard; firstName: string }) {
   const { authFetch } = useSession();
   const { data: status } = useData<{ enabled: boolean; model: string }>("/api/assistant/status");
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
+  const [greet, setGreet] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Once per browser session, a moment after the first screen settles.
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem("kasa-greeted") === "1";
+      sessionStorage.setItem("kasa-greeted", "1");
+    } catch {
+      // Storage blocked: greet, it is harmless.
+    }
+    if (seen) return;
+    const t = setTimeout(() => setGreet(true), 1200);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => end.current?.scrollIntoView({ block: "end" }), [turns]);
   useEffect(() => {
@@ -95,15 +149,21 @@ export function AssistantDock() {
 
   return (
     <>
-      <button className="dock-trigger" aria-expanded={open} aria-controls="assistant-panel" onClick={() => setOpen((o) => !o)}>
-        Asistana sor <kbd>⌘K</kbd>
+      {greet && !open && dashboard && (
+        <Greeting dashboard={dashboard} firstName={firstName} onClose={() => setGreet(false)} onAsk={() => { setGreet(false); setOpen(true); }} />
+      )}
+      <button className="dock-trigger" aria-expanded={open} aria-controls="assistant-panel" onClick={() => { setGreet(false); setOpen((o) => !o); }}>
+        <SaymanMark size={22} /> Sayman&apos;a sor <kbd>⌘K</kbd>
       </button>
 
       <aside id="assistant-panel" className="dock" data-open={open} aria-label="Asistan" aria-hidden={!open} inert={!open}>
         <header className="dock-head">
-          <div>
-            <b>Asistan</b>
-            <span>Hesaplar, hareketler ve cariler hakkında sorun. Sadece okur.</span>
+          <div className="dock-who">
+            <SaymanMark size={32} />
+            <div>
+              <b>Sayman</b>
+              <span>Hesaplar, hareketler ve cariler hakkında sorun. Sadece okur, hiçbir şeyi değiştirmez.</span>
+            </div>
           </div>
           <button className="secondary dock-close" onClick={() => setOpen(false)} aria-label="Asistanı kapat">Kapat</button>
         </header>
@@ -120,11 +180,14 @@ export function AssistantDock() {
           {turns.map((t, i) => (
             <div key={i} className={`dock-turn ${t.role}`}>
               {t.role === "user" ? <div className="bubble">{t.text}</div> : (
-                <div>
+                <div className="reply">
+                  <SaymanMark size={20} />
+                  <div>
                   {t.steps?.map((s, j) => <div key={j} className="dot idle step">{s}</div>)}
                   {t.text && <div className="answer">{t.text}</div>}
                   {!t.text && !t.error && busy && i === turns.length - 1 && <div className="muted">Düşünüyor…</div>}
                   {t.error && <div className="error">{t.error}</div>}
+                  </div>
                 </div>
               )}
             </div>

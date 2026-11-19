@@ -1,19 +1,23 @@
 "use client";
 
+import { ArrowLeftRight, Building2, CircleDashed, FileText, LayoutDashboard, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AssistantDock } from "@/lib/AssistantDock";
 import { LiveProvider, useLive } from "@/lib/live";
+import { KasaMark } from "@/lib/marks";
 import { useSession } from "@/lib/session";
+import type { Dashboard } from "@/lib/types";
+import { useData } from "@/lib/useData";
 
-const nav = [
-  { href: "/panel", label: "Panel" },
-  { href: "/hareketler", label: "Hareketler" },
-  { href: "/eslesmeyenler", label: "Eşleşmeyenler" },
-  { href: "/baglantilar", label: "Banka bağlantıları" },
-  { href: "/erp", label: "ERP ve cariler" },
-  { href: "/ekip", label: "Ekip" },
+const nav: { href: string; label: string; icon: LucideIcon; queue?: true }[] = [
+  { href: "/panel", label: "Panel", icon: LayoutDashboard },
+  { href: "/hareketler", label: "Hareketler", icon: ArrowLeftRight },
+  { href: "/eslesmeyenler", label: "Eşleşmeyenler", icon: CircleDashed, queue: true },
+  { href: "/baglantilar", label: "Banka bağlantıları", icon: Building2 },
+  { href: "/erp", label: "ERP ve cariler", icon: FileText },
+  { href: "/ekip", label: "Ekip", icon: Users },
 ];
 
 function LiveDot() {
@@ -21,10 +25,49 @@ function LiveDot() {
   return <span className={`dot ${connected ? "ok" : "idle"}`}>{connected ? "Canlı" : "Bağlanıyor"}</span>;
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { ready, me, signOut } = useSession();
-  const router = useRouter();
+function Shell({ children }: { children: React.ReactNode }) {
+  const { me, signOut } = useSession();
   const path = usePathname();
+  // The one queue that needs a person: its count beside its name, updated live.
+  const { data } = useData<Dashboard>("/api/dashboard?days=30");
+  const waiting = data ? data.unmatched + data.exportFailed : 0;
+
+  return (
+    <>
+      <div className="shell">
+        <nav className="side" aria-label="Ana menü">
+          <div className="brand">
+            <KasaMark size={28} />
+            <div><b>Kasa</b><small>{me!.companyName}</small></div>
+          </div>
+          {nav.map(({ href, label, icon: Icon, queue }) => (
+            <Link key={href} href={href} aria-current={path.startsWith(href) ? "page" : undefined}>
+              <Icon size={16} strokeWidth={1.5} aria-hidden />
+              <span>{label}</span>
+              {queue && waiting > 0 && <span className="count" aria-label={`${waiting} hareket bekliyor`}>{waiting}</span>}
+            </Link>
+          ))}
+          <div className="foot">
+            <div className="who">
+              <span className="initial" aria-hidden>{me!.fullName.trim().charAt(0).toLocaleUpperCase("tr-TR")}</span>
+              <div><b>{me!.fullName}</b><span>{{ Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" }[me!.role]}</span></div>
+            </div>
+            <div className="row">
+              <LiveDot />
+              <button className="secondary" style={{ height: 28, padding: "0 12px", fontSize: 13 }} onClick={() => signOut()}>Çıkış</button>
+            </div>
+          </div>
+        </nav>
+        <main className="main">{children}</main>
+      </div>
+      <AssistantDock dashboard={data} firstName={me!.fullName.split(" ")[0]} />
+    </>
+  );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { ready, me } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     if (ready && !me) router.replace("/giris");
@@ -34,24 +77,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <LiveProvider>
-      <div className="shell">
-        <nav className="side" aria-label="Ana menü">
-          <div className="brand"><b>Kasa</b><small>{me.companyName}</small></div>
-          {nav.map((n) => (
-            <Link key={n.href} href={n.href} aria-current={path.startsWith(n.href) ? "page" : undefined}>{n.label}</Link>
-          ))}
-          <div className="foot">
-            <b>{me.fullName}</b>
-            <span>{{ Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" }[me.role]}</span>
-            <div className="row">
-              <LiveDot />
-              <button className="secondary" style={{ height: 28, padding: "0 12px", fontSize: 13 }} onClick={() => signOut()}>Çıkış</button>
-            </div>
-          </div>
-        </nav>
-        <main className="main">{children}</main>
-      </div>
-      <AssistantDock />
+      <Shell>{children}</Shell>
     </LiveProvider>
   );
 }

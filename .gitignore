@@ -486,3 +486,4 @@ $RECYCLE.BIN/
 next-env.d.ts
 *.tsbuildinfo
 .demo/
+.taste-skill/

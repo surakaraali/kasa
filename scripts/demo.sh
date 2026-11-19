@@ -42,6 +42,7 @@ case "${1:-start}" in
   reset)
     stop
     set -a; source .env; set +a
+    docker compose up -d --wait   # the database must be up before it can be emptied (after a reboot it is not)
     # The test banks and the test ERP keep their state in memory, so restarting them is their reset.
     docker compose exec -T sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -b \
       -Q "IF DB_ID('Kasa') IS NOT NULL BEGIN ALTER DATABASE Kasa SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE Kasa; END"

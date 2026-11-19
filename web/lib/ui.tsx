@@ -2,7 +2,8 @@ import type { Transaction } from "./types";
 import { tl } from "./format";
 
 export function Amount({ value }: { value: number }) {
-  return <span className={`num ${value > 0 ? "in" : "out"}`}>{value > 0 ? "+" : ""}{tl(value)}</span>;
+  // A real minus sign, so "+" and "−" line up in a column of mono figures.
+  return <span className={`num ${value > 0 ? "in" : "out"}`}>{value > 0 ? "+" : "−"}{tl(Math.abs(value))}</span>;
 }
 
 const ruleText = { Iban: "IBAN ile", TaxNumber: "vergi no ile", Manual: "elle" } as const;

@@ -28,4 +28,5 @@ export interface CurrentAccount { id: string; code: string; title: string; taxNu
 export interface Dashboard {
   totalBalance: number; accounts: Account[]; todayIn: number; todayOut: number; daily: { date: string; in: number; out: number }[];
   matched: number; unmatched: number; ignored: number; exported: number; exportPending: number; exportFailed: number; lastSyncAt: string | null;
+  matchedByIban: number; matchedByTaxNumber: number; matchedManually: number;
 }

@@ -64,7 +64,8 @@ public sealed record DailyFlow(DateOnly Date, decimal In, decimal Out);
 
 public sealed record DashboardDto(
     decimal TotalBalance, IReadOnlyList<AccountDto> Accounts, decimal TodayIn, decimal TodayOut, IReadOnlyList<DailyFlow> Daily,
-    int Matched, int Unmatched, int Ignored, int Exported, int ExportPending, int ExportFailed, DateTimeOffset? LastSyncAt);
+    int Matched, int Unmatched, int Ignored, int Exported, int ExportPending, int ExportFailed, DateTimeOffset? LastSyncAt,
+    int MatchedByIban, int MatchedByTaxNumber, int MatchedManually);
 
 [ApiController]
 [Route("api/dashboard")]
@@ -141,10 +142,13 @@ public sealed class DashboardController(
 
         var match = await db.BankTransactions.GroupBy(t => t.MatchStatus).Select(g => new { g.Key, Count = g.Count() }).ToDictionaryAsync(g => g.Key, g => g.Count, ct);
         var export = await db.BankTransactions.GroupBy(t => t.ExportStatus).Select(g => new { g.Key, Count = g.Count() }).ToDictionaryAsync(g => g.Key, g => g.Count, ct);
+        var rules = await db.BankTransactions.Where(t => t.MatchStatus == MatchStatus.Matched && t.MatchRule != null)
+            .GroupBy(t => t.MatchRule!.Value).Select(g => new { g.Key, Count = g.Count() }).ToDictionaryAsync(g => g.Key, g => g.Count, ct);
         var lastSync = await db.BankConnections.Where(c => c.Status != ConnectionStatus.Removed).MaxAsync(c => c.LastSyncAt, ct);
 
         return new DashboardDto(accounts.Sum(a => a.Balance ?? 0), accounts, daily[^1].In, daily[^1].Out, daily,
             match.GetValueOrDefault(MatchStatus.Matched), match.GetValueOrDefault(MatchStatus.Unmatched), match.GetValueOrDefault(MatchStatus.Ignored),
-            export.GetValueOrDefault(ExportStatus.Exported), export.GetValueOrDefault(ExportStatus.Pending), export.GetValueOrDefault(ExportStatus.Failed), lastSync);
+            export.GetValueOrDefault(ExportStatus.Exported), export.GetValueOrDefault(ExportStatus.Pending), export.GetValueOrDefault(ExportStatus.Failed), lastSync,
+            rules.GetValueOrDefault(MatchRule.Iban), rules.GetValueOrDefault(MatchRule.TaxNumber), rules.GetValueOrDefault(MatchRule.Manual));
     }
 }

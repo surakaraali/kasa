@@ -1,3 +1,5 @@
+import { KasaMark } from "@/lib/marks";
+
 /** One movement's whole trip through Kasa, in the product's own words and figures. */
 function Journey() {
   return (
@@ -25,7 +27,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <main className="auth">
       <section className="auth-brand" aria-label="Kasa">
-        <div className="auth-logo">Kasa</div>
+        <div className="auth-logo"><KasaMark size={28} /> Kasa</div>
         <div>
           <h1>Bankadaki her kuruş, doğru cariye ve ERP&apos;ye</h1>
           <p className="lede">Bütün banka hesaplarınız tek yerde. Hareketler kendiliğinden cariye eşleşir, emin olunamayanı size bırakır, eşleşeni ERP&apos;ye fiş olarak yazar.</p>
