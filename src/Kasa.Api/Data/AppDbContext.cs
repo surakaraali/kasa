@@ -46,6 +46,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
         {
             e.Property(u => u.FullName).HasMaxLength(AppUser.FullNameMaxLength);
             e.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
+            e.Property(u => u.AvatarType).HasMaxLength(20);
             e.HasOne(u => u.Company).WithMany().HasForeignKey(u => u.CompanyId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(u => u.CompanyId);
         });

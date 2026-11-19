@@ -23,7 +23,7 @@ public sealed record InvitationResponse(Guid Id, string Email, UserRole Role, Da
 /// <summary>The token is shown once, here; only its hash is kept.</summary>
 public sealed record CreatedInvitationResponse(Guid Id, string Email, UserRole Role, DateTimeOffset ExpiresAt, string Token);
 
-public sealed record UserResponse(Guid Id, string FullName, string Email, UserRole Role, DateTimeOffset CreatedAt);
+public sealed record UserResponse(Guid Id, string FullName, string Email, UserRole Role, DateTimeOffset CreatedAt, int? AvatarVersion);
 
 /// <summary>Users and invitations of the signed-in user's company. Admins only.</summary>
 [ApiController]
@@ -39,7 +39,7 @@ public sealed class TeamController(AppDbContext db, TenantContext tenant, TimePr
         // Users have no query filter (sign-in must find them), so the company is named here.
         var companyId = tenant.CompanyId;
         return db.Users.Where(u => u.CompanyId == companyId).OrderBy(u => u.CreatedAt)
-            .Select(u => new UserResponse(u.Id, u.FullName, u.Email!, u.Role, u.CreatedAt))
+            .Select(u => new UserResponse(u.Id, u.FullName, u.Email!, u.Role, u.CreatedAt, u.Avatar != null ? u.AvatarVersion : null))
             .ToListAsync(ct);
     }
 

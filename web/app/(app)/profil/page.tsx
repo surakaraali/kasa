@@ -1,16 +1,65 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
+import { Avatar } from "@/lib/Avatar";
 import { useSession } from "@/lib/session";
 
 const roleText = { Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" } as const;
+
+/** Cuts the middle square out of any photo and shrinks it to 256 px, so a phone picture of a few MB uploads as ~20 KB. */
+async function squarePhoto(file: File): Promise<Blob> {
+  const image = await createImageBitmap(file);
+  const side = Math.min(image.width, image.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 256;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff"; // a transparent PNG would otherwise turn black as JPEG
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, 256, 256);
+  image.close();
+  return new Promise((ok, fail) => canvas.toBlob((b) => (b ? ok(b) : fail(new Error())), "image/jpeg", 0.88));
+}
 
 export default function Profile() {
   const { api, me, reload } = useSession();
   const [name, setName] = useState(me?.fullName ?? "");
   const [nameNotice, setNameNotice] = useState<{ text: string; bad?: boolean } | null>(null);
   const [passNotice, setPassNotice] = useState<{ text: string; bad?: boolean } | null>(null);
-  const [busy, setBusy] = useState<"name" | "password" | null>(null);
+  const [photoNotice, setPhotoNotice] = useState<{ text: string; bad?: boolean } | null>(null);
+  const [busy, setBusy] = useState<"name" | "password" | "photo" | null>(null);
+
+  async function changePhoto(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // the same file can be picked again
+    if (!file) return;
+    setBusy("photo");
+    setPhotoNotice(null);
+    try {
+      const photo = await squarePhoto(file).catch(() => { throw new Error("Bu dosya fotoğraf olarak açılamadı. JPEG, PNG ya da WebP seçin."); });
+      const body = new FormData();
+      body.append("file", photo, "foto.jpg");
+      await api("/api/me/avatar", { method: "PUT", body });
+      await reload();
+      setPhotoNotice({ text: "Fotoğrafınız kaydedildi." });
+    } catch (err) {
+      setPhotoNotice({ text: (err as Error).message, bad: true });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function removePhoto() {
+    setBusy("photo");
+    try {
+      await api("/api/me/avatar", { method: "DELETE" });
+      await reload();
+      setPhotoNotice({ text: "Fotoğrafınız kaldırıldı." });
+    } catch (err) {
+      setPhotoNotice({ text: (err as Error).message, bad: true });
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function saveName(e: FormEvent) {
     e.preventDefault();
@@ -60,6 +109,16 @@ export default function Profile() {
 
       <section className="card">
         <h2>Bilgileriniz</h2>
+        <div className="photo-row">
+          <Avatar id={me.userId} version={me.avatarVersion} name={me.fullName} size={64} />
+          <div className="actions">
+            <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={changePhoto} disabled={busy !== null} />
+            <label htmlFor="photo" className="button">{busy === "photo" ? "Yükleniyor…" : me.avatarVersion == null ? "Fotoğraf yükle" : "Fotoğrafı değiştir"}</label>
+            {me.avatarVersion != null && <button type="button" className="secondary" onClick={removePhoto} disabled={busy !== null}>Kaldır</button>}
+            <small className="muted">Ortadan kare olarak kırpılır. Sadece şirketinizdeki kişiler görür.</small>
+          </div>
+        </div>
+        {photoNotice && <div className={`notice ${photoNotice.bad ? "bad" : ""}`} role="status" style={{ marginBottom: 16 }}>{photoNotice.text}</div>}
         <form className="profile-form" onSubmit={saveName}>
           <label>Ad soyad<input value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={200} autoComplete="name" /></label>
           <label>E-posta<input value={me.email} readOnly aria-describedby="email-hint" /></label>

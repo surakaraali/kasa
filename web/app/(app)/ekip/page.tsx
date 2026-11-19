@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Avatar } from "@/lib/Avatar";
 import { when } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import type { Role } from "@/lib/types";
@@ -8,7 +9,7 @@ import { useData } from "@/lib/useData";
 
 const roleText: Record<Role, string> = { Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" };
 
-interface User { id: string; fullName: string; email: string; role: Role; createdAt: string }
+interface User { id: string; fullName: string; email: string; role: Role; createdAt: string; avatarVersion: number | null }
 interface Invitation { id: string; email: string; role: Role; expiresAt: string; acceptedAt: string | null }
 
 export default function Team() {
@@ -64,7 +65,7 @@ export default function Team() {
         <h2>Kullanıcılar</h2>
         <table>
           <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th></tr></thead>
-          <tbody>{users.data?.map((u) => <tr key={u.id}><td>{u.fullName}</td><td>{u.email}</td><td>{roleText[u.role]}</td></tr>)}</tbody>
+          <tbody>{users.data?.map((u) => <tr key={u.id}><td><span className="person"><Avatar id={u.id} version={u.avatarVersion} name={u.fullName} size={24} />{u.fullName}</span></td><td>{u.email}</td><td>{roleText[u.role]}</td></tr>)}</tbody>
         </table>
       </section>
       <section className="card table-wrap">

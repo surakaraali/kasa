@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 
@@ -161,5 +162,43 @@ public sealed class AuthTests(KasaFixture fixture) : IDisposable
         Assert.Equal(HttpStatusCode.Unauthorized, (await otherDevice.PostAsync("/api/auth/refresh", null)).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = admin.Password })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = newPassword })).StatusCode);
+    }
+
+    [Fact]
+    public async Task A_profile_photo_is_checked_by_its_bytes_and_seen_only_inside_the_company()
+    {
+        var admin = await api.RegisterAsync();
+        var colleague = await api.InviteAsync(admin, "Viewer");
+        var stranger = await api.RegisterAsync();
+        byte[] png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, 4];
+
+        // A text file renamed to .png, and a photo over 512 KB, are both refused.
+        Assert.Equal(HttpStatusCode.BadRequest, (await Upload(admin, "hello"u8.ToArray(), "image/png")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await Upload(admin, [.. png, .. new byte[512 * 1024]], "image/png")).StatusCode);
+
+        var uploaded = await Upload(admin, png, "image/jpeg");
+        await uploaded.EnsureOkAsync();
+        var me = await uploaded.JsonAsync();
+        var address = $"/api/users/{me.GetProperty("userId").GetGuid()}/avatar";
+        Assert.Equal(1, me.GetProperty("avatarVersion").GetInt32());
+
+        // Served with the type its bytes say, not the one the browser claimed.
+        var seen = await colleague.Client.GetAsync(address);
+        await seen.EnsureOkAsync();
+        Assert.Equal("image/png", seen.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(png, await seen.Content.ReadAsByteArrayAsync());
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.Client.GetAsync(address)).StatusCode);
+
+        var removed = await admin.Client.DeleteAsync("/api/me/avatar");
+        await removed.EnsureOkAsync();
+        Assert.Equal(System.Text.Json.JsonValueKind.Null, (await removed.JsonAsync()).GetProperty("avatarVersion").ValueKind);
+        Assert.Equal(HttpStatusCode.NotFound, (await colleague.Client.GetAsync(address)).StatusCode);
+    }
+
+    private static Task<HttpResponseMessage> Upload(Session user, byte[] bytes, string type)
+    {
+        var file = new ByteArrayContent(bytes);
+        file.Headers.ContentType = new MediaTypeHeaderValue(type);
+        return user.Client.PutAsync("/api/me/avatar", new MultipartFormDataContent { { file, "file", "foto.png" } });
     }
 }

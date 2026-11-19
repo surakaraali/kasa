@@ -68,7 +68,8 @@ public sealed class ChangePasswordRequest
 /// <summary>Only the access token is in the body. The refresh token is set as an httpOnly cookie.</summary>
 public sealed record TokenResponse(string AccessToken, int ExpiresIn, string TokenType = "Bearer");
 
-public sealed record MeResponse(Guid UserId, string FullName, string Email, UserRole Role, Guid CompanyId, string CompanyName);
+/// <param name="AvatarVersion">Null without a photo; otherwise part of the photo's address, so a new photo is never served from cache.</param>
+public sealed record MeResponse(Guid UserId, string FullName, string Email, UserRole Role, Guid CompanyId, string CompanyName, int? AvatarVersion);
 
 [ApiController]
 [Route("api/auth")]
@@ -203,7 +204,7 @@ public sealed class AuthController(
     {
         var userId = Guid.Parse(User.FindFirstValue(KasaClaims.UserId)!);
         var me = await db.Users.Where(u => u.Id == userId)
-            .Select(u => new MeResponse(u.Id, u.FullName, u.Email!, u.Role, u.CompanyId, u.Company!.Name))
+            .Select(u => new MeResponse(u.Id, u.FullName, u.Email!, u.Role, u.CompanyId, u.Company!.Name, u.Avatar != null ? u.AvatarVersion : null))
             .SingleOrDefaultAsync(ct);
         return me is null ? Unauthorized() : me;
     }
@@ -245,6 +246,77 @@ public sealed class AuthController(
         await refreshTokens.RevokeAllAsync(user.Id, ct);
         return await SignInAsync(user, ct);
     }
+
+    /// <summary>
+    /// The profile photo. What arrives is checked by its first bytes, not by its name or the type the browser claims:
+    /// only JPEG, PNG and WebP, at most 512 KB. It is served back only to people of the same company.
+    /// </summary>
+    [HttpPut("/api/me/avatar")]
+    [RequestSizeLimit(AppUser.AvatarMaxBytes + 16 * 1024)]
+    public async Task<ActionResult<MeResponse>> UploadAvatar(IFormFile file, CancellationToken ct)
+    {
+        if (file.Length is 0 or > AppUser.AvatarMaxBytes)
+        {
+            return Problem("Fotoğraf en fazla 512 KB olabilir.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        using var buffer = new MemoryStream();
+        await file.CopyToAsync(buffer, ct);
+        var bytes = buffer.ToArray();
+        var type = ImageType(bytes);
+        if (type is null)
+        {
+            return Problem("Fotoğraf JPEG, PNG ya da WebP olmalı.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var user = await users.FindByIdAsync(User.FindFirstValue(KasaClaims.UserId)!);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        (user.Avatar, user.AvatarType) = (bytes, type);
+        user.AvatarVersion++;
+        await users.UpdateAsync(user);
+        return await Me(ct);
+    }
+
+    [HttpDelete("/api/me/avatar")]
+    public async Task<ActionResult<MeResponse>> RemoveAvatar(CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(User.FindFirstValue(KasaClaims.UserId)!);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        (user.Avatar, user.AvatarType) = (null, null);
+        await users.UpdateAsync(user);
+        return await Me(ct);
+    }
+
+    [HttpGet("/api/users/{id:guid}/avatar")]
+    public async Task<IActionResult> Avatar(Guid id, CancellationToken ct)
+    {
+        // Users carry no query filter (sign-in must find them), so the company is checked here.
+        var companyId = Guid.Parse(User.FindFirstValue(KasaClaims.CompanyId)!);
+        var photo = await db.Users.Where(u => u.Id == id && u.CompanyId == companyId && u.Avatar != null)
+            .Select(u => new { u.Avatar, u.AvatarType }).SingleOrDefaultAsync(ct);
+        if (photo is null)
+        {
+            return NotFound();
+        }
+
+        // The address carries the version, so the photo may be kept; private, because it is a person's picture.
+        Response.Headers.CacheControl = "private, max-age=31536000, immutable";
+        return File(photo.Avatar!, photo.AvatarType!);
+    }
+
+    private static string? ImageType(byte[] b) =>
+        b is [0xFF, 0xD8, 0xFF, ..] ? "image/jpeg"
+        : b is [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, ..] ? "image/png"
+        : b.Length > 12 && b[..4] is [0x52, 0x49, 0x46, 0x46] && b[8..12] is [0x57, 0x45, 0x42, 0x50] ? "image/webp"
+        : null;
 
     private static AppUser NewUser(string email, string fullName, Guid companyId, UserRole role, DateTimeOffset now) => new()
     {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AssistantDock } from "@/lib/AssistantDock";
+import { Avatar } from "@/lib/Avatar";
 import { LiveProvider, useLive } from "@/lib/live";
 import { KasaMark } from "@/lib/marks";
 import { useSession } from "@/lib/session";
@@ -49,7 +50,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           ))}
           <div className="foot">
             <Link className="who" href="/profil" aria-current={path.startsWith("/profil") ? "page" : undefined} title="Profil">
-              <span className="initial" aria-hidden>{me!.fullName.trim().charAt(0).toLocaleUpperCase("tr-TR")}</span>
+              <Avatar id={me!.userId} version={me!.avatarVersion} name={me!.fullName} />
               <div><b>{me!.fullName}</b><span>{{ Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" }[me!.role]}</span></div>
             </Link>
             <div className="row">

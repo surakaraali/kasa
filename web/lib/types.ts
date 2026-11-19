@@ -1,6 +1,6 @@
 export type Role = "Admin" | "Accountant" | "Viewer";
 
-export interface Me { userId: string; fullName: string; email: string; role: Role; companyId: string; companyName: string }
+export interface Me { userId: string; fullName: string; email: string; role: Role; companyId: string; companyName: string; avatarVersion: number | null }
 
 export interface Account { id: string; connectionId: string; bank: "AcikBank" | "KlasikBank"; iban: string; name: string; currency: string; balance: number | null; balanceAt: string | null }
 

@@ -19,6 +19,10 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - Yeni şifre iki kez soruluyor (yazım hatasına karşı).
 - Şifre değişince diğer bütün cihazlardaki oturumlar kapanıyor, kendi oturumun açık kalıyor.
 - Bilinçli bir sınır: diğer cihazlarda zaten açılmış sayfaların giriş anahtarı en fazla 15 dakika daha çalışabiliyor.
+- Profil fotoğrafını tarayıcı ortadan kare kırpıp 256 piksele küçültüyor; birkaç MB'lık telefon fotoğrafı yaklaşık 20 KB'a iniyor.
+- Sunucu dosyanın adına ya da tarayıcının söylediği türe değil, ilk baytlarına bakıyor: sadece JPEG, PNG, WebP; en fazla 512 KB. Adı .png yapılmış bir metin dosyası reddediliyor.
+- Fotoğrafı sadece aynı şirketteki kişiler görüyor. Başka şirketten adresiyle denenirse "bulunamadı" (404).
+- Fotoğraf değişince adresi de değişiyor (sürüm numarası), bu yüzden tarayıcı eskisini göstermiyor.
 
 ## Ekip ve roller
 
@@ -101,7 +105,7 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - **RabbitMQ kapalı:** ERP'ye gidecek işler veritabanında bekliyor, açılınca gidiyor.
 - **Aktarım servisi kapalı:** işler kuyrukta bekliyor.
 - **SQL Server kapalı:** sistem çalışmıyor. Asıl veri orada; bu bilinçli.
-- 18 hata senaryosunun her birinin otomatik testi var. Toplam 79 test, gerçek veritabanlarına karşı çalışıyor.
+- 18 hata senaryosunun her birinin otomatik testi var. Toplam 80 test, gerçek veritabanlarına karşı çalışıyor.
 - İzleme panelinde tek bir tıklamanın API, kuyruk, aktarım servisi ve ERP'deki yolu tek bir iz olarak görünüyor.
 
 ## Demo için

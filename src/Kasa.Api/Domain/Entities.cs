@@ -48,7 +48,16 @@ public sealed class AppUser : IdentityUser<Guid>
     public UserRole Role { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>The profile photo, a small square the web app has already cut and shrunk. Null when there is none.</summary>
+    public byte[]? Avatar { get; set; }
+
+    public string? AvatarType { get; set; }
+
+    /// <summary>Goes up with every new photo, so the photo's address changes and browsers never show an old one.</summary>
+    public int AvatarVersion { get; set; }
+
     public const int FullNameMaxLength = 200;
+    public const int AvatarMaxBytes = 512 * 1024;
 }
 
 /// <summary>
