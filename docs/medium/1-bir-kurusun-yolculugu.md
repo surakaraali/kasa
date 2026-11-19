@@ -175,4 +175,4 @@ Bu projeden çıkardığım en önemli ders şu: para tutan bir sistemde doğrul
 ve idempotency'ye bağlamak gerekiyor. Kilitler, önbellekler ve kuyruklar sistemi hızlandırıyor, yükü dağıtıyor; ama "bu
 hareket tek kez kaydedildi mi, bu fiş tek kez yazıldı mı" sorusunun cevabı her biri çökse bile değişmemeli.
 
-Kodun tamamı, karar notları ve 18 hata senaryosunun testleri GitHub'da: [bağlantı]
+Kodun tamamı, karar notları ve 18 hata senaryosunun testleri GitHub'da: [github.com/surakaraali/kasa](https://github.com/surakaraali/kasa)

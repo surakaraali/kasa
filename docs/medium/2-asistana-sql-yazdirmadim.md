@@ -138,4 +138,4 @@ ise ben karar verdim. Güvenimi testlerden, ölçümlerden ve her kararın gerek
 Asistanın sadece okuyan araçlarla sınırlanması, şirket kimliğinin token'dan gelmesi, maskeleme ve maliyet sınırları da bu
 kararlardan.
 
-Kodun tamamı, karar notları ve testler GitHub'da: [bağlantı]
+Kodun tamamı, karar notları ve testler GitHub'da: [github.com/surakaraali/kasa](https://github.com/surakaraali/kasa)
