@@ -46,7 +46,7 @@ export default function Erp() {
       <div className="head">
         <div>
           <h1>ERP ve cariler</h1>
-          <p className="muted" style={{ margin: 0 }}>Eşleşen her hareket ERP&apos;de bir fiş olur: giren para tahsilat, çıkan para tediye fişi. <a href={erpPage} target="_blank" rel="noreferrer">Test ERP&apos;sindeki fişler</a></p>
+          <p>Eşleşen her hareket ERP&apos;de bir fiş olur: giren para tahsilat, çıkan para tediye fişi. <a href={erpPage} target="_blank" rel="noreferrer">Test ERP&apos;sindeki fişler</a></p>
         </div>
       </div>
       {notice && <div className={`notice ${notice.bad ? "bad" : ""}`} role="status">{notice.text}</div>}

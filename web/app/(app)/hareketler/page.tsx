@@ -70,7 +70,7 @@ export default function Transactions() {
         </label>
       </div>
       {error && <p className="error">{error}</p>}
-      <div className="card table-wrap" style={{ padding: 0 }}>
+      <div className="card table-wrap">
         <table>
           <thead><tr><th>Tarih</th><th>Karşı taraf / açıklama</th><th>Hesap</th><th>Cari</th><th className="right">Tutar</th><th>Durum</th></tr></thead>
           <tbody>

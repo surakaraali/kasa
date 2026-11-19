@@ -18,7 +18,7 @@ const nav = [
 
 function LiveDot() {
   const { connected } = useLive();
-  return <span className="live" data-on={connected}>{connected ? "Canlı" : "Bağlanıyor"}</span>;
+  return <span className={`dot ${connected ? "ok" : "idle"}`}>{connected ? "Canlı" : "Bağlanıyor"}</span>;
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -36,16 +36,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <LiveProvider>
       <div className="shell">
         <nav className="side" aria-label="Ana menü">
-          <div className="brand">Kasa<small>{me.companyName}</small></div>
+          <div className="brand"><b>Kasa</b><small>{me.companyName}</small></div>
           {nav.map((n) => (
             <Link key={n.href} href={n.href} aria-current={path.startsWith(n.href) ? "page" : undefined}>{n.label}</Link>
           ))}
           <div className="foot">
-            <div>{me.fullName}</div>
-            <div>{{ Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" }[me.role]}</div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+            <b>{me.fullName}</b>
+            <span>{{ Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" }[me.role]}</span>
+            <div className="row">
               <LiveDot />
-              <button className="secondary" style={{ padding: "2px 10px" }} onClick={() => signOut()}>Çıkış</button>
+              <button className="secondary" style={{ height: 28, padding: "0 12px", fontSize: 13 }} onClick={() => signOut()}>Çıkış</button>
             </div>
           </div>
         </nav>

@@ -69,7 +69,7 @@ function Connections() {
         <section key={c.id} className="card">
           <div className="head" style={{ marginBottom: 12 }}>
             <div>
-              <h2 style={{ margin: 0 }}>{c.bank} <span className={`badge ${c.status === "Active" ? "good" : c.status === "Pending" ? "" : "warn"}`}>{statusText[c.status]}</span></h2>
+              <h2 style={{ margin: "0 0 4px", display: "flex", gap: 12, alignItems: "center" }}>{c.bank} <span className={`dot ${c.status === "Active" ? "ok" : c.status === "Pending" ? "idle" : "warn"}`} style={{ fontSize: 13, fontWeight: 400 }}>{statusText[c.status]}</span></h2>
               <div className="cell-sub">
                 Son senkron: {when(c.lastSyncAt)}
                 {c.lastSyncOutcome === "Failed" && <span className="out"> · {c.lastSyncError}</span>}

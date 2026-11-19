@@ -63,7 +63,7 @@ export default function Unmatched() {
       <div className="head">
         <div>
           <h1>Eşleşmeyenler</h1>
-          <p className="muted" style={{ margin: 0 }}>Kurallar karar veremedi: IBAN ya da vergi numarası hiçbir cariye uymuyor, ya da iki ipucu farklı carileri gösteriyor.</p>
+          <p>Kurallar karar veremedi: IBAN ya da vergi numarası hiçbir cariye uymuyor, ya da iki ipucu farklı carileri gösteriyor.</p>
         </div>
       </div>
       {notice && <div className={`notice ${notice.bad ? "bad" : ""}`} role="status">{notice.text}</div>}

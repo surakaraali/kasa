@@ -75,7 +75,7 @@ export default function Assistant() {
       <div className="head">
         <div>
           <h1>Asistan</h1>
-          <p className="muted" style={{ margin: 0 }}>Hesaplarınız, hareketleriniz ve carileriniz hakkında soru sorun. Asistan sadece okur; hiçbir şeyi değiştiremez.</p>
+          <p>Hesaplarınız, hareketleriniz ve carileriniz hakkında soru sorun. Asistan sadece okur; hiçbir şeyi değiştiremez.</p>
         </div>
       </div>
 

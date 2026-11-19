@@ -8,16 +8,16 @@ export function Amount({ value }: { value: number }) {
 const ruleText = { Iban: "IBAN ile", TaxNumber: "vergi no ile", Manual: "elle" } as const;
 
 export function MatchBadge({ t }: { t: Transaction }) {
-  if (t.matchStatus === "Unmatched") return <span className="badge warn">Eşleşmedi</span>;
-  if (t.matchStatus === "Ignored") return <span className="badge">ERP&apos;ye gitmeyecek</span>;
-  return <span className="badge good">Eşleşti{t.matchRule ? `, ${ruleText[t.matchRule]}` : ""}</span>;
+  if (t.matchStatus === "Unmatched") return <span className="dot warn">Eşleşmedi</span>;
+  if (t.matchStatus === "Ignored") return <span className="dot idle">ERP&apos;ye gitmeyecek</span>;
+  return <span className="dot ok">Eşleşti{t.matchRule ? `, ${ruleText[t.matchRule]}` : ""}</span>;
 }
 
 export function ExportBadge({ t }: { t: Transaction }) {
   switch (t.exportStatus) {
-    case "Pending": return <span className="badge">ERP&apos;ye gidiyor</span>;
-    case "Exported": return <span className="badge good">Fiş {t.erpVoucherNo}</span>;
-    case "Failed": return <span className="badge bad" title={t.exportError ?? undefined}>Aktarılamadı</span>;
+    case "Pending": return <span className="dot idle">ERP&apos;ye gidiyor</span>;
+    case "Exported": return <span className="voucher"><span>Fiş</span>{t.erpVoucherNo}</span>;
+    case "Failed": return <span className="dot bad" title={t.exportError ?? undefined}>Aktarılamadı</span>;
     default: return null;
   }
 }
