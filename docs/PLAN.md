@@ -241,15 +241,16 @@ Her sprint şu adımlarla kapanır:
 - [x] Testler: toplam 77 (+1 performans testi, `KASA_PERF=1`)
 - **Çıktı:** "Bu servis çökerse ne olur?" sorusunun her biri için kanıtlı cevap
 
-### Sprint 7: Teknik sunum ve prova
-- [ ] Teknik sunum (sunum.surakaraali.dev'in teknik versiyonu):
-  - Mimari
-  - Sıra diyagramları
-  - Ölçüm grafikleri (önbellek etkisi, sorgu süreleri)
-  - Karar tablosu
-- [ ] Canlı demo betiği ve yedek video
-- [ ] **Prova:** 40+ soruluk mülakat soru listesi, cevapların; ben mülakatçı rolündeyim
-- [ ] Canlı hata demosu: Redis'i kapat, ERP'yi kapat, sistemin nasıl davrandığını göster
+### Sprint 7: Teknik sunum ve prova (devam ediyor)
+- [x] Demo betiği ([demo.md](demo.md)) ve tek komutla başlat/sıfırla (`scripts/demo.sh`); üretim modunda tarayıcıda denendi
+- [x] Canlı hata demosu komutları: ERP'yi kapat/aç, Redis'i kapat/aç, banka bozuk veri
+- [x] Teknik sunum taslağı ([teknik-sunum.md](teknik-sunum.md)): mimari, sıra diyagramı, ölçümler, kararlar
+- [x] Soru listesi: 75 soru ve ipucu ([sorular.md](sorular.md))
+- [ ] Teknik sunumun site hâli (sunum.surakaraali.dev'in teknik versiyonu)
+- [ ] Yedek video (ekran kaydı sende)
+- [ ] kasa.surakaraali.dev: Cloudflare Tunnel (`cloudflared` indirmek için onayın gerekiyor)
+- [ ] Prova: ben mülakatçı rolünde, sorular üzerinden
+- [ ] Medium yazıları; en sonda depoyu herkese açmak
 - **Çıktı:** mülakata hazırsın
 
 ---

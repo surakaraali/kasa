@@ -498,3 +498,39 @@ MFA ve şifre sıfırlama yok; Data Protection anahtar halkası şifresiz; web C
 imzalı değil; bağımlılık taraması CI'da yok; uyarı kuralı yok. Hepsi guvenlik.md'de yazılı. Eksikleri bilip yazmak, olmadığını
 iddia etmekten iyidir.
 </details>
+
+---
+
+## Sprint 7: Büyük resim (mülakatın son çeyreği için)
+
+**1. Bu projede en çok neyle gurur duyuyorsun?**
+<details><summary>İpucu</summary>
+Tek bir özellik değil, "bu çökerse ne olur?" sorusuna her bağımlılık için kanıtlı bir cevabın olması: 18 senaryo, her biri testli.
+Para tutan yazılımda doğruluğu uygulama koduna değil veritabanı kurallarına ve idempotency'ye bağlamak.
+</details>
+
+**2. Baştan yapsan neyi farklı yapardın?**
+<details><summary>İpucu</summary>
+Dürüst ol: örneğin outbox satırlarının temizlenmesi ve bekleyen mesajlar için uyarı baştan tasarlanabilirdi; banka çağrılarına
+kısa bir yeniden deneme eklenebilirdi; asistan konuşmaları sunucuda saklanabilirdi. Hepsi bilerek ertelendi ve yazılı.
+</details>
+
+**3. Bunu 100 şirket ve 3 API örneğiyle üretime çıkarsak ilk ne kırılır?**
+<details><summary>İpucu</summary>
+SignalR grupları tek süreçte (Redis backplane gerekir), Quartz her örnekte çalışır (kilit koruyor ama boşa sorgu), Data Protection
+halkası korunmalı, migration'lar açılışta değil dağıtım adımında koşmalı, metin araması tam metin aramasına geçmeli. Hepsi
+karar notlarında `shortcut:` olarak işaretli.
+</details>
+
+**4. Yapay zekâyla geliştirdin. Kodu anladığını nasıl gösterirsin?**
+<details><summary>İpucu</summary>
+Kararları ben verdim ve gerekçelerini anlatabiliyorum (karar notları); her sprint sonunda soruları çalıştım. Herhangi bir dosyayı
+açıp neden böyle olduğunu, neyin kırılacağını anlatabilirim. Yapay zekâ hızlı yazdı; neyin yeterince iyi olduğunu testler ve
+ölçümler gösterdi.
+</details>
+
+**5. Ekibe katılınca ilk ay ne yaparsın?**
+<details><summary>İpucu</summary>
+Önce mevcut sistemin hata senaryolarını ve izlerini öğrenirim: hangi entegrasyon nasıl kırılıyor, nasıl fark ediliyor. Küçük,
+test edilebilir işlerle başlarım; karar notu ve test yazma alışkanlığını ekibin düzenine uydururum.
+</details>

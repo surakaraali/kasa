@@ -6,7 +6,7 @@ sorulabiliyor.
 
 > Bu bir pratik projesi. Bankalar ve ERP test için kurgulandı, bütün veriler örnek veridir.
 
-**Durum:** Sprint 6 tamamlandı: iki banka, eşleştirme, RabbitMQ ile ERP aktarımı, web arayüzü, canlı panel, yapay zekâ asistanı, uçtan uca izleme; 18 hata senaryosu testli, 500 bin hareketle ölçüldü. Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
+**Durum:** Sprint 0–6 tamamlandı, Sprint 7 (sunum ve prova) sürüyor: iki banka, eşleştirme, RabbitMQ ile ERP aktarımı, web arayüzü, canlı panel, yapay zekâ asistanı, uçtan uca izleme; 18 hata senaryosu testli, 500 bin hareketle ölçüldü. Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
 
 ## Mimari
 
@@ -39,7 +39,14 @@ Neden böyle: [docs/kararlar/0001](docs/kararlar/0001-moduler-monolit-ve-tek-mik
 
 ## Çalıştırma
 
-Gerekenler: .NET 10 SDK ve Docker.
+Gerekenler: .NET 10 SDK, Node.js 22 ve Docker. Tek komutla, üretim modunda (demo için):
+
+```bash
+cp .env.example .env
+scripts/demo.sh            # durdurmak: scripts/demo.sh stop, sıfırdan başlatmak: scripts/demo.sh reset
+```
+
+Demo akışı: [docs/demo.md](docs/demo.md). Geliştirirken servisleri ayrı ayrı çalıştırmak için:
 
 ```bash
 cp .env.example .env
