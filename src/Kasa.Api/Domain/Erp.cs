@@ -72,4 +72,7 @@ public sealed class OutboxMessage
     public DateTimeOffset? PublishedAt { get; set; }
     public int Attempts { get; set; }
     public string? LastError { get; set; }
+
+    /// <summary>W3C traceparent of the work that wrote the row, so the trace continues when it is published later.</summary>
+    public string? TraceParent { get; set; }
 }

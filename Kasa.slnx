@@ -5,6 +5,7 @@
     <Project Path="src/Kasa.ErpExporter/Kasa.ErpExporter.csproj" />
     <Project Path="src/Kasa.MockBanks/Kasa.MockBanks.csproj" />
     <Project Path="src/Kasa.MockErp/Kasa.MockErp.csproj" />
+    <Project Path="src/Kasa.ServiceDefaults/Kasa.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Kasa.IntegrationTests/Kasa.IntegrationTests.csproj" />

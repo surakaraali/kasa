@@ -529,6 +529,10 @@ namespace Kasa.Api.Data.Migrations
                     b.Property<DateTimeOffset?>("PublishedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("TraceParent")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(100)

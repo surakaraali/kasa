@@ -20,8 +20,9 @@ public sealed class AssistantOptions
     /// <summary>Set by the operator (user secrets or ANTHROPIC_API_KEY). Without it the assistant answers 503.</summary>
     public string? ApiKey { get; set; }
 
+    /// <summary>The cheap, fast model by default (the plan's cost decision); claude-opus-5-5 for harder questions.</summary>
     [Required]
-    public string Model { get; set; } = "claude-opus-5-5";
+    public string Model { get; set; } = "claude-haiku-5-5";
 
     /// <summary>low, medium, high. A chat over a few tools does well at low and answers faster.</summary>
     [Required]
@@ -121,10 +122,12 @@ public sealed class AssistantService(AnthropicClient client, AssistantTools tool
                 OutputConfig = new BetaOutputConfig { Effort = o.Effort switch { "high" => Effort.High, "medium" => Effort.Medium, _ => Effort.Low } },
                 // Caches everything up to the last message, so each tool round re-reads the conversation at the cache price.
                 CacheControl = new BetaCacheControlEphemeral(),
-                // A policy decline is answered by a fallback model in the same call.
-                Betas = [AnthropicBeta.ServerSideFallback2026_07_01],
-                Fallbacks = new Default(),
             };
+            if (HasServerSideFallback(o.Model))
+            {
+                // A policy decline is answered by a fallback model in the same call.
+                parameters = parameters with { Betas = [AnthropicBeta.ServerSideFallback2026_07_01], Fallbacks = new Default() };
+            }
 
             var message = await Forward(client.Beta.Messages.CreateStreaming(parameters, ct), emit).Aggregate();
             log.LogInformation("Assistant round {Round}: {Input} in, {Output} out, {CacheRead} cache read, stop {Stop}",
@@ -165,6 +168,9 @@ public sealed class AssistantService(AnthropicClient client, AssistantTools tool
 
         await emit(new AssistantEvent("error", "Bu soru için çok fazla adım gerekti. Soruyu daraltın."));
     }
+
+    /// <summary>Server-side fallbacks exist for these; Haiku has none, a refusal there just ends the answer.</summary>
+    private static bool HasServerSideFallback(string model) => model is "claude-opus-5-5" or "claude-sonnet-5-5" or "claude-fable-5-2" or "claude-fable-5-1";
 
     /// <summary>Passes text to the browser as it streams, and hands every event on to the aggregator.</summary>
     private static async IAsyncEnumerable<BetaRawMessageStreamEvent> Forward(IAsyncEnumerable<BetaRawMessageStreamEvent> stream, Func<AssistantEvent, Task> emit)

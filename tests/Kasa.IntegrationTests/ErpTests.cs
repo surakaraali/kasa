@@ -188,6 +188,56 @@ public sealed class ErpTests(KasaFixture fixture)
     }
 
     [Fact]
+    public async Task When_the_ERP_writes_the_voucher_but_the_answer_is_lost_the_retry_makes_no_second_voucher()
+    {
+        await using var rig = new ErpRig(fixture, maxAttempts: 50);
+        var admin = await rig.CompanyWithErpAsync();
+        await rig.Erp.SetFaultAsync("loseresponse");
+        await admin.ConnectAsync(rig.Banks, "klasikbank");
+        var matched = (await admin.TransactionsAsync("match=Matched")).Count;
+
+        // The ERP has every voucher, Kasa does not know it yet.
+        await ErpKit.Until(async () => (await rig.Erp.VouchersAsync()).Length == matched);
+        Assert.NotEmpty(await admin.TransactionsAsync("export=Pending"));
+
+        await rig.Erp.SetFaultAsync("none");
+        await admin.WaitForExportsAsync();
+
+        Assert.Equal(matched, (await rig.Erp.VouchersAsync()).Length);
+        Assert.Equal(matched, (await admin.TransactionsAsync("export=Exported")).Count);
+    }
+
+    [Fact]
+    public async Task While_RabbitMQ_is_down_the_outbox_keeps_the_messages_and_sends_them_later()
+    {
+        var prefix = $"kasa-test-{Guid.NewGuid():N}-";
+        await using var banks = new MockBanksFactory();
+        await using var erp = new MockErpFactory();
+        Session admin;
+        Guid companyId;
+        await using (var down = new KasaApiFactory(fixture, b => b.UseSetting("RabbitMq:Port", "5699"), banks, erp, prefix))
+        {
+            admin = await down.RegisterAsync();
+            await (await admin.Client.PutAsJsonAsync("/api/company/erp", new { firmCode = "001" })).EnsureOkAsync();
+            await (await admin.Client.PostAsync("/api/current-accounts/import", null)).EnsureOkAsync();
+            await admin.ConnectAsync(banks, "klasikbank");
+            companyId = (await admin.Client.GetFromJsonAsync<JsonElement>("/api/me")).GetProperty("companyId").GetGuid();
+            await Task.Delay(1500);
+
+            await using var db = fixture.CreateDbContext();
+            Assert.True(await db.OutboxMessages.CountAsync(m => m.CompanyId == companyId && m.PublishedAt == null) > 0);
+        }
+
+        // RabbitMQ is back (a new API instance with the right address); nothing was lost meanwhile.
+        await using var exporter = new ExporterFactory(fixture, erp, prefix).Started();
+        await using var up = new KasaApiFactory(fixture, banks: banks, erp: erp, rabbitPrefix: prefix);
+        var again = await up.SignInAsync(admin);
+        await again.WaitForExportsAsync();
+
+        Assert.All(await again.TransactionsAsync("match=Matched"), t => Assert.Equal("Exported", t.GetProperty("exportStatus").GetString()));
+    }
+
+    [Fact]
     public async Task While_the_exporter_is_not_running_exports_wait_in_the_queue()
     {
         await using var rig = new ErpRig(fixture, startExporter: false);

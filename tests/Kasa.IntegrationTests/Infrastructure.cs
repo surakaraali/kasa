@@ -149,6 +149,16 @@ public static class Api
         return new Session(client, email, Password);
     }
 
+    /// <summary>Signs an existing user in against another API instance (for tests that restart the API).</summary>
+    public static async Task<Session> SignInAsync(this KasaApiFactory factory, Session existing)
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var response = await client.PostAsJsonAsync("/api/auth/login", new { email = existing.Email, password = existing.Password });
+        await response.EnsureOkAsync();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await response.AccessTokenAsync());
+        return existing with { Client = client };
+    }
+
     /// <summary>Invites a user with a role and signs that user in through the invitation.</summary>
     public static async Task<Session> InviteAsync(this KasaApiFactory factory, Session admin, string role)
     {

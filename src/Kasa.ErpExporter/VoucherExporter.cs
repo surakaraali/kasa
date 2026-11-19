@@ -157,3 +157,23 @@ public sealed class VoucherExporter(RabbitConnection rabbit, ErpClient erp, IOpt
             ? Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture)
             : 1;
 }
+
+public sealed class ErpHealthCheck(IHttpClientFactory http, IOptions<ErpOptions> options) : Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck
+{
+    public async Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult> CheckHealthAsync(
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext context, CancellationToken ct = default)
+    {
+        try
+        {
+            using var client = http.CreateClient(nameof(ErpClient));
+            using var response = await client.GetAsync(new Uri(new Uri(options.Value.BaseUrl), "/health"), ct);
+            return response.IsSuccessStatusCode
+                ? Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy()
+                : Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Degraded($"ERP HTTP {(int)response.StatusCode}: aktarımlar kuyrukta bekliyor");
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Degraded("ERP'ye ulaşılamıyor: aktarımlar kuyrukta bekliyor");
+        }
+    }
+}

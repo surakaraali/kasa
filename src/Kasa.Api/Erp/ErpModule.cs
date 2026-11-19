@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Kasa.Api.Banking;
@@ -6,10 +7,12 @@ using Kasa.Api.Common;
 using Kasa.Api.Data;
 using Kasa.Api.Domain;
 using Kasa.Contracts;
+using Kasa.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using SuppressInstrumentationScope = OpenTelemetry.SuppressInstrumentationScope;
 
 namespace Kasa.Api.Erp;
 
@@ -126,12 +129,22 @@ public sealed class OutboxPublisher(IServiceScopeFactory scopes, RabbitConnectio
         await using var scope = scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
-        var batch = await db.OutboxMessages
-            .FromSql($"SELECT TOP ({options.Value.BatchSize}) * FROM OutboxMessages WITH (UPDLOCK, READPAST, ROWLOCK) WHERE PublishedAt IS NULL ORDER BY CreatedAt")
-            .ToListAsync(ct);
+        List<OutboxMessage> batch;
+        // The poll runs every second; its SQL would be a trace of its own each time. Only real publishing is traced.
+        using (SuppressInstrumentationScope.Begin())
+        {
+            batch = await db.OutboxMessages
+                .FromSql($"SELECT TOP ({options.Value.BatchSize}) * FROM OutboxMessages WITH (UPDLOCK, READPAST, ROWLOCK) WHERE PublishedAt IS NULL ORDER BY CreatedAt")
+                .ToListAsync(ct);
+        }
 
+        Exception? failure = null;
         foreach (var message in batch)
         {
+            // Continues the trace of the request that matched the movement: one trace from the click to the ERP voucher.
+            ActivityContext.TryParse(message.TraceParent, null, out var parent);
+            using var activity = ServiceDefaultsExtensions.Source.StartActivity("outbox publish", ActivityKind.Producer, parent);
+            activity?.SetTag("kasa.outbox.id", message.Id);
             try
             {
                 await channel.BasicPublishAsync(rabbit.Topology.Exchange, Topology.ExportKey, mandatory: true,
@@ -143,15 +156,24 @@ public sealed class OutboxPublisher(IServiceScopeFactory scopes, RabbitConnectio
             {
                 message.Attempts++;
                 message.LastError = ex.Message.Length <= BankConnection.ErrorMaxLength ? ex.Message : ex.Message[..BankConnection.ErrorMaxLength];
-                await db.SaveChangesAsync(ct);
-                await transaction.CommitAsync(ct);
-                throw;
+                failure = ex;
+                break;
             }
         }
 
         // shortcut: sent rows are kept for inspection; delete those older than a few weeks with a job once the table grows.
-        await db.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
+        using (SuppressInstrumentationScope.Begin())
+        {
+            await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+        }
+
+        if (failure is not null)
+        {
+            // What was published before the failure stays marked; the rest goes again on the next round.
+            throw failure;
+        }
+
         return batch.Count;
     }
 }

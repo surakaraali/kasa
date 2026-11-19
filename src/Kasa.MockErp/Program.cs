@@ -3,20 +3,21 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Kasa.MockErp;
+using Kasa.ServiceDefaults;
 using Microsoft.Extensions.Options;
 
-// A test ERP in the style of Logo Tiger: current accounts and vouchers, over a small REST API with an API key.
+// A test ERP in the style of a typical Turkish ERP: current accounts and vouchers, over a small REST API with an API key.
 // Test data only. "/" shows the vouchers as a page for the demo; /mock takes the ERP down or makes it slow.
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddHealthChecks();
+builder.AddServiceDefaults();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<ErpWorld>();
 builder.Services.Configure<MockErpOptions>(builder.Configuration.GetSection("MockErp"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<MockErpOptions>>().Value);
 var app = builder.Build();
 
-app.MapHealthChecks("/health");
+app.MapDefaultEndpoints();
 
 // Faults apply to the ERP API only, never to the page, /mock or /health.
 app.Use(async (context, next) =>
@@ -53,7 +54,7 @@ app.MapGet("/api/firms/{firm}/current-accounts", (string firm) =>
 app.MapGet("/api/firms/{firm}/vouchers", (string firm, ErpWorld world) =>
     firm == ErpWorld.Firm ? Results.Json(world.Vouchers()) : Results.NotFound(new { error = "Firma bulunamadı" }));
 
-app.MapPost("/api/firms/{firm}/vouchers", (string firm, VoucherRequest body, HttpRequest request, ErpWorld world, TimeProvider clock) =>
+app.MapPost("/api/firms/{firm}/vouchers", async (string firm, VoucherRequest body, HttpRequest request, ErpWorld world, TimeProvider clock) =>
 {
     if (firm != ErpWorld.Firm)
     {
@@ -78,6 +79,11 @@ app.MapPost("/api/firms/{firm}/vouchers", (string firm, VoucherRequest body, Htt
     }
 
     var (voucher, replayed, error) = world.Create(key, body, account, clock.GetUtcNow());
+    if (world.Fault == Fault.LoseResponse)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(30), request.HttpContext.RequestAborted);
+    }
+
     return error is not null
         ? Results.UnprocessableEntity(new { error })
         : Results.Json(voucher, statusCode: replayed ? StatusCodes.Status200OK : StatusCodes.Status201Created);
@@ -87,7 +93,7 @@ app.MapPost("/mock/fault", (FaultRequest body, ErpWorld world) =>
 {
     if (!Enum.TryParse<Fault>(body.Mode, ignoreCase: true, out var fault))
     {
-        return Results.BadRequest("mode is none, down or slow");
+        return Results.BadRequest("mode is none, down, slow or loseresponse");
     }
 
     world.Fault = fault;

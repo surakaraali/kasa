@@ -4,9 +4,24 @@ import type { NextConfig } from "next";
 // (SameSite=Strict, Path=/api/auth) is a same-site cookie and the API needs no CORS.
 const api = process.env.KASA_API_URL ?? "http://localhost:5100";
 
+// Production only: the dev server needs eval for hot reload. Next's own inline bootstrap scripts need 'unsafe-inline'
+// without nonces. shortcut: nonce-based CSP (middleware) would drop 'unsafe-inline' for scripts.
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "base-uri 'self'",
+].join("; ");
+
 const config: NextConfig = {
   async rewrites() {
     return [
+      // The API's readiness report (anonymous, states only), for the dashboard's system card.
+      { source: "/api/system/health", destination: `${api}/health` },
       { source: "/api/:path*", destination: `${api}/api/:path*` },
       { source: "/hubs/:path*", destination: `${api}/hubs/:path*` },
     ];
@@ -19,6 +34,7 @@ const config: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "same-origin" },
+          ...(process.env.NODE_ENV === "production" ? [{ key: "Content-Security-Policy", value: csp }] : []),
         ],
       },
     ];

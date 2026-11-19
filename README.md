@@ -1,24 +1,27 @@
 # Kasa
 
 Şirketler için nakit yönetimi: bütün banka hesapları tek ekranda, hareketler otomatik olarak doğru cari hesapla
-eşleşiyor, muhasebe programına (Logo Tiger benzeri bir test ERP'si) aktarılıyor ve sorular bir yapay zekâ asistanına
+eşleşiyor, muhasebe programına (Türkiye'de yaygın ERP'lere benzeyen bir test ERP'si) aktarılıyor ve sorular bir yapay zekâ asistanına
 sorulabiliyor.
 
 > Bu bir pratik projesi. Bankalar ve ERP test için kurgulandı, bütün veriler örnek veridir.
 
-**Durum:** Sprint 5 tamamlandı (iki banka, eşleştirme, RabbitMQ ile ERP aktarımı, web arayüzü, canlı panel ve yapay zekâ asistanı). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
+**Durum:** Sprint 6 tamamlandı: iki banka, eşleştirme, RabbitMQ ile ERP aktarımı, web arayüzü, canlı panel, yapay zekâ asistanı, uçtan uca izleme; 18 hata senaryosu testli, 500 bin hareketle ölçüldü. Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
 
 ## Mimari
 
 ```mermaid
 flowchart LR
-    web["Web arayüzü"] --> api["Kasa.Api<br/>modüler monolit"]
-    api --> sql[("SQL Server")]
-    api --> redis[("Redis")]
-    api --> mongo[("MongoDB")]
+    web["Web arayüzü<br/>Next.js"] -- "/api, /hubs (SignalR)" --> api["Kasa.Api<br/>modüler monolit"]
+    api --> sql[("SQL Server<br/>asıl veri, outbox")]
+    api --> redis[("Redis<br/>kilit, önbellek, sınırlar")]
+    api --> mongo[("MongoDB<br/>ham banka cevapları")]
+    api -- "REST + OAuth/PKCE, SOAP" --> banks["Kasa.MockBanks"]
     api -- "Outbox → RabbitMQ" --> erp["Kasa.ErpExporter"]
-    erp --> tiger["Kasa.MockErp"]
-    api --> banks["Kasa.MockBanks"]
+    erp -- "Idempotency-Key" --> mockerp["Kasa.MockErp"]
+    erp -- "sonuç kuyruğu" --> api
+    api -- "araç kullanımı" --> claude["Claude API"]
+    api & erp & banks & mockerp -. "OpenTelemetry" .-> dash["Aspire paneli"]
 ```
 
 Neden böyle: [docs/kararlar/0001](docs/kararlar/0001-moduler-monolit-ve-tek-mikroservis.md)
@@ -30,6 +33,7 @@ Neden böyle: [docs/kararlar/0001](docs/kararlar/0001-moduler-monolit-ve-tek-mik
 | `src/Kasa.MockBanks` | Test bankaları (REST ve SOAP) | http://localhost:5102 |
 | `src/Kasa.MockErp` | Test ERP'si (fişler http://localhost:5103 sayfasında) | http://localhost:5103 |
 | `src/Kasa.Contracts` | API ile aktarım servisi arasındaki mesajlar ve kuyruklar | |
+| `src/Kasa.ServiceDefaults` | Bütün servislerin ortak izleme ve sağlık ayarları | |
 | `web` | Web arayüzü (Next.js) | http://localhost:3000 |
 | `tests/Kasa.IntegrationTests` | Entegrasyon testleri | |
 
@@ -39,7 +43,7 @@ Gerekenler: .NET 10 SDK ve Docker.
 
 ```bash
 cp .env.example .env
-docker compose up -d --wait        # SQL Server, Redis, MongoDB, RabbitMQ
+docker compose up -d --wait        # SQL Server, Redis, MongoDB, RabbitMQ, izleme paneli
 dotnet run --project src/Kasa.Api  # her servis için ayrı bir terminalde (Api, MockBanks, MockErp, ErpExporter)
 cd web && npm ci && npm run dev    # http://localhost:3000
 dotnet test
@@ -51,6 +55,7 @@ dotnet test
 | Redis | `localhost:6379` |
 | MongoDB | `localhost:27017` |
 | RabbitMQ | `localhost:5672`, yönetim paneli http://localhost:15672 |
+| İzleme (Aspire paneli) | http://localhost:18888 |
 
 Bankaları denemek için `src/Kasa.MockBanks` ve `src/Kasa.Api` çalışırken Swagger'dan (http://localhost:5100/swagger) kayıt olun,
 sonra `POST /api/bank-connections/klasikbank` ile bağlanın (kullanıcı `kasa`, şifre `klasik-dev-pass`; test bankasının
@@ -82,5 +87,13 @@ Her teknoloji seçiminin gerekçesi `docs/kararlar/` altında: bağlam, seçenek
 - [0011: Web arayüzü: oturum, API'ye geçiş ve canlı güncelleme](docs/kararlar/0011-web-arayuzu-oturum-ve-canli-guncelleme.md)
 - [0012: Panel önbelleği: sürüm anahtarıyla Redis](docs/kararlar/0012-panel-onbellegi.md)
 - [0013: Yapay zekâ asistanı: sadece okuyan araçlar ve dar bir güven sınırı](docs/kararlar/0013-yapay-zeka-asistani.md)
+- [0014: İzleme: Serilog yerine OpenTelemetry ve Aspire paneli](docs/kararlar/0014-izleme-opentelemetry.md)
+
+## Kanıtlar
+
+- [Hata senaryoları](docs/hata-senaryolari.md): "bu servis çökerse ne olur?" sorusunun 18 cevabı ve her birinin testi
+- [Ölçümler](docs/olcumler.md): 500 bin hareketle liste, sayfalama ve panel süreleri
+- [Güvenlik turu](docs/guvenlik.md): OWASP Top 10 (2025), yapılanlar ve bilerek eksik bırakılanlar
+- [Yapay zekâ ile geliştirme](docs/ai-assisted-development.md): bu proje nasıl yapıldı
 
 Sprint sonu soruları ve cevap ipuçları: [docs/sorular.md](docs/sorular.md). İş takibi: [GitHub Projects panosu](https://github.com/users/surakaraali/projects/1).

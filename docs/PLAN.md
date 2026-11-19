@@ -39,7 +39,7 @@ Her şirket yalnızca kendi verisini görür (çok kiracılı yapı).
 - Kayıt, giriş, roller, kullanıcı daveti
 - İki test bankası bağlama: biri açık bankacılık (REST, rıza akışı), biri eski usul (SOAP)
 - Hareketlerin otomatik çekilmesi, tek kayıt, cari eşleştirme, elle eşleme
-- Eşleşen hareketlerin ayrı bir servisle ERP'ye (Tiger benzeri test ERP) aktarılması
+- Eşleşen hareketlerin ayrı bir servisle ERP'ye (yaygın ERP'lere benzeyen test ERP'si) aktarılması
 - Canlı panel: grafikler, yeni hareketin ekrana anında düşmesi
 - Yapay zekâ asistanı (sadece okuma)
 - Testler, CI, loglama, sağlık kontrolleri, dokümantasyon
@@ -72,7 +72,7 @@ flowchart LR
     api --> mongo[("MongoDB<br/>ham cevaplar, denetim")]
     api -- "Outbox → RabbitMQ" --> mq[["RabbitMQ"]]
     mq --> erp["Kasa.ErpExporter<br/>(ayrı servis)"]
-    erp -- "REST" --> tiger["Kasa.MockErp<br/>Tiger benzeri"]
+    erp -- "REST" --> mockerp["Kasa.MockErp<br/>test ERP"]
     ai -- "araç çağrısı" --> claude["Claude API"]
 ```
 
@@ -88,7 +88,7 @@ devam etmeli. Mülakatta "neden her şey mikroservis değil?" sorusunun cevabı 
 | `Kasa.Api` | Ana uygulama: Web API, SignalR hub, Quartz işleri, asistan | 5100 |
 | `Kasa.ErpExporter` | RabbitMQ'dan okur, ERP'ye fiş yazar (Worker Service) | 5101 (sadece sağlık kontrolü) |
 | `Kasa.MockBanks` | REST açık bankacılık bankası + SOAP eski banka | 5102 |
-| `Kasa.MockErp` | Tiger benzeri cari ve fiş API'si; yavaşlık ve hata simülasyonu var | 5103 |
+| `Kasa.MockErp` | Cari kart ve fiş API'si; yavaşlık ve hata simülasyonu var | 5103 |
 | `Kasa.Contracts` | Servisler arası mesaj sözleşmeleri | |
 | `web` | Next.js arayüz | 3000 |
 | `tests/*` | Birim, entegrasyon ve uçtan uca testler | |
@@ -194,7 +194,7 @@ Her sprint şu adımlarla kapanır:
 - **Çıktı:** iki banka bağlı, hareketler akıyor
 
 ### Sprint 3: Eşleştirme ve ERP aktarımı ✅ 2026-11-19
-- [x] `Kasa.MockErp`: Tiger tarzı cari kartlar, `Idempotency-Key` ile tahsilat/tediye fişi, hata modları, fişleri gösteren sayfa
+- [x] `Kasa.MockErp`: cari kartlar, `Idempotency-Key` ile tahsilat/tediye fişi, hata modları, fişleri gösteren sayfa
 - [x] Cari eşleştirme kuralları: IBAN, sonra vergi numarası; çakışma ya da çift aday kişiye bırakılır (birim testli)
 - [x] Elle eşleme API'si: `rowversion` ile iyimser eşzamanlılık (409), "ERP'ye aktarılmayacak" kararı, denetim kaydı (SQL)
 - [x] Outbox: eşleşme, denetim kaydı ve "aktar" mesajı aynı veritabanı işleminde; `UPDLOCK, READPAST` ile yayıncı
@@ -224,19 +224,21 @@ Her sprint şu adımlarla kapanır:
 - [x] Güvenlik: araçlar sadece okuyor; şirket kimliği token'dan; IBAN ve vergi numarası maskeli; hareket açıklamalarındaki talimatlar veri sayılıyor (test)
 - [x] Zaman aşımı (90 sn), tur sınırı (6), saatlik soru sınırı (30), anahtar yoksa 503 ve arayüzde "kapalı"
 - [x] Önbellek: sabit sistem talimatı ve araç listesi; tarih ve şirket son soruda; araç turlarında üst düzey `cache_control`
-- [x] Sunucu tarafı yedek model (`fallbacks: "default"`), reddedilen soruda anlamlı mesaj
+- [x] Varsayılan model `claude-haiku-5-5` (ucuz); Opus/Sonnet seçilirse sunucu tarafı yedek model (`fallbacks: "default"`); reddedilen soruda anlamlı mesaj
 - [x] Testler: sahte Claude sunucusuyla 8 test (araç turu, düşünme imzası, maskeleme, hatalı girdi, tur sınırı, saatlik sınır, bozuk geçmiş, şirket kapsamı), toplam 72
 - Karar notu: 0013 yapay zekâ asistanı
 - Gerçek modelle deneme: API anahtarı eklenince (`dotnet user-secrets set "Assistant:ApiKey" ... --project src/Kasa.Api`)
 - **Çıktı:** "Bu ay en çok kim ödedi?" sorusu gerçek veriden, araçlarla cevaplanıyor
 
-### Sprint 6: Kalite ve dayanıklılık
-- [ ] Serilog ve OpenTelemetry: bir isteğin bütün servislerdeki izi
-- [ ] Sağlık kontrolleri (SQL, Redis, Mongo, RabbitMQ); hepsi panelde görünüyor
-- [ ] **Hata senaryoları tablosunun** (bölüm 9) hepsi denenip yazılıyor
-- [ ] Performans: 500 bin hareketle ölçüm (liste, panel, önbellekli ve önbelleksiz)
-- [ ] Güvenlik turu: OWASP ilk 10 kontrol listesi
-- [ ] README, mimari diyagram, karar notlarının tamamı
+### Sprint 6: Kalite ve dayanıklılık ✅ 2026-11-19
+- [x] OpenTelemetry (Serilog yerine, karar 0014): iz, metrik, log; `Kasa.ServiceDefaults`; iz outbox ve RabbitMQ boyunca sürüyor, tek istek 4 servisi kapsayan tek iz
+- [x] Aspire paneli docker compose'da (http://localhost:18888)
+- [x] Sağlık kontrolleri: SQL Server (unhealthy), Redis, MongoDB, RabbitMQ (degraded); aktarım servisinde RabbitMQ ve ERP; `/alive` ve `/health`; web panelinde sistem durumu
+- [x] **Hata senaryolarının** 18'i de testli: [hata-senaryolari.md](hata-senaryolari.md). Yeni: ERP fişi yazıp cevap vermediğinde tek fiş, RabbitMQ kapalıyken outbox, bozuk cevabın Mongo'da saklanması
+- [x] Performans: 500 bin hareket ([olcumler.md](olcumler.md)): ilk sayfa 4,9 ms, 250 bininci satırdan sonraki sayfa 6,1 ms, OFFSET 55 ms / keyset 1,8 ms, panel 253 ms → önbellekten 1,2 ms
+- [x] Güvenlik turu: OWASP Top 10 (2025) ([guvenlik.md](guvenlik.md)); API güvenlik başlıkları, web CSP, HSTS
+- [x] README, mimari diyagram, 14 karar notu, [ai-assisted-development.md](ai-assisted-development.md)
+- [x] Testler: toplam 77 (+1 performans testi, `KASA_PERF=1`)
 - **Çıktı:** "Bu servis çökerse ne olur?" sorusunun her biri için kanıtlı cevap
 
 ### Sprint 7: Teknik sunum ve prova
@@ -296,7 +298,7 @@ Her sprint şu adımlarla kapanır:
 |---|---|
 | 8 GB RAM, 9,7 GB boş disk | Eski konteynerler kapatılır, imajlar temizlenir; SQL Server'a 1,5 GB sınır; Next.js geliştirme modunda değil, derlenmiş hâliyle demo |
 | Mülakat tarihi belirsiz, süre yetmeyebilir | Sprint sırası, her sprint sonunda gösterilebilir bir şey bırakacak şekilde. Önce çekirdek, "vakit kalırsa" maddeleri en sonda |
-| Yapay zekâ API'si için anahtar ve kullanım ücreti | Anahtarı sen alıp `.env` dosyasına kendin koyuyorsun (ben anahtar girmiyorum). Ucuz model (Haiku) varsayılan. Anahtar yoksa asistan kibarca kapalı olduğunu söylüyor |
+| Yapay zekâ API'si için anahtar ve kullanım ücreti | Anahtarı sen alıp user-secrets'a kendin koyuyorsun (ben anahtar girmiyorum). Ucuz model (Haiku) varsayılan. Anahtar yoksa asistan kibarca kapalı olduğunu söylüyor |
 | Canlı demoda bir şey bozulabilir | Demo betiği, sıfırla-yeniden-başlat komutu, yedek video |
 | "Bunu sen mi yazdın?" sorusu | Her sprint sonunda anlatma provası; karar notlarını sen okuyup onaylıyorsun; yapay zekânın yaptığı hatalar ayrı bir belgede tutuluyor (önceki projelerdeki gibi) |
 

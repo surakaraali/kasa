@@ -390,7 +390,7 @@ loglara, konuşma geçmişine, ekran görüntüsüne de düşmez. KVKK açısın
 <details><summary>İpucu</summary>
 Soru başına en fazla 6 araç turu (model döngüye girerse durur), kullanıcı başına saatte 30 soru (Redis), cevap başına üst token
 sınırı, 90 saniye zaman aşımı, geçmiş 20 mesajla sınırlı. Her turun girdi/çıktı/önbellek token'ı loglanıyor; maliyet ölçülebilir.
-Model ve effort ayardan değişiyor.
+Model ve effort ayardan değişiyor; varsayılan en ucuz model (Haiku), zor sorular için Opus'a geçilebilir.
 </details>
 
 **6. Prompt caching nasıl çalışıyor? Neden tarihi sistem talimatına koymadın?**
@@ -427,4 +427,74 @@ denemesi ayrıca yapılmalı.
 Olabilir; o yüzden rakamları model hesaplamıyor, araçlar SQL'de hesaplıyor; model sadece aktarıyor. Ayrıca her toplamın hangi
 dönemi ve filtreyi kapsadığını söylemesi isteniyor, kullanıcı ekranlardan kontrol edebiliyor. Asistan karar vermiyor, eşleme
 yapmıyor; sadece okuyor.
+</details>
+
+---
+
+## Sprint 6: Kalite ve dayanıklılık
+
+**1. Log, metrik ve iz (trace) arasındaki fark ne?**
+<details><summary>İpucu</summary>
+Log: bir anda olan bir olayın kaydı ("senkron başarısız: HTTP 503"). Metrik: zaman içinde sayılan bir değer (istek sayısı,
+süre dağılımı). İz: bir işin süreçler arasındaki yolu; her adım bir "span", hepsi aynı trace id'yi taşıyor. "Bu fiş neden
+gecikti?" sorusu izle cevaplanır.
+</details>
+
+**2. Bir isteğin izi RabbitMQ'nun öbür tarafına nasıl geçiyor? Outbox araya girince ne oldu?**
+<details><summary>İpucu</summary>
+W3C `traceparent` başlığı. HTTP'de HttpClient ve ASP.NET Core bunu kendisi taşıyor; RabbitMQ.Client 7 de mesaj başlığına
+koyuyor. Ama outbox'ta yayın istekten saniyeler sonra, başka bir döngüde oluyor; o anda "geçerli iz" yok. Bu yüzden eşleşmeyi
+yapan isteğin izini outbox satırına (`TraceParent`) yazdım, yayıncı onu üst iz olarak kullanıp devam ettiriyor.
+</details>
+
+**3. Neden Serilog değil de OpenTelemetry?**
+<details><summary>İpucu</summary>
+Sorun logların biçimi değil, dört süreç arasındaki yoldu. OpenTelemetry iz, metrik ve logu tek standartla veriyor ve satıcıdan
+bağımsız: yerelde Aspire paneli, üretimde Grafana, Datadog, Azure Monitor, hangisi olursa. .NET'in `ILogger`'ı zaten ona akıyor.
+</details>
+
+**4. `/alive` ile `/health` neden ayrı?**
+<details><summary>İpucu</summary>
+Liveness: süreç yaşıyor mu? Hayırsa orkestratör yeniden başlatır. Bağımlılığa bakmamalı; Redis kapandı diye API'yi yeniden
+başlatmak hiçbir şeyi düzeltmez, sadece kesinti ekler. Readiness: trafik alabilir mi? Her bağımlılığı bildiriyor.
+</details>
+
+**5. Redis kapalıyken sağlık durumu neden "unhealthy" değil de "degraded"?**
+<details><summary>İpucu</summary>
+Çünkü API çalışıyor: Redis'siz devam yolu tanımlı (karar 0005). "Unhealthy" demek yük dengeleyicinin trafiği kesmesine ya da
+gece yanlış alarma yol açardı. SQL Server ise asıl veri; o yoksa gerçekten çalışamıyoruz, "unhealthy".
+</details>
+
+**6. 500 bin hareketle ne ölçtün, ne çıktı?**
+<details><summary>İpucu</summary>
+İlk sayfa 4,9 ms; 250 bininci satırdan sonraki sayfa keyset ile 6,1 ms. Aynı sayfa yalnız SQL'de OFFSET ile 55 ms, keyset
+ile 1,8 ms: OFFSET atladığı satırları okuyor. Panel önbelleksiz 253 ms, önbellekten 1,2 ms. Her ölçüm ısınma + 7 çalıştırmanın
+ortancası; tekrar üretmek için tek komut var.
+</details>
+
+**7. Neden ortalama değil ortanca?**
+<details><summary>İpucu</summary>
+Tek bir yavaş çalıştırma (çöp toplayıcı, disk) ortalamayı bozar. Ortanca tipik durumu gösterir. Gerçek sistemde p95/p99
+de bakılır, çünkü kullanıcıyı kızdıran yavaş istekler kuyrukta. İlk çalıştırma ısınma olarak atılıyor (plan önbelleği, bağlantı havuzu).
+</details>
+
+**8. ERP fişi yazar ama cevap vermezse ne olur? Bunu nasıl test ettin?**
+<details><summary>İpucu</summary>
+Test ERP'sine "loseresponse" modu ekledim: fişi yazıyor, sonra cevap vermiyor. Aktarım servisi 2 saniyede zaman aşımına düşüp
+tekrar deniyor; aynı Idempotency-Key ile ERP ilk fişi dönüyor. Test ERP'de fiş sayısının eşleşen hareket sayısına eşit kaldığını
+kontrol ediyor. Gerçek hayatta en sinsi hata bu: "olmadı" sanıp tekrar göndermek.
+</details>
+
+**9. OWASP Top 10'dan Kasa için en kritik olan hangisi ve ne yaptın?**
+<details><summary>İpucu</summary>
+A01, bozuk erişim denetimi: çok şirketli bir sistemde en büyük risk bir şirketin ötekinin parasını görmesi. Şirket her zaman
+token'dan, her sorguda filtre, yazarken koruma, başka şirketin kaydı 404. Bunu her modül için ayrı test ediyorum, ayrıca
+"filtreyi unutan kod" için de test var.
+</details>
+
+**10. Güvenlik turunda neyi bilerek eksik bıraktın?**
+<details><summary>İpucu</summary>
+MFA ve şifre sıfırlama yok; Data Protection anahtar halkası şifresiz; web CSP'si `'unsafe-inline'` içeriyor; kuyruk mesajları
+imzalı değil; bağımlılık taraması CI'da yok; uyarı kuralı yok. Hepsi guvenlik.md'de yazılı. Eksikleri bilip yazmak, olmadığını
+iddia etmekten iyidir.
 </details>

@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Kasa.MockBanks;
+using Kasa.ServiceDefaults;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Options;
 // /mock lets the demo and the tests add a movement now, take a bank down or make it send bad data.
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddHealthChecks();
+builder.AddServiceDefaults();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<BankWorld>();
 builder.Services.AddSingleton<AcikBankAuth>();
@@ -29,7 +30,7 @@ XNamespace soap = "http://schemas.xmlsoap.org/soap/envelope/";
 XNamespace kb = "http://klasikbank.example/ekstre";
 
 app.MapGet("/", () => "Kasa test banks: AcikBank (REST, open banking) and KlasikBank (SOAP). Test data only.");
-app.MapHealthChecks("/health");
+app.MapDefaultEndpoints();
 
 // Faults and slowness apply to the bank endpoints, never to /mock or /health.
 app.Use(async (context, next) =>

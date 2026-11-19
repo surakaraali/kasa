@@ -8,6 +8,23 @@ import { useData } from "@/lib/useData";
 
 const compact = new Intl.NumberFormat("tr-TR", { notation: "compact", maximumFractionDigits: 1 });
 
+const dependencyNames: Record<string, string> = { sqlserver: "SQL Server", redis: "Redis", mongodb: "MongoDB", rabbitmq: "RabbitMQ" };
+
+/** Each dependency's state. Redis, MongoDB and RabbitMQ being down slows or delays things but loses nothing. */
+function SystemStatus() {
+  const { data } = useData<{ status: string; checks: Record<string, { status: string; description: string | null }> }>("/api/system/health");
+  if (!data) return null;
+  return (
+    <div className="toolbar" aria-label="Sistem durumu">
+      {Object.entries(data.checks).filter(([k]) => k in dependencyNames).map(([k, c]) => (
+        <span key={k} className={`badge ${c.status === "Healthy" ? "good" : c.status === "Degraded" ? "warn" : "bad"}`} title={c.description ?? undefined}>
+          {dependencyNames[k]}: {c.status === "Healthy" ? "çalışıyor" : c.status === "Degraded" ? "kısıtlı çalışıyor" : "kapalı"}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function Panel() {
   const { data, error } = useData<Dashboard>("/api/dashboard?days=30");
   if (error) return <p className="error">{error}</p>;
@@ -24,6 +41,7 @@ export default function Panel() {
           <h1>Panel</h1>
           <p className="muted" style={{ margin: 0 }}>Son senkron: {when(data.lastSyncAt)}</p>
         </div>
+        <SystemStatus />
       </div>
 
       {data.accounts.length === 0 && (

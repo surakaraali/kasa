@@ -101,10 +101,11 @@ public sealed class AssistantTests(KasaFixture fixture)
         Assert.Equal("Toplam bakiyeniz 915.000,00 TL.", string.Concat(events.Where(e => e.Type == "text").Select(e => e.Text)));
 
         var first = claude.Requests[0];
-        Assert.Equal("claude-opus-5-5", first.GetProperty("model").GetString());
+        Assert.Equal("claude-haiku-5-5", first.GetProperty("model").GetString());
         Assert.True(first.GetProperty("stream").GetBoolean());
         Assert.Equal("ephemeral", first.GetProperty("cache_control").GetProperty("type").GetString());
-        Assert.Equal("default", first.GetProperty("fallbacks").GetString());
+        // Haiku has no server-side fallback, so none is asked for.
+        Assert.False(first.TryGetProperty("fallbacks", out _));
         Assert.Equal(5, first.GetProperty("tools").GetArrayLength());
         // The system prompt is the same for every company and day; the changing context rides on the question.
         Assert.DoesNotContain(DateTime.UtcNow.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), first.GetProperty("system").ToString(), StringComparison.Ordinal);
@@ -120,6 +121,18 @@ public sealed class AssistantTests(KasaFixture fixture)
         var content = result.GetProperty("content").ToString();
         Assert.Contains("TR09 **** **** 0001", content, StringComparison.Ordinal);
         Assert.DoesNotContain("TR090090001000000000000001", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task On_a_model_with_server_side_fallbacks_they_are_requested()
+    {
+        var claude = new FakeClaude().Then(FakeClaude.Start(), FakeClaude.Text(0, "Tamam."), FakeClaude.Stop("end_turn"));
+        await using var api = WithClaude(claude, configure: b => b.UseSetting("Assistant:Model", "claude-opus-5-5"));
+        var admin = await api.RegisterAsync();
+
+        await AskAsync(admin, "Merhaba");
+
+        Assert.Equal("default", claude.Requests[0].GetProperty("fallbacks").GetString());
     }
 
     [Fact]

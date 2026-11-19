@@ -30,9 +30,10 @@ gömülmüş talimatlara uyması (prompt injection) ve maliyetin kontrolsüz bü
   zaman aşımı. Geçmiş en fazla 20 mesaj, mesaj başına 4.000 karakter. Her turun token kullanımı loglanıyor.
 - **Önbellek:** Sistem talimatı ve araç listesi sabit; tarih ve şirket adı son soruya ayrı bir blok olarak ekleniyor. Böylece
   önek her istekte aynı ve önbelleğe alınabiliyor. Araç turlarında konuşma da önbellekten okunuyor (üst düzey `cache_control`).
-- **Model:** Varsayılan `claude-opus-5-5`, çaba (effort) `low`: sohbet ve basit araç kullanımı için yeterli ve hızlı.
-  `Assistant:Model` ile değiştirilebilir (örneğin daha ucuz `claude-haiku-5-5`). Sunucu tarafı yedek model açık
-  (`fallbacks: "default"`): bir güvenlik sınıflandırıcısı soruyu reddederse aynı çağrıda başka bir model cevaplıyor.
+- **Model:** Varsayılan `claude-haiku-5-5` (planda maliyet için verilen karar), çaba (effort) `low`: sohbet ve beş araç için
+  yeterli, hızlı ve ucuz. Zor sorular için `Assistant:Model` ile `claude-opus-5-5`'e geçilebilir. Sunucu tarafı yedek
+  modeli olan modellerde (Opus 5.5, Sonnet 5.5) `fallbacks: "default"` açılıyor: güvenlik sınıflandırıcısı soruyu reddederse
+  aynı çağrıda başka bir model cevaplıyor. Haiku'da yedek yok; ret olursa kullanıcı "cevap veremiyor" mesajı görüyor.
 - **Anahtar yoksa** asistan 503 dönüyor, arayüz "kapalı" diyor; uygulamanın geri kalanı etkilenmiyor.
 - **Akış:** Cevap SSE ile kelime kelime geliyor. Araç çalışırken arayüz "Hareketler aranıyor…" gibi bir adım gösteriyor.
 

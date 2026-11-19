@@ -1,3 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
+  <ItemGroup>
+    <ProjectReference Include="..\Kasa.ServiceDefaults\Kasa.ServiceDefaults.csproj" />
+  </ItemGroup>
 </Project>

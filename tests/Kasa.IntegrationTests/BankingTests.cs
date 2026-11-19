@@ -218,6 +218,11 @@ public sealed class BankingTests(KasaFixture fixture)
         Assert.Equal("Failed", result.GetProperty("outcome").GetString());
         Assert.Contains("amount", result.GetProperty("error").GetString()!, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(before, (await admin.AllTransactionsAsync()).Count);
+        // Nothing was stored, but what the bank sent is kept for a person to look at.
+        var archive = new MongoClient(fixture.Mongo).GetDatabase(fixture.MongoDatabase).GetCollection<BsonDocument>("bank_raw_responses");
+        var bad = bank == "acikbank" ? "12,5O" : "1250.50";
+        Assert.True(await archive.Find(Builders<BsonDocument>.Filter.Eq("connectionId", connectionId.ToString())
+            & Builders<BsonDocument>.Filter.Regex("body", new BsonRegularExpression(System.Text.RegularExpressions.Regex.Escape(bad)))).AnyAsync());
     }
 
     [Fact]

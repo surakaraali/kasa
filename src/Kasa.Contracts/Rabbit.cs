@@ -254,3 +254,22 @@ public abstract class QueueConsumer(RabbitConnection rabbit, ILogger log) : Back
         return Task.CompletedTask;
     }
 }
+
+/// <summary>Can this app reach RabbitMQ right now? Opens the shared connection if it is not open.</summary>
+public sealed class RabbitHealthCheck(RabbitConnection rabbit, Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus whenDown)
+    : Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck
+{
+    public async Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult> CheckHealthAsync(
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext context, CancellationToken ct = default)
+    {
+        try
+        {
+            await rabbit.GetAsync(ct);
+            return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy();
+        }
+        catch (Exception) when (!ct.IsCancellationRequested)
+        {
+            return new(whenDown, "RabbitMQ'ya ulaşılamıyor");
+        }
+    }
+}

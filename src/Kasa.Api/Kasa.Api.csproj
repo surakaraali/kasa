@@ -12,6 +12,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Anthropic" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <PackageReference Include="MongoDB.Driver" />
     <PackageReference Include="Quartz.Extensions.Hosting" />
     <PackageReference Include="StackExchange.Redis" />
@@ -25,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Kasa.Contracts\Kasa.Contracts.csproj" />
+    <ProjectReference Include="..\Kasa.ServiceDefaults\Kasa.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

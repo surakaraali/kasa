@@ -152,6 +152,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
         {
             e.Property(m => m.Type).HasMaxLength(100);
             e.Property(m => m.LastError).HasMaxLength(BankConnection.ErrorMaxLength);
+            e.Property(m => m.TraceParent).HasMaxLength(64);
             // The publisher only ever looks for what is not sent yet.
             e.HasIndex(m => m.CreatedAt).HasFilter("[PublishedAt] IS NULL").HasDatabaseName("IX_OutboxMessages_Unpublished");
         });

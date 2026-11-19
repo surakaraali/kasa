@@ -115,6 +115,7 @@ public sealed class Matching(AppDbContext db, TimeProvider clock)
             Payload = JsonSerializer.Serialize(new ExportVoucher(exportId, account.CompanyId, firmCode, account.Code, iban,
                 DateOnly.FromDateTime(local.DateTime), transaction.Amount, transaction.Description, transaction.BankReference), RabbitConnection.Json),
             CreatedAt = now,
+            TraceParent = System.Diagnostics.Activity.Current?.Id,
         });
     }
 

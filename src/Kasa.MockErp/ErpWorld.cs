@@ -14,6 +14,9 @@ public enum Fault
 
     /// <summary>Waits 30 seconds before answering.</summary>
     Slow,
+
+    /// <summary>Writes the voucher, then never answers: the caller times out not knowing it worked.</summary>
+    LoseResponse,
 }
 
 public sealed record CurrentAccount(string Code, string Title, string? TaxNumber, string? Iban);
@@ -24,7 +27,7 @@ public sealed record Voucher(string VoucherNo, string Firm, string Type, DateOnl
     string CurrentAccountTitle, string BankIban, string Description, string Reference, string IdempotencyKey, DateTimeOffset CreatedAt);
 
 /// <summary>
-/// One firm's books in the style of Logo Tiger: current accounts (cari kartlar) and the collection and payment
+/// One firm's books in the style of a typical Turkish ERP: current accounts (cari kartlar) and the collection and payment
 /// vouchers (tahsilat / tediye fişleri) written to them. The current accounts are chosen so that every matching
 /// rule shows up with the test banks' movements: by IBAN, by tax number, a conflict, and no match at all.
 /// </summary>

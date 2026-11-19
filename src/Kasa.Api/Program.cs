@@ -5,11 +5,13 @@ using Kasa.Api.Common;
 using Kasa.Api.Data;
 using Kasa.Api.Erp;
 using Kasa.Api.Infrastructure;
+using Kasa.ServiceDefaults;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 // Fail at start-up, not on the first request, when the database is not configured.
 var sql = builder.Configuration.GetConnectionString("Sql")
@@ -22,7 +24,6 @@ builder.Services
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Errors are answered as RFC 9457 problem details; an unhandled exception becomes a plain 500 without a stack trace.
 builder.Services.AddProblemDetails();
-builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi(o => o.AddDocumentTransformer((document, _, _) =>
 {
     // Lets Swagger UI send a bearer token with every request.
@@ -41,6 +42,7 @@ KasaRedis.Add(builder.Services);
 builder.Services.AddKasaAuth();
 builder.Services.AddKasaBanking(builder.Configuration);
 builder.Services.AddKasaErp();
+builder.Services.AddKasaHealthChecks();
 builder.Services.AddSignalR();
 Kasa.Api.Assistant.AssistantSetup.AddKasaAssistant(builder.Services);
 builder.Services.AddSingleton<Kasa.Api.Dashboard.CompanyEvents>();
@@ -61,6 +63,25 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
 });
 app.UseStatusCodePages();
 
+// A JSON API never needs to be framed, sniffed or to run scripts. Swagger UI (Development only) needs its scripts.
+app.Use(async (http, next) =>
+{
+    var headers = http.Response.Headers;
+    headers.XContentTypeOptions = "nosniff";
+    headers.XFrameOptions = "DENY";
+    headers["Referrer-Policy"] = "no-referrer";
+    if (!http.Request.Path.StartsWithSegments("/swagger"))
+    {
+        headers.ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
+    }
+
+    await next();
+});
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi().AllowAnonymous();
@@ -71,7 +92,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<Kasa.Api.Dashboard.KasaHub>("/hubs/kasa");
-// Liveness for now. Checks for SQL Server, Redis, MongoDB and RabbitMQ join it as each one arrives.
-app.MapHealthChecks("/health").AllowAnonymous();
+app.MapDefaultEndpoints();
 
 app.Run();
