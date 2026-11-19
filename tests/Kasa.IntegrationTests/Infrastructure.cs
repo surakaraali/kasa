@@ -63,6 +63,16 @@ public sealed class KasaFixture
         }
     }
 
+    /// <summary>
+    /// Tests run one after another and share the outbox table. A test that ends before its messages went out leaves
+    /// rows behind, and the next test's API would publish them into its own queues and ERP. ERP tests start clean.
+    /// </summary>
+    public void ForgetPendingOutbox()
+    {
+        using var db = CreateDbContext();
+        db.OutboxMessages.Where(m => m.PublishedAt == null).ExecuteUpdate(s => s.SetProperty(m => m.PublishedAt, DateTimeOffset.UtcNow));
+    }
+
     public AppDbContext CreateDbContext(Guid? companyId = null)
     {
         var tenant = new TenantContext(new HttpContextAccessor());

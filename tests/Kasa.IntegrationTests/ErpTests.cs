@@ -211,6 +211,7 @@ public sealed class ErpTests(KasaFixture fixture)
     public async Task While_RabbitMQ_is_down_the_outbox_keeps_the_messages_and_sends_them_later()
     {
         var prefix = $"kasa-test-{Guid.NewGuid():N}-";
+        fixture.ForgetPendingOutbox();
         await using var banks = new MockBanksFactory();
         await using var erp = new MockErpFactory();
         Session admin;

@@ -63,6 +63,7 @@ public sealed class ErpRig : IAsyncDisposable
     public ErpRig(KasaFixture fixture, bool startExporter = true, int maxAttempts = 3)
     {
         (_fixture, _maxAttempts) = (fixture, maxAttempts);
+        fixture.ForgetPendingOutbox();
         Api = new KasaApiFactory(fixture, banks: Banks, erp: Erp, rabbitPrefix: Prefix);
         if (startExporter)
         {
