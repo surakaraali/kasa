@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="tr">
+<head><meta charset="utf-8"><title>Kasa kuyrukları</title><link rel="stylesheet" href="style.css"><script src="diagram.js"></script></head>
+<body>
+<div class="frame"></div>
+<script>
+  // One voucher request's possible paths: written, retried after 10 s, or given up for a person to look at.
+  const s = diagram(680, 645);
+  box(s, { x: 240, y: 16, w: 200, h: 64, title: "Kasa.Api", lines: ["outbox yayıncısı"], kind: "main" });
+  box(s, { x: 240, y: 120, w: 200, h: 52, title: "erp.export", lines: ["sıradaki fiş istekleri"], kind: "queue" });
+  box(s, { x: 20, y: 120, w: 180, h: 52, title: "erp.export.retry", lines: ["10 sn sonra geri döner"], kind: "retry" });
+  box(s, { x: 240, y: 216, w: 200, h: 72, title: "Aktarım servisi", lines: ["deneme sayısı başlıkta,", "en fazla 5"] });
+  box(s, { x: 480, y: 216, w: 180, h: 52, title: "ERP", lines: ["fişi yazar"] });
+  box(s, { x: 480, y: 330, w: 180, h: 60, title: "erp.export.dead", lines: ["bir kişi bakar"], kind: "dead" });
+  box(s, { x: 240, y: 420, w: 200, h: 52, title: "erp.results", lines: ["her sonuç"], kind: "queue" });
+  box(s, { x: 240, y: 512, w: 200, h: 72, title: "Kasa.Api", lines: ["hareket “ERP'de fiş”", "ya da “Aktarılamadı”"], kind: "main" });
+
+  arrow(s, [[340, 80], [340, 118]], "green");
+  label(s, 352, 104, "voucher.export", { mono: true, size: 12 });
+  arrow(s, [[340, 172], [340, 214]], "green");
+  arrow(s, [[440, 234], [478, 234]], "green");
+  arrow(s, [[478, 254], [442, 254]], "grey");
+
+  arrow(s, [[240, 252], [110, 252], [110, 174]], "amber");
+  arrow(s, [[200, 146], [238, 146]], "amber");
+  label(s, 20, 278, ["geçici hata: ERP kapalı,", "5xx ya da zaman aşımı"], { tone: "amber", size: 12 });
+
+  arrow(s, [[440, 278], [570, 278], [570, 328]], "red");
+  label(s, 560, 300, ["kalıcı hata ya da", "5. deneme bitti"], { tone: "red", anchor: "end", size: 12 });
+
+  arrow(s, [[340, 288], [340, 418]], "green");
+  label(s, 352, 352, "voucher.result", { mono: true, size: 12 });
+  label(s, 352, 370, "fiş no ya da hata", { size: 12 });
+  arrow(s, [[340, 472], [340, 510]], "green");
+
+  label(s, 20, 618, ["Gri kutular kuyruk, beyaz kutular servis. Hepsi tek bir direct exchange",
+    "(kasa.erp) üzerinden yönleniyor; kuyruklar quorum, mesajlar kalıcı."], { size: 12 });
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="tr">
+<head><meta charset="utf-8"><title>Sayman nasıl cevaplıyor</title><link rel="stylesheet" href="style.css"><script src="diagram.js"></script></head>
+<body>
+<div class="frame"></div>
+<script>
+  // One question to Sayman: the model asks for a tool, Kasa runs it inside the company's boundary.
+  const s = diagram(680, 535);
+  box(s, { x: 20, y: 16, w: 400, h: 72, title: "Tarayıcı", lines: ["“Bu ay ABC Tekstil'den ne kadar tahsilat geldi?”"] });
+
+  box(s, { x: 20, y: 128, w: 400, h: 360, title: "", kind: "container", dashed: true });
+  label(s, 36, 156, "Kasa.Api", { tone: "ink", size: 15, weight: 600 });
+  label(s, 36, 176, "araç döngüsü: modelle en fazla 6 tur");
+  box(s, { x: 36, y: 196, w: 190, h: 150, title: "5 araç, sadece okur", monoLines: true,
+    lines: ["list_accounts", "search_transactions", "cash_flow", "current_account_summary", "unmatched_overview"] });
+  box(s, { x: 240, y: 196, w: 166, h: 70, title: "Maskeleme", lines: ["TR09 **** **** 0001"], monoLines: true });
+  box(s, { x: 240, y: 276, w: 166, h: 70, title: "Banka açıklaması", lines: ["veri, talimat değil"] });
+  box(s, { x: 36, y: 400, w: 190, h: 64, title: "SQL Server", lines: ["toplamları SQL hesaplar"] });
+  box(s, { x: 240, y: 400, w: 166, h: 64, title: "Sınırlar", lines: ["30 soru/saat, 90 sn"] });
+  arrow(s, [[131, 346], [131, 398]], "green");
+  label(s, 143, 368, ["şirket filtresi:", "token'daki şirket"], { tone: "green", size: 12 });
+
+  box(s, { x: 480, y: 196, w: 180, h: 110, title: "Claude", lines: ["dil modeli", "SQL görmez,", "şirket seçemez"] });
+  arrow(s, [[422, 220], [478, 220]], "green");
+  step(s, 450, 206, 2);
+  arrow(s, [[478, 252], [422, 252]], "green");
+  step(s, 450, 238, 3);
+  arrow(s, [[422, 284], [478, 284]], "green");
+  step(s, 450, 270, 4);
+
+  step(s, 490, 342, 2);
+  label(s, 506, 347, "talimat, 5 araç, soru");
+  step(s, 490, 372, 3);
+  label(s, 506, 377, "araç isteği, örneğin");
+  label(s, 506, 395, "search_transactions", { mono: true, size: 12 });
+  step(s, 490, 422, 4);
+  label(s, 506, 427, "aracın maskeli sonucu");
+
+  arrow(s, [[140, 88], [140, 126]], "green");
+  step(s, 122, 107, 1);
+  label(s, 152, 112, "soru");
+  arrow(s, [[300, 126], [300, 90]], "green");
+  step(s, 282, 107, 5);
+  label(s, 312, 112, "cevap, kelime kelime");
+
+  label(s, 20, 520, "Şirketin verisi Kasa.Api'nin içinde kalır; modele sadece aracın sonucu gider.");
+</script>
+</body>
+</html>

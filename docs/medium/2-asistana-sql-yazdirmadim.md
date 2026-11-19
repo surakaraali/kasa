@@ -1,6 +1,7 @@
 # Muhasebe asistanına SQL yazdırmadım
 
-*Taslak 2. Medium'a yapıştırmadan önce [Görsel] yazan yerlere resimleri koy.*
+*Medium'a aktarırken: metni yapıştır, her `![...]` satırının yerine `gorseller/` klasöründeki dosyayı sürükle; altındaki
+italik satır resmin yazısı. Diyagramların kaynağı `gorseller/kaynak/` içinde.*
 
 ---
 
@@ -15,7 +16,8 @@ kararları anlatıyorum:
 2. Banka açıklamalarına gömülü talimatlara uyması (prompt injection)
 3. Maliyetin kontrolsüz büyümesi
 
-[Görsel 1: Sayman paneli. Sağdan açılan sohbet, araç adımları ("Hareketler aranıyor…") ve cevap.]
+![Sayman bir soruyu nasıl cevaplıyor](gorseller/2-sayman-dongusu.png)
+*Sayman bir soruyu nasıl cevaplıyor: model bir araç istiyor, aracı Kasa şirketin sınırı içinde çalıştırıyor.*
 
 ## İlk akla gelen: modele SQL yazdırmak
 
@@ -118,7 +120,8 @@ Böylece iki şeyi birden test edebiliyorum:
 Hatalı araç girdisi, tur sınırı, saatlik sınır ve bozuk konuşma geçmişi için de birer test var. Gerçek modelle kalite denemesi
 ayrıca yapılmalı; sahte sunucu doğruluğu değil, sistemin davranışını test ediyor.
 
-[Görsel 2: Sayman'ın girişte verdiği karşılama. "Şu an 23 hareket kararınızı bekliyor" ve "Bekleyenlere bak" düğmesi.]
+![Sayman'ın karşılaması](gorseller/2-karsilama.png)
+*Girişteki karşılama: dil modelinden değil, panelin kendi verisinden.*
 
 ## Asistanın en kullanışlı cümlesi modelden gelmiyor
 
@@ -136,8 +139,3 @@ Asistanın sadece okuyan araçlarla sınırlanması, şirket kimliğinin token'd
 kararlardan.
 
 Kodun tamamı, karar notları ve testler GitHub'da: [bağlantı]
-
----
-
-*Görseller için not: Görsel 1 Sayman panelinin ekran görüntüsü (gerçek modelle bir soru sorulmuş hâli daha iyi olur;
-anahtar eklenince çekilebilir). Görsel 2 karşılama balonu.*

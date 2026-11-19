@@ -1,8 +1,12 @@
 # Bir kuruşun bankadan ERP'ye yolculuğu: tek fiş garantisi
 
-*Taslak 1. Medium'a yapıştırmadan önce [Görsel] yazan yerlere resimleri koy.*
+*Medium'a aktarırken: metni yapıştır, her `![...]` satırının yerine `gorseller/` klasöründeki dosyayı sürükle; altındaki
+italik satır resmin yazısı. Diyagramların kaynağı `gorseller/kaynak/` içinde.*
 
 ---
+
+![Kasa'nın giriş ekranı](gorseller/1-kapak.png)
+*Kasa'nın giriş ekranı: bir banka ekstresi satır satır cariye eşleşiyor, eşleşen ERP fişi oluyor.*
 
 Bir şirketin muhasebe ekibinin sabahı çoğu zaman aynı başlar: bankaların ekstrelerini indir, hangi paranın hangi müşteriden
 geldiğini bul, muhasebe programına tahsilat fişi olarak gir. Üç banka, günde yüz hareket, ayda birkaç bin satır.
@@ -19,7 +23,8 @@ Para söz konusu olduğunda bu soruların cevabı "genelde olmaz" olamaz. Bu yaz
 pratik projede hangi kararları neden verdiğimi anlatıyorum. Kod .NET 10, SQL Server, Redis ve RabbitMQ ile yazıldı;
 bankalar ve ERP test için kurgulanmış sunucular.
 
-[Görsel 1: Kasa'nın mimarisi. Web, Kasa.Api (SQL Server, Redis, MongoDB), RabbitMQ, ERP aktarım servisi, test ERP'si.]
+![Kasa'nın mimarisi](gorseller/1-mimari.png)
+*Kasa'nın mimarisi. Yeşil çizgi, bir hareketin bankadan ERP fişine yolu.*
 
 ## Önce soruları yazdım
 
@@ -133,7 +138,8 @@ Her hata aynı değil, aynı şekilde ele alınmamalı:
 Neden mesajı `nack` ile anında kuyruğa geri koymadım? Çünkü ERP kapalıyken bu, saniyede yüzlerce deneme yapan sıcak bir döngü
 olur. Bekleme kuyruğu hem ERP'yi hem servisi rahatlatıyor.
 
-[Görsel 2: Kuyruk yapısı. kasa.erp exchange; erp.export, erp.export.retry (TTL 10 sn), erp.export.dead, erp.results.]
+![Kuyruk yapısı](gorseller/1-kuyruklar.png)
+*Bir fiş isteğinin olası yolları: yazılır, 10 saniye sonra yeniden denenir ya da bir kişiye bırakılır.*
 
 ## Biri kapanırsa
 
@@ -170,8 +176,3 @@ ve idempotency'ye bağlamak gerekiyor. Kilitler, önbellekler ve kuyruklar siste
 hareket tek kez kaydedildi mi, bu fiş tek kez yazıldı mı" sorusunun cevabı her biri çökse bile değişmemeli.
 
 Kodun tamamı, karar notları ve 18 hata senaryosunun testleri GitHub'da: [bağlantı]
-
----
-
-*Görseller için not: Görsel 1 README'deki mimari diyagramdan, Görsel 2 kuyruk yapısından çizilecek. Kapak için Kasa'nın
-giriş ekranındaki ekstre görüntüsü kullanılabilir.*

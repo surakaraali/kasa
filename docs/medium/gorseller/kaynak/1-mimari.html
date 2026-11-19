@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="tr">
+<head><meta charset="utf-8"><title>Kasa mimarisi</title><link rel="stylesheet" href="style.css"><script src="diagram.js"></script></head>
+<body>
+<div class="frame"></div>
+<script>
+  // A movement's way, top to bottom: bank, Kasa.Api, RabbitMQ, the export service, the ERP.
+  const s = diagram(680, 560);
+  box(s, { x: 240, y: 16, w: 200, h: 72, title: "Bankalar", lines: ["AcikBank (OAuth + PKCE)", "KlasikBank (şifre)"] });
+  box(s, { x: 240, y: 128, w: 200, h: 88, title: "Kasa.Api", lines: ["Senkron, eşleştirme,", "outbox yayını"], kind: "main" });
+  box(s, { x: 240, y: 256, w: 200, h: 72, title: "RabbitMQ", lines: ["kasa.erp, 4 kuyruk"] });
+  box(s, { x: 240, y: 368, w: 200, h: 72, title: "Aktarım servisi", lines: ["Kasa.ErpExporter"] });
+  box(s, { x: 240, y: 480, w: 200, h: 64, title: "ERP", lines: ["tahsilat ve tediye fişi"] });
+
+  box(s, { x: 20, y: 136, w: 190, h: 72, title: "Tarayıcı", lines: ["Next.js", "SignalR ile canlı ekran"] });
+  arrow(s, [[212, 172], [238, 172]], "grey", { both: true });
+
+  box(s, { x: 490, y: 104, w: 170, h: 50, title: "SQL Server", lines: ["asıl veri, outbox"] });
+  box(s, { x: 490, y: 162, w: 170, h: 50, title: "Redis", lines: ["kilit, önbellek, sınır"] });
+  box(s, { x: 490, y: 220, w: 170, h: 50, title: "MongoDB", lines: ["ham banka cevapları"] });
+  arrow(s, [[440, 172], [465, 172], [465, 129], [488, 129]], "grey");
+  arrow(s, [[465, 172], [465, 187], [488, 187]], "grey");
+  arrow(s, [[465, 187], [465, 245], [488, 245]], "grey");
+
+  arrow(s, [[340, 88], [340, 126]], "green");
+  label(s, 328, 103, ["15 dakikada bir", "ya da “Şimdi çek”"], { anchor: "end", size: 12 });
+
+  arrow(s, [[325, 216], [325, 254]], "green");
+  arrow(s, [[355, 254], [355, 218]], "grey");
+  label(s, 316, 240, "fiş isteği", { anchor: "end", tone: "green", size: 12 });
+  label(s, 366, 240, "sonuç", { size: 12 });
+  arrow(s, [[325, 328], [325, 366]], "green");
+  arrow(s, [[355, 366], [355, 330]], "grey");
+  label(s, 316, 352, "fiş isteği", { anchor: "end", tone: "green", size: 12 });
+  label(s, 366, 352, "sonuç", { size: 12 });
+
+  arrow(s, [[340, 440], [340, 478]], "green");
+  label(s, 352, 464, "HTTP, Idempotency-Key", { size: 12 });
+
+  label(s, 476, 500, ["Yeşil çizgi: bir hareketin", "bankadan ERP fişine yolu."], { tone: "green", size: 12 });
+  label(s, 476, 540, "Gri: sonuçlar ve veri.", { size: 12 });
+</script>
+</body>
+</html>
