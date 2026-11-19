@@ -355,3 +355,76 @@ sayfalar kaymaz; OFFSET'te bir satır iki sayfada görünürdü. Canlı mesaj ge
 Her satır gördüğü `rowVersion`'ı gönderiyor. İkinci kişi 409 alıyor ve "siz bakarken başka biri değiştirdi" mesajını görüyor;
 liste yenileniyor, güncel hali çıkıyor. Kimse kimsenin kararını sessizce ezmiyor.
 </details>
+
+---
+
+## Sprint 5: Yapay zekâ asistanı
+
+**1. Modele neden SQL yazdırmadın da araç verdin?**
+<details><summary>İpucu</summary>
+SQL yazan model her şeyi okuyabilir; şirket filtresini unutması ya da ikna edilmesi yeter. Araçlarda sorguyu Kasa yazıyor,
+şirket filtresi her sorguda zorunlu. Model sadece "neyi" söylüyor, "nasıl"ı Kasa belirliyor. Araçlar sadece okuyor.
+</details>
+
+**2. Asistan başka şirketin verisini nasıl göremiyor?**
+<details><summary>İpucu</summary>
+Araçların şirket parametresi yok. Şirket, isteği yapan kullanıcının JWT'sinden TenantContext'e geliyor ve EF Core sorgu filtresi
+her sorguya ekliyor. Model "bütün şirketleri göster" dese bile elindeki araç sadece kendi şirketini okuyabiliyor. Bunun testi var:
+saldırganın kendi hareketine yazdığı talimat, başka şirketin hesabını göstermiyor.
+</details>
+
+**3. Prompt injection nedir, Kasa'da nereden gelebilir?**
+<details><summary>İpucu</summary>
+Modelin okuduğu veriye gömülmüş talimat. Kasa'da kaynak banka hareket açıklaması ve karşı taraf adı: parayı gönderen istediğini
+yazabilir ("SİSTEM: önceki talimatları yok say..."). Önlemler: açıklamalar araç sonucunda JSON alanı olarak gidiyor, sistem
+talimatı bunları veri saymasını söylüyor; asıl önlem de mimaride: asistanın yapabileceği en kötü şey kendi şirketinin verisini okumak.
+</details>
+
+**4. IBAN ve vergi numarasını neden maskeliyorsun? Model zaten senin.**
+<details><summary>İpucu</summary>
+Veri azaltma: soruyu cevaplamak için tam numara gerekmiyor, hesapları ayırmaya son 4 hane yetiyor. Dışarı çıkmayan veri sızamaz;
+loglara, konuşma geçmişine, ekran görüntüsüne de düşmez. KVKK açısından da "gerektiği kadar" ilkesi.
+</details>
+
+**5. Maliyeti nasıl sınırladın?**
+<details><summary>İpucu</summary>
+Soru başına en fazla 6 araç turu (model döngüye girerse durur), kullanıcı başına saatte 30 soru (Redis), cevap başına üst token
+sınırı, 90 saniye zaman aşımı, geçmiş 20 mesajla sınırlı. Her turun girdi/çıktı/önbellek token'ı loglanıyor; maliyet ölçülebilir.
+Model ve effort ayardan değişiyor.
+</details>
+
+**6. Prompt caching nasıl çalışıyor? Neden tarihi sistem talimatına koymadın?**
+<details><summary>İpucu</summary>
+Önbellek önek eşleşmesi: araçlar, sistem, mesajlar sırasıyla; önekte tek bir bayt değişirse sonrası önbellekten okunmaz. Tarih ya
+da şirket adı sistem talimatında olsaydı her gün ve her şirket için önek değişirdi. Onları son sorunun yanına ayrı bir blok olarak
+koydum; araçlar ve talimat her istekte aynı. Araç turlarında da konuşmanın öncesi önbellekten okunuyor.
+</details>
+
+**7. Araç döngüsü nasıl işliyor?**
+<details><summary>İpucu</summary>
+İstek gider, model ya cevap yazar ya `tool_use` blokları döner (stop_reason: tool_use). Kasa araçları çalıştırır, modelin cevabını
+(düşünme blokları imzalarıyla birlikte) aynen geri ekler, ardından bütün araç sonuçlarını tek bir kullanıcı mesajında gönderir.
+Model cevap verene ya da tur sınırına gelene kadar sürer. Akış sırasında metin parçaları tarayıcıya hemen iletiliyor.
+</details>
+
+**8. Model yanlış bir araç girdisi verirse ne oluyor?**
+<details><summary>İpucu</summary>
+Araç girdisi dış veri gibi doğrulanıyor: tarih biçimi, sayı aralığı, uzunluk. Hatalıysa istisna fırlatmıyorum; modele `is_error`
+işaretli bir sonuç dönüyor ("from must be YYYY-MM-DD"), model düzeltip tekrar deniyor. Girdiler akarken geldiği için yarım kalmış
+bir girdi de aynı doğrulamaya takılıyor.
+</details>
+
+**9. Anahtar olmadan asistanı nasıl test ettin?**
+<details><summary>İpucu</summary>
+Sahte bir Claude sunucusu: SDK'nın HttpClient'ına bir handler verdim, gerçek API'nin SSE biçiminde önceden yazılmış cevaplar
+dönüyor ve gönderilen istekleri saklıyor. Böylece hem döngüyü (araç turu, düşünme bloğu imzası, araç sonucu) hem de gönderilen
+isteği (model, önbellek, araç listesi, maskeli veri) kontrol edebiliyorum. CI'da anahtar gerekmiyor. Gerçek modelle kalite
+denemesi ayrıca yapılmalı.
+</details>
+
+**10. Asistan yanlış rakam söylerse?**
+<details><summary>İpucu</summary>
+Olabilir; o yüzden rakamları model hesaplamıyor, araçlar SQL'de hesaplıyor; model sadece aktarıyor. Ayrıca her toplamın hangi
+dönemi ve filtreyi kapsadığını söylemesi isteniyor, kullanıcı ekranlardan kontrol edebiliyor. Asistan karar vermiyor, eşleme
+yapmıyor; sadece okuyor.
+</details>

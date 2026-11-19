@@ -218,17 +218,17 @@ Her sprint şu adımlarla kapanır:
 - Karar notları: 0011 web arayüzü ve canlı güncelleme, 0012 panel önbelleği
 - **Çıktı:** demo senaryosunun görsel kısmı çalışıyor; tarayıcıda kayıt, ERP, iki banka, elle eşleme ve canlı panel denendi
 
-### Sprint 5: Yapay zekâ asistanı
-- [ ] Arayüzde sohbet paneli; cevaplar akışlı (kelime kelime) geliyor
-- [ ] API tarafında Claude ile araç çağrısı: hesap listesi, hareket arama, eşleşmeyenler, cari özeti
-- [ ] Güvenlik:
-  - Araçlar sadece okuma yapıyor.
-  - Şirket kimliği modelden değil, kullanıcının token'ından geliyor.
-  - IBAN ve vergi numarası maskeleniyor.
-  - Hareket açıklamalarındaki talimatlar dikkate alınmıyor (prompt injection testi).
-- [ ] Zaman aşımı, maliyet sınırı, model kapalıysa anlamlı mesaj
-- [ ] Testler: sahte modelle araç seçimi ve maskeleme
-- **Çıktı:** "Bu ay en çok kim ödedi?" sorusu gerçek veriden cevaplanıyor
+### Sprint 5: Yapay zekâ asistanı ✅ 2026-11-19
+- [x] Arayüzde sohbet sayfası; cevaplar akışlı (SSE, kelime kelime), araç adımları görünüyor; Next geçişinin akışı tamponlamadığı ölçüldü
+- [x] API tarafında Claude ile araç çağrısı (resmî C# SDK, elle yazılmış araç döngüsü): hesaplar, hareket arama, nakit akışı, cari özeti, eşleşmeyenler
+- [x] Güvenlik: araçlar sadece okuyor; şirket kimliği token'dan; IBAN ve vergi numarası maskeli; hareket açıklamalarındaki talimatlar veri sayılıyor (test)
+- [x] Zaman aşımı (90 sn), tur sınırı (6), saatlik soru sınırı (30), anahtar yoksa 503 ve arayüzde "kapalı"
+- [x] Önbellek: sabit sistem talimatı ve araç listesi; tarih ve şirket son soruda; araç turlarında üst düzey `cache_control`
+- [x] Sunucu tarafı yedek model (`fallbacks: "default"`), reddedilen soruda anlamlı mesaj
+- [x] Testler: sahte Claude sunucusuyla 8 test (araç turu, düşünme imzası, maskeleme, hatalı girdi, tur sınırı, saatlik sınır, bozuk geçmiş, şirket kapsamı), toplam 72
+- Karar notu: 0013 yapay zekâ asistanı
+- Gerçek modelle deneme: API anahtarı eklenince (`dotnet user-secrets set "Assistant:ApiKey" ... --project src/Kasa.Api`)
+- **Çıktı:** "Bu ay en çok kim ödedi?" sorusu gerçek veriden, araçlarla cevaplanıyor
 
 ### Sprint 6: Kalite ve dayanıklılık
 - [ ] Serilog ve OpenTelemetry: bir isteğin bütün servislerdeki izi

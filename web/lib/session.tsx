@@ -42,6 +42,8 @@ interface Session {
   token: string | null;
   /** Calls the API with the access token; on 401 refreshes once and tries again. */
   api: <T>(path: string, init?: RequestInit & { json?: unknown }) => Promise<T>;
+  /** The same, but hands back the raw response (for streams). Throws ApiError when it is not ok. */
+  authFetch: (path: string, init?: RequestInit & { json?: unknown }) => Promise<Response>;
   signIn: (path: "/api/auth/login" | "/api/auth/register" | "/api/auth/accept-invitation", body: unknown) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -67,7 +69,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     refreshOnce().then(loadMe);
   }, [loadMe]);
 
-  const api = useCallback(async <T,>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> => {
+  const authFetch = useCallback(async (path: string, init: RequestInit & { json?: unknown } = {}): Promise<Response> => {
     const send = (accessToken: string | null) => {
       const headers = new Headers(init.headers);
       if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
@@ -87,8 +89,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       response = await send(fresh);
     }
     if (!response.ok) throw await errorOf(response);
-    return (response.status === 204 ? undefined : await response.json()) as T;
+    return response;
   }, [loadMe]);
+
+  const api = useCallback(async <T,>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> => {
+    const response = await authFetch(path, init);
+    return (response.status === 204 ? undefined : await response.json()) as T;
+  }, [authFetch]);
 
   const signIn = useCallback<Session["signIn"]>(async (path, body) => {
     const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -101,7 +108,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await loadMe(null);
   }, [loadMe]);
 
-  const value = useMemo(() => ({ ...state, api, signIn, signOut }), [state, api, signIn, signOut]);
+  const value = useMemo(() => ({ ...state, api, authFetch, signIn, signOut }), [state, api, authFetch, signIn, signOut]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 

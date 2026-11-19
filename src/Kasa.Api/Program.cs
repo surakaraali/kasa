@@ -42,6 +42,7 @@ builder.Services.AddKasaAuth();
 builder.Services.AddKasaBanking(builder.Configuration);
 builder.Services.AddKasaErp();
 builder.Services.AddSignalR();
+Kasa.Api.Assistant.AssistantSetup.AddKasaAssistant(builder.Services);
 builder.Services.AddSingleton<Kasa.Api.Dashboard.CompanyEvents>();
 
 var app = builder.Build();

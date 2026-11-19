@@ -6,7 +6,7 @@ sorulabiliyor.
 
 > Bu bir pratik projesi. Bankalar ve ERP test için kurgulandı, bütün veriler örnek veridir.
 
-**Durum:** Sprint 4 tamamlandı (iki banka, eşleştirme, RabbitMQ ile ERP aktarımı, web arayüzü ve canlı panel). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
+**Durum:** Sprint 5 tamamlandı (iki banka, eşleştirme, RabbitMQ ile ERP aktarımı, web arayüzü, canlı panel ve yapay zekâ asistanı). Plan ve sprintler: [docs/PLAN.md](docs/PLAN.md)
 
 ## Mimari
 
@@ -57,6 +57,12 @@ sonra `POST /api/bank-connections/klasikbank` ile bağlanın (kullanıcı `kasa`
 sabit değerleri). ERP için önce `PUT /api/company/erp` (`{"firmCode":"001"}`), sonra `POST /api/current-accounts/import`;
 eşleşen hareketler birkaç saniye içinde http://localhost:5103 sayfasında fiş olarak görünür. Açık bankacılık için `POST /api/bank-connections/acikbank` dönen adresi tarayıcıda açın.
 
+Asistanı açmak için Anthropic API anahtarını kendi makinenizde user-secrets'a koyun (depoya hiçbir zaman girmez):
+
+```bash
+dotnet user-secrets set "Assistant:ApiKey" "<anahtarınız>" --project src/Kasa.Api
+```
+
 Bellek sınırları 8 GB RAM'li bir dizüstüne göre ayarlı; dört servis toplam yaklaşık 4 GB ile sınırlı.
 
 ## Kararlar
@@ -75,5 +81,6 @@ Her teknoloji seçiminin gerekçesi `docs/kararlar/` altında: bağlam, seçenek
 - [0010: Cari eşleştirme kuralları ve iyimser eşzamanlılık](docs/kararlar/0010-eslestirme-kurallari-ve-eszamanlilik.md)
 - [0011: Web arayüzü: oturum, API'ye geçiş ve canlı güncelleme](docs/kararlar/0011-web-arayuzu-oturum-ve-canli-guncelleme.md)
 - [0012: Panel önbelleği: sürüm anahtarıyla Redis](docs/kararlar/0012-panel-onbellegi.md)
+- [0013: Yapay zekâ asistanı: sadece okuyan araçlar ve dar bir güven sınırı](docs/kararlar/0013-yapay-zeka-asistani.md)
 
 Sprint sonu soruları ve cevap ipuçları: [docs/sorular.md](docs/sorular.md). İş takibi: [GitHub Projects panosu](https://github.com/users/surakaraali/projects/1).

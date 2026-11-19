@@ -12,6 +12,7 @@ const nav = [
   { href: "/eslesmeyenler", label: "Eşleşmeyenler" },
   { href: "/baglantilar", label: "Banka bağlantıları" },
   { href: "/erp", label: "ERP ve cariler" },
+  { href: "/asistan", label: "Asistan" },
   { href: "/ekip", label: "Ekip" },
 ];
 

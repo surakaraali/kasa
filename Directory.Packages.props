@@ -12,6 +12,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.15" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.15" />
     <!-- Third party -->
+    <PackageVersion Include="Anthropic" Version="13.10.0" />
     <PackageVersion Include="MongoDB.Driver" Version="3.14.0" />
     <PackageVersion Include="Quartz.Extensions.Hosting" Version="4.7.3" />
     <PackageVersion Include="RabbitMQ.Client" Version="7.2.2" />
