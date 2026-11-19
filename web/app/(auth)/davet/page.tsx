@@ -8,15 +8,15 @@ function Invitation() {
   const token = useSearchParams().get("token") ?? "";
   return (
     <>
-      <h1>Ekibe katılın</h1>
-      <p className="muted">Davet edildiğiniz şirkete katılmak için adınızı ve şifrenizi belirleyin.</p>
+      <h2>Ekibe katılın</h2>
+      <p className="muted">Adınızı ve şifrenizi belirleyin; davet edildiğiniz şirkete katılırsınız.</p>
       <AuthForm
         path="/api/auth/accept-invitation"
         submit="Katıl"
         extra={{ token }}
         fields={[
           { name: "fullName", label: "Adınız soyadınız", autoComplete: "name" },
-          { name: "password", label: "Şifre (en az 10 karakter; büyük, küçük harf ve rakam)", type: "password", autoComplete: "new-password" },
+          { name: "password", label: "Şifre", type: "password", autoComplete: "new-password", hint: "En az 10 karakter; büyük harf, küçük harf ve rakam." },
         ]}
       />
     </>

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useSession } from "./session";
 
-interface Field { name: string; label: string; type?: string; autoComplete?: string }
+interface Field { name: string; label: string; type?: string; autoComplete?: string; hint?: string; placeholder?: string }
 
 /** One form for sign in, sign up and joining by invitation: they differ only in fields and endpoint. */
 export function AuthForm({ path, fields, submit, extra, footer }: {
@@ -38,13 +38,15 @@ export function AuthForm({ path, fields, submit, extra, footer }: {
         {fields.map((f) => (
           <label key={f.name}>
             {f.label}
-            <input name={f.name} type={f.type ?? "text"} autoComplete={f.autoComplete} required />
+            <input name={f.name} type={f.type ?? "text"} autoComplete={f.autoComplete} placeholder={f.placeholder} required
+              aria-describedby={f.hint ? `${f.name}-hint` : undefined} />
+            {f.hint && <small id={`${f.name}-hint`}>{f.hint}</small>}
           </label>
         ))}
         {error && <p className="error" role="alert">{error}</p>}
         <button type="submit" disabled={busy}>{busy ? "Bekleyin…" : submit}</button>
       </form>
-      {footer && <p className="muted" style={{ marginTop: 16, marginBottom: 0 }}>{footer}</p>}
+      {footer && <p className="auth-switch">{footer}</p>}
     </>
   );
 }

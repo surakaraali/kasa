@@ -11,6 +11,28 @@ http://localhost:18888, ikinci bir gizli pencerede Kasa (muhasebeci için). Bir 
 
 Test bankası giriş bilgileri: kullanıcı `kasa`, şifre `klasik-dev-pass` (test bankasının sabit değerleri).
 
+## Hazır demo şirketi
+
+Boş sistem yerine her şeyi bağlı bir şirketle başlamak için, `reset`'ten sonra:
+
+```bash
+scripts/demo-seed.sh       # genel adresle: KASA_PUBLIC_URL=https://kasa.surakaraali.dev scripts/demo-seed.sh
+```
+
+Anadolu Tekstil A.Ş.: ERP firması 001 ve 7 cari kart, iki banka, yaklaşık 60 hareket (çoğu eşleşmiş ve ERP'de fiş). Test
+hesapları (sadece bu demonun yerel veritabanında, örnek veri):
+
+| E-posta | Rol | Şifre |
+|---|---|---|
+| demo@kasa.test | Yönetici | Demo-Password-2026 |
+| muhasebe@kasa.test | Muhasebeci | Demo-Password-2026 |
+| izleyici@kasa.test | İzleyici | Demo-Password-2026 |
+
+## Demo videosu
+
+`.demo/kasa-demo.webm` (2 dk 35 sn, depoya girmez): kayıttan başlayarak 13 adım, her adımda Türkçe açıklama. Playwright ile
+kurulu Chrome'un ayrı, temiz bir oturumunda kaydedildi.
+
 ## Genel adresten (kasa.surakaraali.dev)
 
 Demo kendi bilgisayarında çalışır; Cloudflare Tunnel sadece web uygulamasını (3000) dışarı açar. API, test servislerinin
@@ -83,4 +105,4 @@ curl -s -X POST localhost:5102/mock/klasikbank/fault -H 'content-type: applicati
 
 ## Yedek video
 
-Aynı akışı ekran kaydıyla (macOS'ta Cmd+Shift+5) kaydet, 6-8 dakika. Kayıt `docs/` altına konmaz; büyük dosya depoya girmesin.
+Hazır: `.demo/kasa-demo.webm`. Kendi sesinle anlatımlı bir kayıt istersen aynı akışı Cmd+Shift+5 ile kaydedebilirsin.

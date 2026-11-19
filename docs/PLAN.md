@@ -246,8 +246,9 @@ Her sprint şu adımlarla kapanır:
 - [x] Canlı hata demosu komutları: ERP'yi kapat/aç, Redis'i kapat/aç, banka bozuk veri
 - [x] Teknik sunum taslağı ([teknik-sunum.md](teknik-sunum.md)): mimari, sıra diyagramı, ölçümler, kararlar
 - [x] Soru listesi: 75 soru ve ipucu ([sorular.md](sorular.md))
+- [x] Giriş, kayıt ve davet ekranları yeniden tasarlandı
 - [ ] Teknik sunumun site hâli (sunum.surakaraali.dev'in teknik versiyonu)
-- [ ] Yedek video (ekran kaydı sende)
+- [x] Demo videosu (2 dk 35 sn, 13 adım, Türkçe açıklamalı) ve hazır demo şirketi (`scripts/demo-seed.sh`)
 - [x] kasa.surakaraali.dev: Cloudflare Tunnel (`scripts/tunnel.sh`); sadece web dışarıda, banka onay sayfası ve ERP fiş sayfası onun arkasında; genel adresten açık bankacılık akışı denendi
 - [ ] Prova: ben mülakatçı rolünde, sorular üzerinden
 - [ ] Medium yazıları; en sonda depoyu herkese açmak

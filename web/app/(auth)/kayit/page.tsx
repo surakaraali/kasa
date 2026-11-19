@@ -4,16 +4,16 @@ import { AuthForm } from "@/lib/AuthForm";
 export default function Register() {
   return (
     <>
-      <h1>Şirket hesabı açın</h1>
-      <p className="muted">Şirketiniz ve ilk yönetici birlikte oluşturulur. Ekibinizi sonra davet edersiniz.</p>
+      <h2>Şirket hesabı açın</h2>
+      <p className="muted">İlk kullanıcı yönetici olur; ekibinizi sonra davet edersiniz.</p>
       <AuthForm
         path="/api/auth/register"
         submit="Hesabı aç"
         fields={[
           { name: "companyName", label: "Şirket adı" },
           { name: "fullName", label: "Adınız soyadınız", autoComplete: "name" },
-          { name: "email", label: "E-posta", type: "email", autoComplete: "username" },
-          { name: "password", label: "Şifre (en az 10 karakter; büyük, küçük harf ve rakam)", type: "password", autoComplete: "new-password" },
+          { name: "email", label: "E-posta", type: "email", autoComplete: "username", placeholder: "ad@sirket.com" },
+          { name: "password", label: "Şifre", type: "password", autoComplete: "new-password", hint: "En az 10 karakter; büyük harf, küçük harf ve rakam." },
         ]}
         footer={<>Hesabınız var mı? <Link href="/giris">Giriş yapın</Link></>}
       />
