@@ -128,6 +128,14 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - Demodan sonra tüneli kapat.
 - Bankalar ve ERP test için kurgulandı; bütün veriler örnek.
 
+## Veritabanı
+
+- Bilgisayarındaki Docker'da çalışan SQL Server 2022; demo veritabanının adı `Kasa`, testlerinki `Kasa_Test`. Port 14335, sadece bu bilgisayardan erişilebilir.
+- Tablolar elle yazılmış SQL ile değil, koddan (EF Core migration) oluşuyor: `src/Kasa.Api/Data/Migrations`. Uygulama açılırken eksik migration'ları kendisi uyguluyor.
+- Tabloları açmak için bir şey kurmana gerek yok: `scripts/db.sh` (yaz, alt satıra `GO`, Enter; çıkış `:quit`).
+- Hazır sorgular `docs/demo-sorgulari.sql` içinde: son hareketler, bekleyenler, eşleşme kaydı, outbox, tekil indeks, şirket ayrımı, aylık özet. Hepsi birden: `scripts/db.sh -f docs/demo-sorgulari.sql`.
+- Bağlanırken "sa" ile giriliyor; bu yüzden sorgularda şirketi elle seçiyoruz. Uygulamada bu koşulu EF Core her sorguya kendisi ekliyor.
+
 ## Bilerek bırakılan eksikler (sorulursa dürüstçe)
 
 - İki adımlı doğrulama (SMS/uygulama) ve "şifremi unuttum" yok. E-posta gönderimi yok.
