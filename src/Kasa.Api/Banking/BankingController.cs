@@ -235,8 +235,19 @@ public sealed class AccountsController(AppDbContext db) : ControllerBase
         var rows = Filtered(q).OrderByDescending(t => t.BookedAt).ThenByDescending(t => t.Id)
             .Select(t => new
             {
-                t.BookedAt, Account = t.Account!.Name, t.Account.Iban, t.CounterpartyName, t.Description, t.Amount, t.Account.Currency,
-                Code = t.CurrentAccount!.Code, Title = t.CurrentAccount.Title, t.MatchStatus, t.MatchRule, t.ErpVoucherNo, t.BankReference,
+                t.BookedAt,
+                Account = t.Account!.Name,
+                t.Account.Iban,
+                t.CounterpartyName,
+                t.Description,
+                t.Amount,
+                t.Account.Currency,
+                Code = t.CurrentAccount!.Code,
+                Title = t.CurrentAccount.Title,
+                t.MatchStatus,
+                t.MatchRule,
+                t.ErpVoucherNo,
+                t.BankReference,
             });
         await foreach (var t in rows.AsAsyncEnumerable().WithCancellation(ct))
         {

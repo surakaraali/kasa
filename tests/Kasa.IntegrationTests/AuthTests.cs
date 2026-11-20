@@ -32,7 +32,7 @@ public sealed class AuthTests(KasaFixture fixture) : IDisposable
         var client = closed.CreateClient();
         Assert.True((await (await client.GetAsync("/api/auth/register")).JsonAsync()).GetProperty("codeRequired").GetBoolean());
 
-        object Body(string? code) => new { companyName = "Kod Deneme A.Ş.", fullName = "Test Admin", email = $"code-{Guid.NewGuid():N}@test.kasa", password = Api.Password, signUpCode = code };
+        static object Body(string? code) => new { companyName = "Kod Deneme A.Ş.", fullName = "Test Admin", email = $"code-{Guid.NewGuid():N}@test.kasa", password = Api.Password, signUpCode = code };
         Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/auth/register", Body(null))).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/auth/register", Body("c0de43"))).StatusCode);
         await (await client.PostAsJsonAsync("/api/auth/register", Body(" c0de42 "))).EnsureOkAsync();
