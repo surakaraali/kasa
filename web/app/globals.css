@@ -47,6 +47,7 @@ p { margin: 0 0 12px; }
 .brand svg { flex: none; }
 .brand b { display: block; font-size: 16px; line-height: 20px; font-weight: 600; letter-spacing: -0.01em; }
 .brand small { display: block; font-size: 12px; line-height: 16px; color: var(--muted); }
+.side .links { display: flex; flex-direction: column; gap: 2px; }
 .side a { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 12px; color: var(--ink-2); text-decoration: none; border-radius: var(--r-control); transition: background-color 140ms var(--ease), color 140ms var(--ease); }
 .side a svg { color: var(--muted); flex: none; }
 .side a[aria-current="page"] svg { color: var(--ink); }
@@ -77,7 +78,7 @@ p { margin: 0 0 12px; }
 /* Surfaces */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 20px 24px; }
 .stack { display: grid; gap: 16px; }
-.kpis { display: grid; grid-template-columns: 1.6fr repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .kpi { display: grid; gap: 4px; align-content: start; }
 .kpi .label { font-size: 13px; color: var(--ink-2); }
 .kpi .value { font-family: var(--mono); font-size: 22px; line-height: 32px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap; }
@@ -101,6 +102,12 @@ tbody tr:hover { background: #fcfcfc; }
 tr:last-child td { border-bottom: 0; }
 td.right, th.right { text-align: right; }
 .cell-sub { font-size: 12px; line-height: 16px; color: var(--muted); margin-top: 2px; }
+/* Why the rules left a movement to a person. A suggestion reads in the accent ink, the rest stays quiet. */
+.hint { font-size: 12px; line-height: 16px; color: var(--ink-2); margin-top: 6px; max-width: 40ch; }
+/* The three decision controls stay on one line. */
+.decision { flex-wrap: nowrap; }
+.decision select { width: 248px; min-width: 0; }
+.hint.suggested { color: var(--accent); }
 /* Cell padding is 12, card padding 24: tables step out by 12 so their text lines up with the card title. */
 .card > .table-wrap { margin: 0 -12px; }
 .card.table-wrap { padding: 20px 12px; }
@@ -113,6 +120,7 @@ td.right, th.right { text-align: right; }
 
 /* Forms */
 form.inline, .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+.toolbar input[type="search"] { width: 280px; }
 label { display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); }
 input, select { font: inherit; color: var(--ink); height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--r-control); background: var(--surface); min-width: 0; transition: border-color 140ms var(--ease); }
 input:hover, select:hover { border-color: rgba(23, 23, 23, 0.24); }
@@ -127,7 +135,7 @@ button.secondary { background: var(--surface); color: var(--ink); border-color: 
 button.secondary:hover:not(:disabled) { background: var(--raised); border-color: var(--line-strong); }
 button.danger { background: var(--surface); color: var(--out); border-color: var(--line-strong); }
 button.danger:hover:not(:disabled) { background: var(--notice-bad); border-color: var(--line-strong); }
-button:disabled { opacity: 0.5; cursor: default; }
+button:disabled, button.secondary:disabled, button.danger:disabled { background: var(--raised); border-color: var(--line); color: var(--muted); cursor: default; }
 .error { color: var(--out); font-size: 13px; margin: 0; }
 
 /* Sign-in pages: the product on the left, a plain form on the right. */
@@ -197,9 +205,13 @@ button:disabled { opacity: 0.5; cursor: default; }
 }
 
 @media (max-width: 800px) {
-  .shell { grid-template-columns: 1fr; }
+  /* minmax(0, …): the sideways-scrolling links must not widen the page to their full length. */
+  .shell { grid-template-columns: minmax(0, 1fr); }
   .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--line); padding: 12px; }
-  .brand { width: 100%; padding: 0 12px 8px; }
+  .brand { width: 100%; padding: 0 8px 8px; }
+  .side .links { width: 100%; flex-direction: row; overflow-x: auto; scrollbar-width: none; margin: 0 -12px; padding: 0 12px; }
+  .side .links::-webkit-scrollbar { display: none; }
+  .side .links a { flex: none; white-space: nowrap; }
   /* On a phone the person and sign-out sit as one row under the links, not hidden. */
   .side .foot { width: 100%; margin-top: 8px; padding: 8px 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .side .foot .row { margin-top: 0; gap: 12px; }

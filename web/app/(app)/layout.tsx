@@ -41,13 +41,15 @@ function Shell({ children }: { children: React.ReactNode }) {
             <KasaMark size={28} />
             <div><b>Kasa</b><small>{me!.companyName}</small></div>
           </div>
-          {nav.map(({ href, label, icon: Icon, queue }) => (
-            <Link key={href} href={href} aria-current={path.startsWith(href) ? "page" : undefined}>
-              <Icon size={16} strokeWidth={1.5} aria-hidden />
-              <span>{label}</span>
-              {queue && waiting > 0 && <span className="count" aria-label={`${waiting} hareket bekliyor`}>{waiting}</span>}
-            </Link>
-          ))}
+          <div className="links">
+            {nav.map(({ href, label, icon: Icon, queue }) => (
+              <Link key={href} href={href} aria-current={path.startsWith(href) ? "page" : undefined}>
+                <Icon size={16} strokeWidth={1.5} aria-hidden />
+                <span>{label}</span>
+                {queue && waiting > 0 && <span className="count" aria-label={`${waiting} hareket bekliyor`}>{waiting}</span>}
+              </Link>
+            ))}
+          </div>
           <div className="foot">
             <Link className="who" href="/profil" aria-current={path.startsWith("/profil") ? "page" : undefined} title="Profil">
               <Avatar id={me!.userId} version={me!.avatarVersion} name={me!.fullName} />

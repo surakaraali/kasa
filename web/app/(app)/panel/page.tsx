@@ -45,7 +45,7 @@ function Journey({ d }: { d: Dashboard }) {
     d.matchedByIban && `${d.matchedByIban} IBAN`,
     d.matchedByTaxNumber && `${d.matchedByTaxNumber} vergi no`,
     d.matchedManually && `${d.matchedManually} elle`,
-  ].filter(Boolean).join(" · ");
+  ].filter(Boolean).join(", ");
   const waiting = d.unmatched + d.exportFailed;
 
   return (
@@ -105,7 +105,7 @@ function LatestVouchers() {
           <li key={t.id}>
             <div className="what">
               <b>{t.currentAccountTitle ?? t.counterpartyName}</b>
-              <span><span className="num">{t.erpVoucherNo}</span> · {t.amount > 0 ? "Tahsilat" : "Tediye"} · <span className="num">{day(t.bookedAt)}</span></span>
+              <span>{t.amount > 0 ? "Tahsilat" : "Tediye"} fişi <span className="num">{t.erpVoucherNo}</span>, <span className="num">{day(t.bookedAt)}</span></span>
             </div>
             <Amount value={t.amount} />
           </li>
@@ -126,11 +126,14 @@ export default function Panel() {
   const chart = data.daily.map((d, i) => ({ day: calendarDay(d.date), Giren: d.in, Çıkan: -d.out, today: i === last }));
   const sumIn = data.daily.reduce((s, d) => s + d.in, 0);
   const sumOut = data.daily.reduce((s, d) => s + d.out, 0);
+  const today = data.todayIn === 0 && data.todayOut === 0
+    ? "Bugün hareket yok."
+    : `Bugün ${data.todayIn > 0 ? `${tl(data.todayIn)} girdi` : "giren yok"}, ${data.todayOut > 0 ? `${tl(data.todayOut)} çıktı` : "çıkan yok"}.`;
   const finding = data.accounts.length === 0
     ? "Henüz banka bağlı değil; bağlayınca hareketler burada akmaya başlar."
     : waiting > 0
-      ? `${waiting} hareket kararınızı bekliyor. Bugün ${tl(data.todayIn)} girdi, ${tl(data.todayOut)} çıktı.`
-      : `Bütün hareketler karara bağlandı. Bugün ${tl(data.todayIn)} girdi, ${tl(data.todayOut)} çıktı.`;
+      ? `${waiting} hareket kararınızı bekliyor. ${today}`
+      : `Bütün hareketler karara bağlandı. ${today}`;
 
   return (
     <div className="stack">
@@ -158,7 +161,7 @@ export default function Panel() {
             <div key={a.id} className="balance">
               <span className="kind">{a.name}</span>
               <span className="figure">{tl(a.balance)}</span>
-              <span className="sub">{a.bank} · <span className="num">{a.iban.slice(-4)}</span></span>
+              <span className="sub">{a.bank}, sonu <span className="num">{a.iban.slice(-4)}</span></span>
             </div>
           ))}
         </section>

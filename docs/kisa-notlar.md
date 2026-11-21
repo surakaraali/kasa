@@ -62,6 +62,8 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - IBAN bir cariyi, vergi numarası başka bir cariyi gösteriyorsa eşlenmiyor, kişiye bırakılıyor. Yanlış cariye yazılan para, hiç yazılmamış paradan kötü.
 - Cari kartlar ERP'den sonradan alınırsa, bekleyen bütün hareketler yeniden deneniyor.
 - Elle eşlemede "ERP'ye aktarma" seçeneği var; banka masrafları gibi bir cariye ait olmayanlar için.
+- Eşleşmeyenler'de her satır nedenini söylüyor: gönderen bilgisi yok (banka masrafı), hiçbir karta uymuyor (yeni müşteri), IBAN ve vergi no farklı kartları gösteriyor, ya da adı bir kartla aynı. Neden, otomatik eşleştirmeyle aynı kurallarla sunucuda hesaplanıyor.
+- Ad benzerliği hiçbir zaman kendiliğinden eşlemiyor; sadece o cariyi seçili getiriyor, "Eşle"ye kişi basıyor. İki firma aynı adı taşıyabilir.
 - İki kişi aynı hareketi aynı anda eşlerse ilki kazanıyor, ikincisi "siz bakarken başka biri değiştirdi" uyarısını alıyor.
 - ERP'ye aktarılmış bir hareketin eşleşmesi değiştirilemiyor. Düzeltme ERP'de ters fişle yapılır.
 - Her eşleme kararı kayıt altında: kim, ne zaman, hangi cariye, hangi kuralla.
@@ -113,7 +115,7 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - **RabbitMQ kapalı:** ERP'ye gidecek işler veritabanında bekliyor, açılınca gidiyor.
 - **Aktarım servisi kapalı:** işler kuyrukta bekliyor.
 - **SQL Server kapalı:** sistem çalışmıyor. Asıl veri orada; bu bilinçli.
-- 18 hata senaryosunun her birinin otomatik testi var. Toplam 82 test, gerçek veritabanlarına karşı çalışıyor.
+- 18 hata senaryosunun her birinin otomatik testi var. Toplam 85 test, gerçek veritabanlarına karşı çalışıyor.
 - İzleme panelinde tek bir tıklamanın API, kuyruk, aktarım servisi ve ERP'deki yolu tek bir iz olarak görünüyor.
 
 ## Demo için

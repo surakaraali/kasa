@@ -21,6 +21,14 @@ export interface Transaction {
   exportError: string | null; rowVersion: string;
 }
 
+/** Why the rules left a movement to a person, and the current account a person would most likely pick. */
+export interface MatchHint {
+  transactionId: number;
+  kind: "NoCounterparty" | "One" | "Conflict" | "SameName" | "NoAccount";
+  suggestedId: string | null;
+  candidates: { id: string; code: string; title: string; by: "Iban" | "TaxNumber" | "Name" }[];
+}
+
 export interface TransactionPage { items: Transaction[]; nextCursor: string | null }
 
 export interface CurrentAccount { id: string; code: string; title: string; taxNumber: string | null; iban: string | null }

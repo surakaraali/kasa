@@ -72,8 +72,8 @@ function Connections() {
               <h2 style={{ margin: "0 0 4px", display: "flex", gap: 12, alignItems: "center" }}>{c.bank} <span className={`dot ${c.status === "Active" ? "ok" : c.status === "Pending" ? "idle" : "warn"}`} style={{ fontSize: 13, fontWeight: 400 }}>{statusText[c.status]}</span></h2>
               <div className="cell-sub">
                 Son senkron: {when(c.lastSyncAt)}
-                {c.lastSyncOutcome === "Failed" && <span className="out"> · {c.lastSyncError}</span>}
-                {c.consentExpiresAt && <> · Rıza bitişi: {when(c.consentExpiresAt)}</>}
+                {c.lastSyncOutcome === "Failed" && <span className="out">, {c.lastSyncError}</span>}
+                {c.consentExpiresAt && <>, rıza bitişi: {when(c.consentExpiresAt)}</>}
               </div>
             </div>
             {canEdit(me) && (

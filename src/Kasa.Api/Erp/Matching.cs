@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Kasa.Api.Banking;
 using Kasa.Api.Data;
@@ -6,6 +7,29 @@ using Kasa.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kasa.Api.Erp;
+
+public enum HintKind
+{
+    /// <summary>No name, IBAN or tax number: usually a bank's own fee.</summary>
+    NoCounterparty,
+
+    /// <summary>One current account fits; it arrived before the rules could run on it.</summary>
+    One,
+
+    /// <summary>The IBAN and the tax number point at different current accounts, or one of them at several.</summary>
+    Conflict,
+
+    /// <summary>No identifier fits, but one current account has exactly the sender's name.</summary>
+    SameName,
+
+    /// <summary>Nothing fits: a new customer, or someone without a current account.</summary>
+    NoAccount,
+}
+
+/// <param name="By">Iban, TaxNumber or Name: what made this current account a candidate.</param>
+public sealed record HintCandidate(Guid Id, string Code, string Title, string By);
+
+public sealed record MatchHint(long TransactionId, HintKind Kind, Guid? SuggestedId, IReadOnlyList<HintCandidate> Candidates);
 
 /// <summary>
 /// Decides which current account a bank movement belongs to, and queues the voucher for the ERP when it does.
@@ -35,6 +59,43 @@ public sealed class Matching(AppDbContext db, TimeProvider clock)
 
         return byTaxNumber is not null ? (byTaxNumber, MatchRule.TaxNumber) : (null, null);
     }
+
+    /// <summary>
+    /// Why the rules left a movement to a person, with the same comparisons as <see cref="Decide"/>, and the current
+    /// account a person would most likely pick. Only a suggestion: the person still chooses.
+    /// </summary>
+    public static MatchHint Hint(long transactionId, string? name, string? iban, string? taxNumber, IReadOnlyCollection<CurrentAccount> accounts)
+    {
+        if (string.IsNullOrWhiteSpace(name) && iban is null && taxNumber is null)
+        {
+            return new(transactionId, HintKind.NoCounterparty, null, []);
+        }
+
+        List<HintCandidate> found =
+        [
+            .. accounts.Where(c => iban is not null && c.Iban == iban).Select(c => Candidate(c, "Iban")),
+            .. accounts.Where(c => taxNumber is not null && c.TaxNumber == taxNumber).Select(c => Candidate(c, "TaxNumber")),
+        ];
+        switch (found.Select(c => c.Id).Distinct().Count())
+        {
+            case 1:
+                return new(transactionId, HintKind.One, found[0].Id, found);
+            case > 1:
+                return new(transactionId, HintKind.Conflict, null, found);
+        }
+
+        // A name is weak evidence (two firms can share one), so it never matches on its own; it only pre-selects.
+        var sameName = string.IsNullOrWhiteSpace(name) ? [] : accounts.Where(c => SameName(c.Title, name)).Select(c => Candidate(c, "Name")).ToList();
+        return sameName.Count == 1
+            ? new(transactionId, HintKind.SameName, sameName[0].Id, sameName)
+            : new(transactionId, HintKind.NoAccount, null, sameName);
+    }
+
+    private static HintCandidate Candidate(CurrentAccount c, string by) => new(c.Id, c.Code, c.Title, by);
+
+    // Turkish casing: "deniz" and "DENİZ" are the same name, "ışık" and "IŞIK" too.
+    private static bool SameName(string title, string name) =>
+        string.Compare(title.Trim(), name.Trim(), CultureInfo.GetCultureInfo("tr-TR"), CompareOptions.IgnoreCase) == 0;
 
     /// <summary>Runs the rules on unmatched movements; each one that matches is queued for export. Returns how many matched.</summary>
     public async Task<int> AutoMatchAsync(IReadOnlyCollection<BankTransaction> transactions, Guid companyId, CancellationToken ct)

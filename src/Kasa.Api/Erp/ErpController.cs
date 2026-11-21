@@ -40,6 +40,17 @@ public sealed class ErpController(
         return NoContent();
     }
 
+    /// <summary>For the movements waiting for a person (newest 200, as the page lists them): why, and a likely current account.</summary>
+    [HttpGet("transactions/unmatched/hints")]
+    public async Task<IReadOnlyList<MatchHint>> Hints(CancellationToken ct)
+    {
+        var open = await db.BankTransactions.AsNoTracking().Where(t => t.MatchStatus == MatchStatus.Unmatched)
+            .OrderByDescending(t => t.BookedAt).ThenByDescending(t => t.Id).Take(200)
+            .Select(t => new { t.Id, t.CounterpartyName, t.CounterpartyIban, t.CounterpartyTaxNumber }).ToListAsync(ct);
+        var accounts = await db.CurrentAccounts.AsNoTracking().ToListAsync(ct);
+        return [.. open.Select(t => Matching.Hint(t.Id, t.CounterpartyName, t.CounterpartyIban, t.CounterpartyTaxNumber, accounts))];
+    }
+
     [HttpGet("current-accounts")]
     public async Task<IReadOnlyList<CurrentAccountDto>> CurrentAccounts(CancellationToken ct) =>
         await db.CurrentAccounts.AsNoTracking().OrderBy(c => c.Code)

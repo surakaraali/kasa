@@ -36,6 +36,31 @@ public sealed class MatchingRuleTests
 
     [Fact]
     public void Nothing_to_go_on_is_unmatched() => Assert.Equal((null, null), Matching.Decide(null, null, All));
+
+    [Fact]
+    public void The_hint_names_both_sides_of_a_conflict_and_suggests_neither()
+    {
+        var hint = Matching.Hint(1, "KUZEY", "TR03", "2222222222", All);
+        Assert.Equal(HintKind.Conflict, hint.Kind);
+        Assert.Null(hint.SuggestedId);
+        Assert.Equal([(Kuzey.Id, "Iban"), (Deniz.Id, "TaxNumber")], hint.Candidates.Select(c => (c.Id, c.By)));
+    }
+
+    [Fact]
+    public void A_name_alone_only_suggests_and_compares_in_turkish()
+    {
+        var hint = Matching.Hint(2, " deniz ", "TR99", null, All);
+        Assert.Equal(HintKind.SameName, hint.Kind);
+        Assert.Equal(Deniz.Id, hint.SuggestedId);
+    }
+
+    [Fact]
+    public void A_bank_fee_has_no_counterparty_and_a_stranger_no_account()
+    {
+        Assert.Equal(HintKind.NoCounterparty, Matching.Hint(3, null, null, null, All).Kind);
+        var stranger = Matching.Hint(4, "MEHMET ÖZGÜR", "TR77", "9999999999", All);
+        Assert.Equal((HintKind.NoAccount, null), (stranger.Kind, stranger.SuggestedId));
+    }
 }
 
 [Collection("Kasa")]
