@@ -114,3 +114,18 @@ curl -s -X POST localhost:5102/mock/klasikbank/fault -H 'content-type: applicati
 ## Yedek video
 
 Hazır: `.demo/kasa-demo.webm`. Kendi sesinle anlatımlı bir kayıt istersen aynı akışı Cmd+Shift+5 ile kaydedebilirsin.
+
+## Mülakatta canlı anlar
+
+Test bankası ve test ERP'si sadece bu bilgisayardan yönetiliyor; sunum sırasında ayrı bir terminalden:
+
+```bash
+scripts/demo-olay.sh tahsilat    # KlasikBank'a ABC Tekstil'den 7.500 TL; "Şimdi çek" → IBAN ile eşleşir → ERP fişi
+scripts/demo-olay.sh erp-kapat   # ERP cevap vermez; bir hareket eşleyin, fiş 10 sn arayla denenir
+scripts/demo-olay.sh erp-ac      # 40 sn içinde açın; bekleyen fiş tek kez yazılır
+```
+
+Test bankası ve test ERP'si verilerini bellekte tutar. Servisler yeniden başlarsa (bilgisayar yeniden açılırsa)
+AcikBank bağlantısı "Yeniden bağlanmalı" olur ve test ERP'sinin fiş numaraları baştan başlar. Mülakat sabahı temiz
+bir başlangıç için: `KASA_PUBLIC_URL=https://kasa.surakaraali.dev scripts/demo.sh reset`, ardından aynı adresle
+`scripts/demo-seed.sh`.
