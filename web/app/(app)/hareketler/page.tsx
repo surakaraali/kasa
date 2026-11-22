@@ -60,10 +60,19 @@ export default function Transactions() {
     };
   }, [api, query, version]);
 
+  const [loadingMore, setLoadingMore] = useState(false);
   async function more() {
-    const page = await api<TransactionPage>(query(cursor));
-    setRows((r) => [...r, ...page.items]);
-    setCursor(page.nextCursor);
+    // Disabled while loading, so a double click does not add the same page twice.
+    setLoadingMore(true);
+    try {
+      const page = await api<TransactionPage>(query(cursor));
+      setRows((r) => [...r, ...page.items]);
+      setCursor(page.nextCursor);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
   const set = (key: keyof typeof filters) => (e: { target: { value: string } }) => setFilters((f) => ({ ...f, [key]: e.target.value }));
@@ -119,7 +128,7 @@ export default function Transactions() {
           </tbody>
         </table>
       </div>
-      {cursor && <div><button className="secondary" onClick={more}>Daha eski hareketler</button></div>}
+      {cursor && <div><button className="secondary" onClick={more} disabled={loadingMore}>{loadingMore ? "Yükleniyor…" : "Daha eski hareketler"}</button></div>}
     </div>
   );
 }

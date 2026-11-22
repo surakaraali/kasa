@@ -22,18 +22,32 @@ async function errorOf(response: Response): Promise<ApiError> {
   return new ApiError(response.status, message);
 }
 
-// One refresh at a time for the whole page. Refresh tokens work once and a second use logs every session of the
-// user out (theft detection), so two tabs of code refreshing at the same moment must share one request.
+// One refresh at a time. Refresh tokens work once and a second use signs every session of the user out (theft
+// detection). Within a tab the promise is shared; across tabs, which share the cookie, a browser lock makes the
+// second tab wait and then send the cookie the first one rotated.
 let refreshing: Promise<string | null> | null = null;
 
 function refreshOnce(): Promise<string | null> {
-  refreshing ??= fetch("/api/auth/refresh", { method: "POST" })
+  const call = () => fetch("/api/auth/refresh", { method: "POST" })
     .then(async (r) => (r.ok ? ((await r.json()).accessToken as string) : null))
-    .catch(() => null)
+    .catch(() => null);
+  // The DOM types give request() a Promise of a Promise; at run time it resolves to the token, which await unwraps.
+  const locked = async () => (typeof navigator !== "undefined" && navigator.locks ? await navigator.locks.request("kasa-refresh", call) : await call());
+  refreshing ??= locked()
     .finally(() => {
       refreshing = null;
     });
   return refreshing;
+}
+
+/** The access token's own expiry (a JWT carries it): within 30 seconds counts as expired. */
+function expiresSoon(jwt: string): boolean {
+  try {
+    const { exp } = JSON.parse(atob(jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return exp * 1000 < Date.now() + 30_000;
+  } catch {
+    return true;
+  }
 }
 
 interface Session {
@@ -48,6 +62,8 @@ interface Session {
   signOut: () => Promise<void>;
   /** Re-reads the signed-in user, with a new access token when the API handed one out (after a password change). */
   reload: (accessToken?: string) => Promise<void>;
+  /** An access token good for at least 30 more seconds, refreshed first when needed; null once signed out. */
+  freshToken: () => Promise<string | null>;
 }
 
 const SessionContext = createContext<Session | null>(null);
@@ -112,7 +128,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const reload = useCallback((accessToken?: string) => loadMe(accessToken ?? token.current), [loadMe]);
 
-  const value = useMemo(() => ({ ...state, api, authFetch, signIn, signOut, reload }), [state, api, authFetch, signIn, signOut, reload]);
+  const freshToken = useCallback(async () => {
+    if (token.current && !expiresSoon(token.current)) return token.current;
+    const fresh = await refreshOnce();
+    if (fresh) {
+      token.current = fresh;
+      setState((s) => ({ ...s, token: fresh }));
+    }
+    return fresh;
+  }, []);
+
+  const value = useMemo(() => ({ ...state, api, authFetch, signIn, signOut, reload, freshToken }), [state, api, authFetch, signIn, signOut, reload, freshToken]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
