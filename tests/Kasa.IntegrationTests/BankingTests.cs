@@ -412,6 +412,24 @@ public sealed class BankingTests(KasaFixture fixture)
     }
 
     [Fact]
+    public async Task Searching_ignores_case_and_turkish_letters()
+    {
+        await using var banks = new MockBanksFactory();
+        await using var api = new KasaApiFactory(fixture, banks: banks);
+        var admin = await api.RegisterAsync();
+        await admin.ConnectAsync(banks, "acikbank");
+        await admin.ConnectAsync(banks, "klasikbank");
+
+        // The banks write "ABC TEKSTİL SANAYİ", "ÇINAR MOBİLYA" and ASCII "FATURA TAHSILATI"; people type it plainly.
+        foreach (var (typed, expected) in new[] { ("tekstil sanayi", "TEKSTİL"), ("cinar", "ÇINAR"), ("tahsilatı", "TAHSILATI") })
+        {
+            var found = await admin.TransactionsAsync($"search={Uri.EscapeDataString(typed)}");
+            Assert.NotEmpty(found);
+            Assert.All(found, t => Assert.Contains(expected, $"{t.GetProperty("counterpartyName")} {t.GetProperty("description")}", StringComparison.Ordinal));
+        }
+    }
+
+    [Fact]
     public async Task Paging_through_movements_returns_each_once_newest_first()
     {
         await using var banks = new MockBanksFactory();

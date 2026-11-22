@@ -144,7 +144,8 @@ public sealed class AssistantTools(AppDbContext db)
         };
         if (Text(input, "text") is { } text)
         {
-            rows = rows.Where(t => t.Description.Contains(text) || t.CounterpartyName!.Contains(text));
+            rows = rows.Where(t => EF.Functions.Collate(t.Description, AppDbContext.SearchCollation).Contains(text)
+                || EF.Functions.Collate(t.CounterpartyName!, AppDbContext.SearchCollation).Contains(text));
         }
 
         if (Number(input, "min_amount") is { } min)
@@ -238,7 +239,7 @@ public sealed class AssistantTools(AppDbContext db)
     private async Task<object> CurrentAccountSummaryAsync(IReadOnlyDictionary<string, JsonElement> input, CancellationToken ct)
     {
         var query = Text(input, "query") ?? throw new ToolInputException("query is required");
-        var accounts = await db.CurrentAccounts.AsNoTracking().Where(c => c.Code.Contains(query) || c.Title.Contains(query))
+        var accounts = await db.CurrentAccounts.AsNoTracking().Where(c => c.Code.Contains(query) || EF.Functions.Collate(c.Title, AppDbContext.SearchCollation).Contains(query))
             .OrderBy(c => c.Code).Take(5).ToListAsync(ct);
         var ids = accounts.Select(a => a.Id).ToList();
         var rows = db.BankTransactions.Where(t => t.CurrentAccountId != null && ids.Contains(t.CurrentAccountId.Value));

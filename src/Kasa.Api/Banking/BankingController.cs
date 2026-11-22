@@ -321,7 +321,8 @@ public sealed class AccountsController(AppDbContext db) : ControllerBase
         {
             // shortcut: LIKE '%...%' scans the company's movements; fine to a few hundred thousand rows, then full-text search.
             var search = q.Search.Trim();
-            rows = rows.Where(t => t.Description.Contains(search) || t.CounterpartyName!.Contains(search));
+            rows = rows.Where(t => EF.Functions.Collate(t.Description, AppDbContext.SearchCollation).Contains(search)
+                || EF.Functions.Collate(t.CounterpartyName!, AppDbContext.SearchCollation).Contains(search));
         }
 
         return rows;

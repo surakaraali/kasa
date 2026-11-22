@@ -25,6 +25,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TenantContext 
     public DbSet<MatchAudit> MatchAudits => Set<MatchAudit>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    /// <summary>
+    /// For text a person types into a search: blind to case, accents and Turkish letters, so "tekstil" finds "TEKSTİL"
+    /// and "tahsilati" finds the bank's ASCII "TAHSILATI" as well. The columns keep their own collation.
+    /// </summary>
+    public const string SearchCollation = "Latin1_General_100_CI_AI";
+
     /// <summary>The ASP.NET Core Data Protection key ring, shared by every API instance.</summary>
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
