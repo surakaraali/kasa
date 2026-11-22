@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { tl } from "./format";
 import { SaymanMark } from "./marks";
 import { useSession } from "./session";
@@ -75,6 +75,40 @@ function Greeting({ dashboard, firstName, onAsk, onClose }: { dashboard: Dashboa
  * The assistant on every screen: a button at the bottom right, a panel from the right. It lives in the app layout,
  * so the conversation stays while the person moves between pages.
  */
+/** **bold** inside a line, as an element; anything else stays text. */
+const inline = (line: string) =>
+  line.split(/(\*\*[^*]+\*\*)/g).map((part, i) => (/^\*\*[^*]+\*\*$/.test(part) ? <strong key={i}>{part.slice(2, -2)}</strong> : part));
+
+/**
+ * The model's light formatting as React elements: paragraphs, "- " lists and **bold**. Built from text, never from
+ * HTML, so nothing the model writes can become markup. Half-streamed markers show as text until they close.
+ */
+function Answer({ text }: { text: string }) {
+  const blocks: ReactNode[] = [];
+  let paragraph: string[] = [];
+  let list: string[] = [];
+  const flush = () => {
+    if (paragraph.length) blocks.push(<p key={blocks.length}>{paragraph.map((l, i) => <Fragment key={i}>{i > 0 && <br />}{inline(l)}</Fragment>)}</p>);
+    if (list.length) blocks.push(<ul key={blocks.length}>{list.map((l, i) => <li key={i}>{inline(l)}</li>)}</ul>);
+    paragraph = [];
+    list = [];
+  };
+  for (const line of text.split("\n")) {
+    const item = /^\s*[-*•]\s+(.*)$/.exec(line);
+    if (item) {
+      if (paragraph.length) flush();
+      list.push(item[1]);
+    } else if (!line.trim()) {
+      flush();
+    } else {
+      if (list.length) flush();
+      paragraph.push(line);
+    }
+  }
+  flush();
+  return <>{blocks}</>;
+}
+
 export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard; firstName: string }) {
   const { authFetch } = useSession();
   const { data: status } = useData<{ enabled: boolean }>("/api/assistant/status");
@@ -194,7 +228,7 @@ export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard;
                   <SaymanMark size={20} />
                   <div>
                   {t.steps?.map((s, j) => <div key={j} className="dot idle step">{s}</div>)}
-                  {t.text && <div className="answer">{t.text}</div>}
+                  {t.text && <div className="answer"><Answer text={t.text} /></div>}
                   {!t.text && !t.error && busy && i === turns.length - 1 && <div className="muted">Düşünüyor…</div>}
                   {t.error && <div className="error">{t.error}</div>}
                   </div>

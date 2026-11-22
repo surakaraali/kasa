@@ -216,6 +216,19 @@ button:disabled, button.secondary:disabled, button.danger:disabled { background:
   .side .foot { width: 100%; margin-top: 8px; padding: 8px 12px 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .side .foot .row { margin-top: 0; gap: 12px; }
   .main { padding: 24px 16px; }
+  /* Eşleşmeyenler on a phone: each movement a block, date and amount on one line, who and why below, then the
+     decision at full width, instead of a table whose decision column sits off the right edge. */
+  .decisions, .decisions tbody { display: block; }
+  .decisions thead { display: none; }
+  .decisions tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 16px 12px; border-bottom: 1px solid var(--line); }
+  .decisions tr:last-child { border-bottom: 0; }
+  .decisions td { display: block; padding: 0; border: 0; }
+  .decisions td:nth-child(2), .decisions td:nth-child(4) { grid-column: 1 / -1; }
+  .decisions td:nth-child(3) { grid-row: 1; grid-column: 2; }
+  .decisions td:nth-child(4) { margin-top: 8px; }
+  .decisions .hint { max-width: none; }
+  .decisions .decision { flex-wrap: wrap; }
+  .decisions .decision select { width: 100%; }
 }
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -262,7 +275,12 @@ kbd { font-family: var(--mono); font-size: 11px; line-height: 18px; padding: 0 6
 .dock-turn .bubble { background: var(--raised); border-radius: 12px; padding: 8px 12px; }
 .dock-turn.assistant { max-width: 100%; }
 .dock-turn .step { font-size: 12px; color: var(--muted); }
-.dock-turn .answer { white-space: pre-wrap; margin-top: 4px; }
+.dock-turn .answer { margin-top: 4px; }
+.dock-turn .answer p { margin: 0 0 8px; }
+.dock-turn .answer ul { margin: 0 0 8px; padding-left: 18px; }
+.dock-turn .answer li + li { margin-top: 2px; }
+.dock-turn .answer strong { font-weight: 600; }
+.dock-turn .answer > :last-child { margin-bottom: 0; }
 .dock-form { display: flex; gap: 8px; padding: 12px 20px 20px; border-top: 1px solid var(--line); }
 .dock-form input { flex: 1; }
 @media (max-width: 800px) {

@@ -96,14 +96,14 @@ export default function Unmatched() {
       {(failed.data?.items.length ?? 0) > 0 && (
         <section className="card table-wrap">
           <h2>ERP&apos;ye aktarılamayanlar</h2>
-          <table><tbody>{failed.data!.items.map((t) => <Row key={t.id} t={t} accounts={accounts ?? []} onDone={done} />)}</tbody></table>
+          <table className="decisions"><tbody>{failed.data!.items.map((t) => <Row key={t.id} t={t} accounts={accounts ?? []} onDone={done} />)}</tbody></table>
         </section>
       )}
 
       <section className="card table-wrap">
         <h2>Karar bekleyen hareketler {unmatched.data && <span className="muted">({unmatched.data.items.length})</span>}</h2>
         {unmatched.error && <p className="error">{unmatched.error}</p>}
-        <table>
+        <table className="decisions">
           <thead><tr><th>Tarih</th><th>Karşı taraf / açıklama</th><th className="right">Tutar</th><th>Karar</th></tr></thead>
           <tbody>
             {hintsSettled && unmatched.data?.items.map((t) => <Row key={`${t.id}-${t.rowVersion}`} t={t} hint={hintOf.get(t.id)} accounts={accounts ?? []} onDone={done} />)}
