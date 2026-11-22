@@ -283,7 +283,9 @@ public sealed class AssistantController(IServiceProvider services, IOptions<Assi
         {
             await services.GetRequiredService<AssistantService>().RunAsync(turns, companyName, Emit, ct);
         }
-        catch (Exception ex) when (ex is Anthropic.Exceptions.AnthropicApiException or HttpRequestException && !ct.IsCancellationRequested)
+        // Any failure, not only API errors: an overloaded error inside the stream, a timeout or an I/O error all end
+        // the answer, and the browser must hear why. Only the browser going away is not answered.
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             log.LogError(ex, "Assistant call failed");
             await Emit(new AssistantEvent("error", "Asistana şu anda ulaşılamıyor. Biraz sonra tekrar deneyin."));

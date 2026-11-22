@@ -229,6 +229,27 @@ public sealed class AssistantTests(KasaFixture fixture)
     }
 
     [Fact]
+    public async Task Tool_input_out_of_range_is_an_error_for_the_model_not_a_crash()
+    {
+        await using var api = new KasaApiFactory(fixture);
+        var admin = await api.RegisterAsync();
+        var companyId = (await admin.Client.GetFromJsonAsync<JsonElement>("/api/me")).GetProperty("companyId").GetGuid();
+        using var scope = api.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<Kasa.Api.Common.TenantContext>().Use(companyId);
+        var tools = scope.ServiceProvider.GetRequiredService<AssistantTools>();
+
+        var (huge, hugeIsError) = await tools.RunAsync("search_transactions",
+            new Dictionary<string, JsonElement> { ["limit"] = JsonSerializer.SerializeToElement(10_000_000_000m) }, CancellationToken.None);
+        var (late, lateIsError) = await tools.RunAsync("search_transactions",
+            new Dictionary<string, JsonElement> { ["to"] = JsonSerializer.SerializeToElement("9999-12-31") }, CancellationToken.None);
+
+        Assert.True(hugeIsError);
+        Assert.Contains("limit must be between", huge, StringComparison.Ordinal);
+        Assert.True(lateIsError);
+        Assert.Contains("out of range", late, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Identifiers_are_masked() =>
         Assert.Equal(("TR09 **** **** 0001", "12******90"), (AssistantTools.MaskIban("TR090090001000000000000001"), AssistantTools.MaskTaxNumber("1234567890")));
 

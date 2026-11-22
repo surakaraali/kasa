@@ -121,8 +121,14 @@ export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard;
 
   async function ask(question: string) {
     if (!question.trim() || busy) return;
-    // Only finished, error-free turns go back as history.
-    const history = [...turns.filter((t) => !t.error && t.text), { role: "user" as const, text: question }].slice(-19);
+    // Only complete question and answer pairs go back, each cut to the server's 4000 characters. A failed answer
+    // would leave its question alone (two questions in a row) and a long one would be refused: either way every
+    // later question would fail too.
+    const pairs = turns.flatMap((t, i) => {
+      const answer = turns[i + 1];
+      return t.role === "user" && answer?.role === "assistant" && answer.text && !answer.error ? [t, answer] : [];
+    });
+    const history = [...pairs, { role: "user" as const, text: question }].map(({ role, text }) => ({ role, text: text.slice(0, 4000) })).slice(-19);
     setTurns((all) => [...all, { role: "user", text: question }, { role: "assistant", text: "", steps: [] }]);
     setDraft("");
     setBusy(true);

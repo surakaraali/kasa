@@ -93,9 +93,11 @@ public sealed class AssistantTools(AppDbContext db)
             };
             return (JsonSerializer.Serialize(result, Json), false);
         }
-        catch (ToolInputException ex)
+        // Input the model got wrong, including numbers and dates out of range (the year 9999 plus a day), goes back to
+        // the model as an error it can correct, instead of ending the answer.
+        catch (Exception ex) when (ex is ToolInputException or ArgumentException or OverflowException)
         {
-            return (JsonSerializer.Serialize(new { error = ex.Message }, Json), true);
+            return (JsonSerializer.Serialize(new { error = ex is ToolInputException ? ex.Message : "a number or date is out of range" }, Json), true);
         }
     }
 
@@ -158,11 +160,14 @@ public sealed class AssistantTools(AppDbContext db)
             rows = rows.Where(t => t.Amount <= max && t.Amount >= -max);
         }
 
-        var limit = (int)(Number(input, "limit") ?? 20);
-        if (limit is < 1 or > MaxRows)
+        // Checked before the cast: 10000000000 does not fit an int.
+        var requested = Number(input, "limit") ?? 20;
+        if (requested < 1 || requested > MaxRows)
         {
             throw new ToolInputException($"limit must be between 1 and {MaxRows}");
         }
+
+        var limit = (int)requested;
 
         var totals = await rows.GroupBy(_ => 1).Select(g => new
         {
