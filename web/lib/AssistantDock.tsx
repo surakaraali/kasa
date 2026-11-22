@@ -77,7 +77,7 @@ function Greeting({ dashboard, firstName, onAsk, onClose }: { dashboard: Dashboa
  */
 export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard; firstName: string }) {
   const { authFetch } = useSession();
-  const { data: status } = useData<{ enabled: boolean; model: string }>("/api/assistant/status");
+  const { data: status } = useData<{ enabled: boolean }>("/api/assistant/status");
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);

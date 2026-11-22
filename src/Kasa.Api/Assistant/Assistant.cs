@@ -88,8 +88,6 @@ public sealed class AssistantService(AnthropicClient client, AssistantTools tool
                 ? r.EnumerateArray().Select(x => x.GetString()!).ToList()
                 : null,
         },
-        // Inputs stream as they are generated; RunAsync validates every field itself, so a cut-off input is safe.
-        EagerInputStreaming = true,
     }).ToArray();
 
     public async Task RunAsync(IReadOnlyList<ChatTurn> history, string companyName, Func<AssistantEvent, Task> emit, CancellationToken ct)
@@ -238,11 +236,11 @@ public sealed class AssistantService(AnthropicClient client, AssistantTools tool
 
 [ApiController]
 [Route("api/assistant")]
-public sealed class AssistantController(IServiceProvider services, IOptions<AssistantOptions> options, AppDbContext db, KasaRedis redis,
-    TimeProvider clock, ILogger<AssistantController> log) : ControllerBase
+public sealed class AssistantController(IServiceProvider services, IOptions<AssistantOptions> options, AppDbContext db, LoginRateLimiter limiter,
+    ILogger<AssistantController> log) : ControllerBase
 {
     [HttpGet("status")]
-    public object Status() => new { enabled = !string.IsNullOrWhiteSpace(options.Value.ApiKey), model = options.Value.Model };
+    public object Status() => new { enabled = !string.IsNullOrWhiteSpace(options.Value.ApiKey) };
 
     /// <summary>Streams the answer as server-sent events: text, tool, done, error.</summary>
     [HttpPost("chat")]
@@ -262,7 +260,8 @@ public sealed class AssistantController(IServiceProvider services, IOptions<Assi
         }
 
         var userId = User.FindFirstValue(KasaClaims.UserId)!;
-        if (await OverLimitAsync(userId))
+        // Per user per hour; fail-open without Redis like the other limits, while the per-question round cap still holds.
+        if (await limiter.CheckAsync($"assistant:{userId}", options.Value.QuestionsPerHour, TimeSpan.FromHours(1)) is not null)
         {
             return Problem($"Saatte en fazla {options.Value.QuestionsPerHour} soru sorulabilir. Biraz sonra tekrar deneyin.", statusCode: StatusCodes.Status429TooManyRequests);
         }
@@ -292,27 +291,6 @@ public sealed class AssistantController(IServiceProvider services, IOptions<Assi
         }
 
         return new EmptyResult();
-    }
-
-    /// <summary>Per user per hour, in Redis. Fail-open like the other Redis uses; the per-question tool-round cap still holds.</summary>
-    private async Task<bool> OverLimitAsync(string userId)
-    {
-        try
-        {
-            var key = $"assistant:{userId}:{clock.GetUtcNow():yyyyMMddHH}";
-            var count = await redis.Db.StringIncrementAsync(key);
-            if (count == 1)
-            {
-                await redis.Db.KeyExpireAsync(key, TimeSpan.FromHours(1));
-            }
-
-            return count > options.Value.QuestionsPerHour;
-        }
-        catch (Exception ex) when (KasaRedis.IsUnavailable(ex))
-        {
-            log.LogWarning("Redis is not reachable; the assistant question limit is not applied");
-            return false;
-        }
     }
 }
 

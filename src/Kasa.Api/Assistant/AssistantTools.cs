@@ -23,7 +23,7 @@ public sealed class AssistantTools(AppDbContext db)
     [
         new("list_accounts", "Lists the company's bank accounts with their current balances and the total.", new
         {
-            type = "object", properties = new { }, additionalProperties = false,
+            type = "object", properties = new { },
         }, "Hesaplara bakılıyor"),
         new("search_transactions",
             "Searches bank movements. All filters are optional and combine with AND. Returns at most 50 rows, newest first, "
@@ -41,7 +41,6 @@ public sealed class AssistantTools(AppDbContext db)
                     max_amount = new { type = "number", description = "Largest absolute amount in TRY" },
                     limit = new { type = "integer", minimum = 1, maximum = MaxRows },
                 },
-                additionalProperties = false,
             }, "Hareketler aranıyor"),
         new("cash_flow", "Money in and out per day, week or month for a period, from bank movements.", new
         {
@@ -53,7 +52,6 @@ public sealed class AssistantTools(AppDbContext db)
                 group_by = new { type = "string", @enum = new[] { "day", "week", "month" } },
             },
             required = new[] { "from", "to", "group_by" },
-            additionalProperties = false,
         }, "Nakit akışı hesaplanıyor"),
         new("current_account_summary",
             "Finds ERP current accounts (cari kart) by code or name and, for each (at most 5), the money received from and "
@@ -67,13 +65,12 @@ public sealed class AssistantTools(AppDbContext db)
                     to = new { type = "string", format = "date" },
                 },
                 required = new[] { "query" },
-                additionalProperties = false,
             }, "Cari özeti çıkarılıyor"),
         new("unmatched_overview",
             "Movements still waiting for a person: how many are unmatched, their total, the counterparties they come from, "
             + "and how many ERP exports failed.", new
             {
-                type = "object", properties = new { }, additionalProperties = false,
+                type = "object", properties = new { },
             }, "Eşleşmeyenlere bakılıyor"),
     ];
 
@@ -120,13 +117,13 @@ public sealed class AssistantTools(AppDbContext db)
         var rows = db.BankTransactions.AsNoTracking();
         if (Date(input, "from") is { } from)
         {
-            var start = StartOfDay(from);
+            var start = BankData.StartOfDay(from);
             rows = rows.Where(t => t.BookedAt >= start);
         }
 
         if (Date(input, "to") is { } to)
         {
-            var end = StartOfDay(to.AddDays(1));
+            var end = BankData.StartOfDay(to.AddDays(1));
             rows = rows.Where(t => t.BookedAt < end);
         }
 
@@ -220,7 +217,7 @@ public sealed class AssistantTools(AppDbContext db)
         }
 
         var groupBy = Text(input, "group_by") ?? throw new ToolInputException("group_by is required");
-        var (start, end) = (StartOfDay(from), StartOfDay(to.AddDays(1)));
+        var (start, end) = (BankData.StartOfDay(from), BankData.StartOfDay(to.AddDays(1)));
         var days = await db.BankTransactions.Where(t => t.BookedAt >= start && t.BookedAt < end)
             .GroupBy(t => EF.Functions.AtTimeZone(t.BookedAt, "Turkey Standard Time").Date)
             .Select(g => new { Day = g.Key, In = g.Sum(t => t.Amount > 0 ? t.Amount : 0), Out = g.Sum(t => t.Amount < 0 ? -t.Amount : 0) })
@@ -247,13 +244,13 @@ public sealed class AssistantTools(AppDbContext db)
         var rows = db.BankTransactions.Where(t => t.CurrentAccountId != null && ids.Contains(t.CurrentAccountId.Value));
         if (Date(input, "from") is { } from)
         {
-            var start = StartOfDay(from);
+            var start = BankData.StartOfDay(from);
             rows = rows.Where(t => t.BookedAt >= start);
         }
 
         if (Date(input, "to") is { } to)
         {
-            var end = StartOfDay(to.AddDays(1));
+            var end = BankData.StartOfDay(to.AddDays(1));
             rows = rows.Where(t => t.BookedAt < end);
         }
 
@@ -298,11 +295,6 @@ public sealed class AssistantTools(AppDbContext db)
     private static string LocalDate(DateTimeOffset at) =>
         TimeZoneInfo.ConvertTime(at, BankData.Turkey).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    private static DateTimeOffset StartOfDay(DateOnly day)
-    {
-        var local = day.ToDateTime(TimeOnly.MinValue);
-        return new DateTimeOffset(local, BankData.Turkey.GetUtcOffset(local));
-    }
 
     private static string? Text(IReadOnlyDictionary<string, JsonElement> input, string key) =>
         input.TryGetValue(key, out var v) && v.ValueKind != JsonValueKind.Null

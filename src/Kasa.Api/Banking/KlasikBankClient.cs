@@ -133,7 +133,7 @@ public sealed partial class KlasikBankClient(HttpClient http)
         }
 
         // The bank sends Turkish local time without an offset.
-        var bookedAt = new DateTimeOffset(local, BankData.Turkey.GetUtcOffset(local));
+        var bookedAt = BankData.InTurkey(local);
         return BankData.Line(Bank, index, Field("DekontNo"), bookedAt, sign * ParseTurkish(amountText),
             Field("Aciklama"), Field("KarsiAd"), Field("KarsiIban"), Field("KarsiVkn"));
     }

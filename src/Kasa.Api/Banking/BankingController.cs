@@ -290,13 +290,13 @@ public sealed class AccountsController(AppDbContext db) : ControllerBase
 
         if (q.From is { } from)
         {
-            var start = StartOfDay(from);
+            var start = BankData.StartOfDay(from);
             rows = rows.Where(t => t.BookedAt >= start);
         }
 
         if (q.To is { } to)
         {
-            var end = StartOfDay(to.AddDays(1));
+            var end = BankData.StartOfDay(to.AddDays(1));
             rows = rows.Where(t => t.BookedAt < end);
         }
 
@@ -327,11 +327,6 @@ public sealed class AccountsController(AppDbContext db) : ControllerBase
         return rows;
     }
 
-    private static DateTimeOffset StartOfDay(DateOnly day)
-    {
-        var local = day.ToDateTime(TimeOnly.MinValue);
-        return new DateTimeOffset(local, BankData.Turkey.GetUtcOffset(local));
-    }
 
     private static string Cursor(TransactionDto last) =>
         Base64Url.EncodeToString(Encoding.UTF8.GetBytes($"{last.BookedAt.UtcTicks.ToString(CultureInfo.InvariantCulture)}.{last.Id.ToString(CultureInfo.InvariantCulture)}"));

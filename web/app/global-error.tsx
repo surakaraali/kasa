@@ -1,23 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useReloadOnStaleBuild } from "@/lib/staleBuild";
 
 // The last safety net, above every layout: instead of the framework's bare English page, Kasa's own message, and
 // after a rebuild (an open tab asking for code that no longer exists) one automatic reload, at most once a minute.
-const isStaleBuild = (error: Error) => /ChunkLoadError|Loading chunk|dynamically imported module|Failed to load chunk|Failed to fetch/i.test(`${error.name} ${error.message}`);
-
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  useEffect(() => {
-    if (!isStaleBuild(error)) return;
-    try {
-      const last = Number(sessionStorage.getItem("kasa-reloaded-at") ?? 0);
-      if (Date.now() - last < 60_000) return;
-      sessionStorage.setItem("kasa-reloaded-at", String(Date.now()));
-    } catch {
-      // Storage blocked: reload anyway.
-    }
-    window.location.reload();
-  }, [error]);
+  useReloadOnStaleBuild(error);
 
   return (
     <html lang="tr">

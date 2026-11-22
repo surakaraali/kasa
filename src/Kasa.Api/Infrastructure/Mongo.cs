@@ -37,8 +37,6 @@ public sealed class RawResponseArchive(IMongoClient client, IOptions<MongoOption
     private readonly IMongoCollection<BsonDocument> _responses = client.GetDatabase(options.Value.Database).GetCollection<BsonDocument>("bank_raw_responses");
     private int _indexesReady;
 
-    public IMongoCollection<BsonDocument> Responses => _responses;
-
     public static IServiceCollection Add(IServiceCollection services)
     {
         services.AddOptions<MongoOptions>().BindConfiguration("Mongo").ValidateDataAnnotations().ValidateOnStart();

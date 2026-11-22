@@ -130,7 +130,7 @@ public sealed class DashboardController(
 
         var today = BankData.TodayInTurkey(clock.GetUtcNow());
         var first = today.AddDays(-(days - 1));
-        var since = new DateTimeOffset(first.ToDateTime(TimeOnly.MinValue), BankData.Turkey.GetUtcOffset(first.ToDateTime(TimeOnly.MinValue)));
+        var since = BankData.StartOfDay(first);
         // Grouped by the Turkish calendar day in SQL Server, whatever offset the bank sent.
         var flows = await db.BankTransactions.Where(t => t.BookedAt >= since)
             .GroupBy(t => EF.Functions.AtTimeZone(t.BookedAt, "Turkey Standard Time").Date)

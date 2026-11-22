@@ -26,8 +26,6 @@ public sealed class KasaRedis(IConnectionMultiplexer connection, IOptions<RedisO
 
     public IDatabase Db { get; } = connection.GetDatabase().WithKeyPrefix(options.Value.KeyPrefix);
 
-    public bool IsConnected => connection.IsConnected;
-
     public static IServiceCollection Add(IServiceCollection services)
     {
         services.AddOptions<RedisOptions>().BindConfiguration("Redis").ValidateDataAnnotations().ValidateOnStart();

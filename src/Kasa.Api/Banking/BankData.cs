@@ -40,6 +40,12 @@ public static class BankData
 {
     public static readonly TimeZoneInfo Turkey = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
 
+    /// <summary>A Turkish wall-clock time as an instant, with the offset Turkey had then.</summary>
+    public static DateTimeOffset InTurkey(DateTime local) => new(local, Turkey.GetUtcOffset(local));
+
+    /// <summary>Midnight at the start of a Turkish calendar day.</summary>
+    public static DateTimeOffset StartOfDay(DateOnly day) => InTurkey(day.ToDateTime(TimeOnly.MinValue));
+
     public static DateOnly TodayInTurkey(DateTimeOffset now) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Turkey).DateTime);
 
     public static async Task<HttpResponseMessage> SendAsync(HttpClient http, HttpRequestMessage request, BankCode bank, CancellationToken ct)

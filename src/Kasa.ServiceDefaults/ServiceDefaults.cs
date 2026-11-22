@@ -25,9 +25,6 @@ public static class ServiceDefaultsExtensions
     /// <summary>Kasa's own spans: outbox publishing, the assistant, bank sync.</summary>
     public static readonly ActivitySource Source = new("Kasa");
 
-    /// <summary>Checks tagged "ready" run on /health; /alive only says the process answers.</summary>
-    public const string ReadyTag = "ready";
-
     public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
     {
         builder.Logging.AddOpenTelemetry(o =>

@@ -26,18 +26,21 @@ public sealed class LoginRateLimiter(KasaRedis redis, IOptions<LoginRateLimitOpt
         """;
 
     /// <returns>Null when allowed; otherwise how long to wait.</returns>
-    public async Task<TimeSpan?> CheckAsync(string clientKey)
+    public Task<TimeSpan?> CheckAsync(string clientKey) => CheckAsync($"login:{clientKey}", options.Value.AttemptsPerMinute, TimeSpan.FromMinutes(1));
+
+    /// <summary>The same count for any key: at most <paramref name="limit"/> per <paramref name="window"/>, from the first use.</summary>
+    public async Task<TimeSpan?> CheckAsync(string key, int limit, TimeSpan window)
     {
         try
         {
-            var result = (RedisResult[])(await redis.Db.ScriptEvaluateAsync(Script, [$"ratelimit:login:{clientKey}"], [60_000]))!;
+            var result = (RedisResult[])(await redis.Db.ScriptEvaluateAsync(Script, [$"ratelimit:{key}"], [(long)window.TotalMilliseconds]))!;
             var count = (long)result[0];
             var ttl = (long)result[1];
-            return count > options.Value.AttemptsPerMinute ? TimeSpan.FromMilliseconds(Math.Max(ttl, 1000)) : null;
+            return count > limit ? TimeSpan.FromMilliseconds(Math.Max(ttl, 1000)) : null;
         }
         catch (Exception ex) when (KasaRedis.IsUnavailable(ex))
         {
-            logger.LogWarning("Redis unavailable, sign-in rate limit skipped: {Reason}", ex.Message);
+            logger.LogWarning("Redis unavailable, rate limit {Key} skipped: {Reason}", key, ex.Message);
             return null;
         }
     }
