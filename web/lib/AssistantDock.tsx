@@ -100,7 +100,11 @@ export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard;
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [turns]);
+  // A block body, not an expression: newer browsers return a Promise from scrollIntoView, and an effect that returns
+  // anything but a function makes React call it as the cleanup and crash the page.
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [turns]);
   useEffect(() => {
     if (open) input.current?.focus();
   }, [open]);
