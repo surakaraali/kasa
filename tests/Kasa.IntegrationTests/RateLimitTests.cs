@@ -39,4 +39,24 @@ public sealed class RateLimitTests(KasaFixture fixture)
 
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
     }
+
+    [Fact]
+    public async Task Guessing_the_current_password_to_change_it_is_limited_too()
+    {
+        using var api = new KasaApiFactory(fixture, b =>
+        {
+            b.UseSetting("LoginRateLimit:AttemptsPerMinute", "3");
+            b.UseSetting("Redis:KeyPrefix", $"kasa-test-{Guid.NewGuid():N}:");
+        });
+        var admin = await api.RegisterAsync();
+
+        for (var i = 0; i < 3; i++)
+        {
+            var guess = await admin.Client.PostAsJsonAsync("/api/me/password", new { currentPassword = $"Guess-Number-{i}", newPassword = "New-Password-2027" });
+            Assert.Equal(HttpStatusCode.BadRequest, guess.StatusCode);
+        }
+
+        var limited = await admin.Client.PostAsJsonAsync("/api/me/password", new { currentPassword = admin.Password, newPassword = "New-Password-2027" });
+        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+    }
 }

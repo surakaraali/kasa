@@ -87,6 +87,7 @@ public sealed class AuthController(
     LoginRateLimiter rateLimiter,
     TenantContext tenant,
     IOptions<JwtOptions> jwt,
+    IOptions<IdentityOptions> identity,
     TimeProvider clock) : ControllerBase
 {
     // A hash of a random password, checked when the e-mail is unknown, so "no such user" takes as long as "wrong password".
@@ -163,12 +164,14 @@ public sealed class AuthController(
 
         if (await users.IsLockedOutAsync(user))
         {
-            return Problem(statusCode: StatusCodes.Status423Locked, title: "Çok fazla hatalı deneme. Hesap 15 dakika kilitlendi.");
+            // The same answer, after the same work, as a wrong password: a lock must not tell that the account exists.
+            users.PasswordHasher.VerifyHashedPassword(new AppUser { FullName = "" }, DummyHash.Value, request.Password);
+            return WrongCredentials();
         }
 
         if (!await users.CheckPasswordAsync(user, request.Password))
         {
-            await users.AccessFailedAsync(user);
+            await CountFailureAsync(user.Id, ct);
             return WrongCredentials();
         }
 
@@ -269,6 +272,13 @@ public sealed class AuthController(
             return Unauthorized();
         }
 
+        // The current password guards a session left open; guessing it is limited like signing in.
+        if (await rateLimiter.CheckAsync("password:" + user.Id) is { } wait)
+        {
+            Response.Headers.RetryAfter = ((int)Math.Ceiling(wait.TotalSeconds)).ToString();
+            return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "Çok fazla deneme. Biraz sonra tekrar deneyin.");
+        }
+
         var changed = await users.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
         if (!changed.Succeeded)
         {
@@ -349,6 +359,19 @@ public sealed class AuthController(
         : b is [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, ..] ? "image/png"
         : b.Length > 12 && b[..4] is [0x52, 0x49, 0x46, 0x46] && b[8..12] is [0x57, 0x45, 0x42, 0x50] ? "image/webp"
         : null;
+
+    /// <summary>
+    /// One UPDATE, so wrong passwords sent at the same moment all count. Identity's AccessFailedAsync reads, adds one
+    /// and writes with a concurrency check, and the parallel writes it loses are simply not counted.
+    /// </summary>
+    private async Task CountFailureAsync(Guid userId, CancellationToken ct)
+    {
+        var max = identity.Value.Lockout.MaxFailedAccessAttempts;
+        DateTimeOffset? lockedUntil = clock.GetUtcNow() + identity.Value.Lockout.DefaultLockoutTimeSpan;
+        await db.Users.Where(u => u.Id == userId && u.LockoutEnabled).ExecuteUpdateAsync(s => s
+            .SetProperty(u => u.LockoutEnd, u => u.AccessFailedCount + 1 >= max ? lockedUntil : u.LockoutEnd)
+            .SetProperty(u => u.AccessFailedCount, u => u.AccessFailedCount + 1 >= max ? 0 : u.AccessFailedCount + 1), ct);
+    }
 
     private static AppUser NewUser(string email, string fullName, Guid companyId, UserRole role, DateTimeOffset now) => new()
     {

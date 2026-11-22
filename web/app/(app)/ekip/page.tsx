@@ -9,7 +9,7 @@ import { useData } from "@/lib/useData";
 
 const roleText: Record<Role, string> = { Admin: "Yönetici", Accountant: "Muhasebeci", Viewer: "İzleyici" };
 
-interface User { id: string; fullName: string; email: string; role: Role; createdAt: string; avatarVersion: number | null }
+interface User { id: string; fullName: string; email: string; role: Role; createdAt: string; avatarVersion: number | null; removed: boolean }
 interface Invitation { id: string; email: string; role: Role; expiresAt: string; acceptedAt: string | null }
 
 export default function Team() {
@@ -34,6 +34,24 @@ export default function Team() {
       setError((err as Error).message);
     }
   }
+
+  /** Runs a change, then shows the lists as they now are; a refusal is shown in place of the change. */
+  async function change(path: string, init: { method: string; json?: unknown }) {
+    setError(null);
+    try {
+      await api(path, init);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+    users.reload();
+    invitations.reload();
+  }
+
+  const removeUser = (u: User) => {
+    if (window.confirm(`${u.fullName} artık giriş yapamayacak; açık oturumu en geç 15 dakikada kapanır. Devam edilsin mi?`)) {
+      change(`/api/users/${u.id}`, { method: "DELETE" });
+    }
+  };
 
   if (!admin) return <div className="stack"><h1>Ekip</h1><p className="muted">Ekibi yalnızca yöneticiler görür.</p></div>;
 
@@ -64,19 +82,43 @@ export default function Team() {
       <section className="card table-wrap">
         <h2>Kullanıcılar</h2>
         <table>
-          <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th></tr></thead>
-          <tbody>{users.data?.map((u) => <tr key={u.id}><td><span className="person"><Avatar id={u.id} version={u.avatarVersion} name={u.fullName} size={24} />{u.fullName}</span></td><td>{u.email}</td><td>{roleText[u.role]}</td></tr>)}</tbody>
+          <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th><th /></tr></thead>
+          <tbody>
+            {users.data?.map((u) => {
+              // One's own role and access are not changed here, so a company always keeps an admin.
+              const editable = u.id !== me?.userId && !u.removed;
+              return (
+                <tr key={u.id}>
+                  <td><span className="person"><Avatar id={u.id} version={u.avatarVersion} name={u.fullName} size={24} />{u.fullName}</span></td>
+                  <td>{u.email}</td>
+                  <td>
+                    {u.removed ? <span className="muted">Erişimi kapalı</span> : editable ? (
+                      <select aria-label={`${u.fullName} rolü`} value={u.role} onChange={(e) => change(`/api/users/${u.id}/role`, { method: "PUT", json: { role: e.target.value } })}>
+                        {(Object.keys(roleText) as Role[]).map((r) => <option key={r} value={r}>{roleText[r]}</option>)}
+                      </select>
+                    ) : roleText[u.role]}
+                  </td>
+                  <td className="right">{editable && <button className="secondary" onClick={() => removeUser(u)}>Erişimi kapat</button>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
         </table>
       </section>
       <section className="card table-wrap">
         <h2>Davetler</h2>
         <table>
-          <thead><tr><th>E-posta</th><th>Rol</th><th>Durum</th></tr></thead>
+          <thead><tr><th>E-posta</th><th>Rol</th><th>Durum</th><th /></tr></thead>
           <tbody>
             {invitations.data?.map((i) => (
-              <tr key={i.id}><td>{i.email}</td><td>{roleText[i.role]}</td><td>{i.acceptedAt ? `Katıldı, ${when(i.acceptedAt)}` : `Bekliyor, ${when(i.expiresAt)} tarihine kadar`}</td></tr>
+              <tr key={i.id}>
+                <td>{i.email}</td>
+                <td>{roleText[i.role]}</td>
+                <td>{i.acceptedAt ? `Katıldı, ${when(i.acceptedAt)}` : `Bekliyor, ${when(i.expiresAt)} tarihine kadar`}</td>
+                <td className="right">{!i.acceptedAt && <button className="secondary" onClick={() => change(`/api/invitations/${i.id}`, { method: "DELETE" })}>İptal et</button>}</td>
+              </tr>
             ))}
-            {invitations.data?.length === 0 && <tr><td colSpan={3} className="muted">Davet yok.</td></tr>}
+            {invitations.data?.length === 0 && <tr><td colSpan={4} className="muted">Davet yok.</td></tr>}
           </tbody>
         </table>
       </section>

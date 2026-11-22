@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 
@@ -79,8 +80,54 @@ public sealed class AuthTests(KasaFixture fixture) : IDisposable
             Assert.Equal(HttpStatusCode.Unauthorized, wrong.StatusCode);
         }
 
+        // Locked: even the right password gets the answer a wrong one gets, so the lock does not reveal the account.
         var right = await client.PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = admin.Password });
-        Assert.Equal(HttpStatusCode.Locked, right.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, right.StatusCode);
+    }
+
+    [Fact]
+    public async Task Wrong_passwords_sent_at_the_same_moment_all_count_towards_the_lock()
+    {
+        var admin = await api.RegisterAsync();
+
+        await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
+            api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = "Wrong-Password-1" })));
+
+        var right = await api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email = admin.Email, password = admin.Password });
+        Assert.Equal(HttpStatusCode.Unauthorized, right.StatusCode);
+    }
+
+    [Fact]
+    public async Task An_admin_takes_access_away_changes_a_role_and_cancels_an_invitation()
+    {
+        var admin = await api.RegisterAsync();
+        var accountant = await api.InviteAsync(admin, "Accountant");
+        var viewer = await api.InviteAsync(admin, "Viewer");
+        var users = (await admin.Client.GetFromJsonAsync<JsonElement[]>("/api/users"))!;
+        Guid Id(Session s) => users.Single(u => u.GetProperty("email").GetString() == s.Email).GetProperty("id").GetGuid();
+
+        Assert.Equal(HttpStatusCode.NoContent, (await admin.Client.PutAsJsonAsync($"/api/users/{Id(viewer)}/role", new { role = "Accountant" })).StatusCode);
+        Assert.Equal("Accountant", (await viewer.Client.GetFromJsonAsync<JsonElement>("/api/me")).GetProperty("role").GetString());
+        Assert.Equal(HttpStatusCode.Forbidden, (await viewer.Client.PutAsJsonAsync($"/api/users/{Id(admin)}/role", new { role = "Viewer" })).StatusCode);
+
+        // Access taken away: the session ends, signing in fails, and the list says so.
+        Assert.Equal(HttpStatusCode.NoContent, (await admin.Client.DeleteAsync($"/api/users/{Id(accountant)}")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await accountant.Client.PostAsync("/api/auth/refresh", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email = accountant.Email, password = accountant.Password })).StatusCode);
+        var after = (await admin.Client.GetFromJsonAsync<JsonElement[]>("/api/users"))!;
+        Assert.True(after.Single(u => u.GetProperty("email").GetString() == accountant.Email).GetProperty("removed").GetBoolean());
+
+        // Not oneself, and not another company's people.
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Client.DeleteAsync($"/api/users/{Id(admin)}")).StatusCode);
+        var stranger = await api.RegisterAsync();
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.Client.DeleteAsync($"/api/users/{Id(viewer)}")).StatusCode);
+
+        // A cancelled invitation cannot be accepted.
+        var invite = await (await admin.Client.PostAsJsonAsync("/api/invitations", new { email = $"late-{Guid.NewGuid():N}@test.kasa", role = "Admin" })).JsonAsync();
+        Assert.Equal(HttpStatusCode.NoContent, (await admin.Client.DeleteAsync($"/api/invitations/{invite.GetProperty("id").GetGuid()}")).StatusCode);
+        var accept = await api.CreateClient().PostAsJsonAsync("/api/auth/accept-invitation",
+            new { token = invite.GetProperty("token").GetString(), fullName = "Late Admin", password = Api.Password });
+        Assert.Equal(HttpStatusCode.BadRequest, accept.StatusCode);
     }
 
     [Fact]
