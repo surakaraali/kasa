@@ -104,8 +104,10 @@ public sealed class ErpController(
 
         await db.SaveChangesAsync(ct);
 
-        // shortcut: loads every unmatched movement at once; page through them when a company has tens of thousands.
-        var unmatched = await db.BankTransactions.Include(t => t.Account).Where(t => t.MatchStatus == MatchStatus.Unmatched).ToListAsync(ct);
+        // Only the ones the rules could use: bank fees with no IBAN and no tax number never match and pile up.
+        // shortcut: loads them all at once; page through them when a company has tens of thousands with an identifier.
+        var unmatched = await db.BankTransactions.Include(t => t.Account)
+            .Where(t => t.MatchStatus == MatchStatus.Unmatched && (t.CounterpartyIban != null || t.CounterpartyTaxNumber != null)).ToListAsync(ct);
         var matched = await matching.AutoMatchAsync(unmatched, companyId, ct);
         await db.SaveChangesAsync(ct);
         await events.ChangedAsync(companyId, "transactions");

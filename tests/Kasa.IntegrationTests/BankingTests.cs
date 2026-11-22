@@ -405,8 +405,10 @@ public sealed class BankingTests(KasaFixture fixture)
         Assert.Null(row.AccessTokenProtected);
         Assert.Null(row.RefreshTokenProtected);
         Assert.True(await db.BankTransactions.IgnoreQueryFilters().AnyAsync(t => t.Account!.BankConnectionId == connectionId));
-        // A new connection can be made after removing the old one.
-        Assert.NotEqual(connectionId, await admin.ConnectAsync(banks, "acikbank"));
+        // Connecting again reuses the removed connection and its accounts, so nothing already stored comes in twice.
+        var stored = await db.BankTransactions.IgnoreQueryFilters().CountAsync(t => t.CompanyId == row.CompanyId);
+        Assert.Equal(connectionId, await admin.ConnectAsync(banks, "acikbank"));
+        Assert.Equal(stored, await db.BankTransactions.IgnoreQueryFilters().CountAsync(t => t.CompanyId == row.CompanyId));
     }
 
     [Fact]

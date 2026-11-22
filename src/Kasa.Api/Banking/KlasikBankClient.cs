@@ -25,6 +25,9 @@ public sealed partial class KlasikBankClient(HttpClient http)
     private static readonly XNamespace Soap = "http://schemas.xmlsoap.org/soap/envelope/";
     private static readonly XNamespace Kb = "http://klasikbank.example/ekstre";
 
+    // The bank writes TL for Turkish lira; any other code is passed on as it is (USD, EUR...).
+    private static string Currency(string? code) => string.IsNullOrWhiteSpace(code) || code is "TL" or "TRY" ? "TRY" : code.Trim();
+
     public async Task<IReadOnlyList<AccountInfo>> GetAccountsAsync(string username, string password, RawResponseTag? tag, CancellationToken ct)
     {
         var result = await CallAsync("HesapListesi", [new XElement(Kb + "KullaniciAdi", username), new XElement(Kb + "Sifre", password)], tag, ct);
@@ -32,7 +35,7 @@ public sealed partial class KlasikBankClient(HttpClient http)
         {
             var iban = BankData.Iban(h.Element(Kb + "Iban")?.Value) ?? throw new BankApiException(Bank, BankErrorKind.InvalidData, $"account {i}: IBAN missing");
             var balance = h.Element(Kb + "Bakiye")?.Value;
-            return new AccountInfo(iban, iban, h.Element(Kb + "HesapAdi")?.Value ?? iban, h.Element(Kb + "DovizKodu")?.Value == "TL" ? "TRY" : "TRY",
+            return new AccountInfo(iban, iban, h.Element(Kb + "HesapAdi")?.Value ?? iban, Currency(h.Element(Kb + "DovizKodu")?.Value),
                 balance is not null && TurkishAmount().IsMatch(balance.TrimStart('-')) ? ParseTurkish(balance.TrimStart('-')) * (balance.StartsWith('-') ? -1 : 1) : null);
         }).ToList();
     }

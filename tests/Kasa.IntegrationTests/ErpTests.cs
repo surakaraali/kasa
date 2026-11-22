@@ -310,6 +310,30 @@ public sealed class ErpTests(KasaFixture fixture)
     }
 
     [Fact]
+    public async Task Sending_a_failed_export_again_to_the_same_account_does_not_write_a_second_voucher()
+    {
+        await using var rig = new ErpRig(fixture, maxAttempts: 1);
+        var admin = await rig.CompanyWithErpAsync();
+        await rig.Erp.SetFaultAsync("loseresponse");
+        await admin.ConnectAsync(rig.Banks, "klasikbank");
+        var matched = (await admin.TransactionsAsync("match=Matched")).Count;
+
+        // The ERP wrote every voucher but no answer came back in time, so Kasa shows them as "Aktarılamadı".
+        await admin.WaitForExportsAsync(seconds: 60);
+        var failed = await admin.TransactionsAsync("export=Failed");
+        Assert.Equal(matched, failed.Count);
+        Assert.Equal(matched, (await rig.Erp.VouchersAsync()).Length);
+
+        // Sent again to the same account: the same key, so the ERP returns the voucher it already has.
+        await rig.Erp.SetFaultAsync("none");
+        var retry = failed[0];
+        Assert.Equal(HttpStatusCode.NoContent, (await admin.MatchAsync(retry, retry.GetProperty("currentAccountId").GetGuid())).StatusCode);
+        await admin.WaitForExportsAsync();
+        Assert.Equal("Exported", (await admin.TransactionAsync(retry.GetProperty("id").GetInt64())).GetProperty("exportStatus").GetString());
+        Assert.Equal(matched, (await rig.Erp.VouchersAsync()).Length);
+    }
+
+    [Fact]
     public async Task A_voucher_the_ERP_refuses_fails_at_once_without_retrying()
     {
         await using var rig = new ErpRig(fixture, maxAttempts: 50);

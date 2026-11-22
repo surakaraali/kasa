@@ -198,7 +198,9 @@ public sealed class BankSync(
         var known = await db.BankAccounts.Where(a => a.BankConnectionId == connection.Id).ToListAsync(ct);
         var now = clock.GetUtcNow();
         var current = new List<BankAccount>();
-        foreach (var info in infos)
+        // shortcut: lira accounts only. Vouchers carry no currency and totals are added up in TL, so a USD account would
+        // be booked and summed as lira; taking foreign currency in needs a currency on the voucher and totals per currency.
+        foreach (var info in infos.Where(i => i.Currency == "TRY"))
         {
             var account = known.FirstOrDefault(a => a.ExternalId == info.ExternalId);
             if (account is null)

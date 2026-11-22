@@ -150,6 +150,7 @@ public sealed class Matching(AppDbContext db, TimeProvider clock)
     private void Apply(BankTransaction transaction, CurrentAccount account, MatchRule rule, Guid? userId, string? firmCode)
     {
         var now = clock.GetUtcNow();
+        var sameAccount = transaction.CurrentAccountId == account.Id;
         transaction.MatchStatus = MatchStatus.Matched;
         transaction.MatchRule = rule;
         transaction.CurrentAccount = account;
@@ -163,14 +164,16 @@ public sealed class Matching(AppDbContext db, TimeProvider clock)
             return;
         }
 
-        // A new id per export: a re-match after a failed export is a new voucher request, not a replay of the old one.
-        var exportId = Guid.NewGuid();
+        // The export id is the ERP's Idempotency-Key. "Aktarılamadı" does not prove the ERP wrote nothing (it may have
+        // written the voucher and lost the answer), so a resend to the same account keeps the key and the ERP replays
+        // that voucher. Another account is a different request and gets a new key.
+        var exportId = sameAccount && transaction.ExportId is { } previous ? previous : Guid.NewGuid();
         (transaction.ExportStatus, transaction.ExportId, transaction.ExportError) = (ExportStatus.Pending, exportId, null);
         var iban = transaction.Account?.Iban ?? throw new InvalidOperationException("The movement's bank account must be loaded to export it.");
         var local = TimeZoneInfo.ConvertTime(transaction.BookedAt, BankData.Turkey);
         db.OutboxMessages.Add(new OutboxMessage
         {
-            Id = exportId,
+            Id = Guid.NewGuid(),
             CompanyId = transaction.CompanyId == Guid.Empty ? account.CompanyId : transaction.CompanyId,
             Type = nameof(ExportVoucher),
             Payload = JsonSerializer.Serialize(new ExportVoucher(exportId, account.CompanyId, firmCode, account.Code, iban,

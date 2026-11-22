@@ -172,8 +172,10 @@ public sealed class BankConnections(
         return true;
     }
 
+    // The newest connection for the bank, a removed one too. Connecting again then reuses its accounts and what they
+    // already imported; new account rows would bring the last 30 days in a second time, each with a second voucher.
     private Task<BankConnection?> CurrentAsync(BankCode bank, CancellationToken ct) =>
-        db.BankConnections.SingleOrDefaultAsync(c => c.Bank == bank && c.Status != ConnectionStatus.Removed, ct);
+        db.BankConnections.Where(c => c.Bank == bank).OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync(ct);
 
     /// <summary>Two "connect" clicks at once both pass the check above; the filtered unique index lets only one through.</summary>
     private async Task SaveAsync(CancellationToken ct)
