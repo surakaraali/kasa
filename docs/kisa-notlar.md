@@ -8,6 +8,10 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - O çerez JavaScript'le okunamıyor (httpOnly). Bir saldırgan sayfaya kod soksa bile çalamaz.
 - Yenileme anahtarı tek kullanımlık. Çalınıp ikinci kez kullanılırsa sistem bunu fark ediyor ve o oturumu tamamen kapatıyor.
 - 5 yanlış şifrede hesap 15 dakika kilitleniyor. Aynı internet adresinden dakikada en fazla 10 deneme yapılabiliyor.
+- Aynı anda gönderilen yanlış şifrelerin hepsi sayılıyor (sayaç tek bir veritabanı komutuyla artıyor), kilit aşılamıyor.
+- Kilitli hesap da "e-posta ya da şifre hatalı" diyor; kilit, hesabın var olduğunu ele vermiyor.
+- Şifre değiştirirken mevcut şifre tahmini de dakikada 10 denemeyle sınırlı.
+- Demo hesabı biri tarafından kilitlenirse, açmak için: `scripts/db.sh "UPDATE AspNetUsers SET LockoutEnd = NULL, AccessFailedCount = 0 WHERE Email = 'demo@kasa.test'"`.
 - Olmayan bir e-postayla giriş denenirse de "e-posta ya da şifre hatalı" deniyor, aynı sürede. Böylece hangi e-postanın kayıtlı olduğu anlaşılamıyor.
 - Şifre en az 10 karakter, büyük harf, küçük harf ve rakam içermeli.
 - Kayıtta şirket ve ilk yönetici tek seferde oluşuyor. Şifre kurala uymazsa şirket de oluşmuyor; yarım kayıt kalmıyor.
@@ -32,6 +36,9 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - Banka bağlantısını kaldırmak, ERP firma kodunu değiştirmek ve ekip yönetimi sadece yöneticide.
 - Yetki sunucuda kontrol ediliyor. İzleyici düğmeyi görmese de API'yi doğrudan denerse yine "yetkiniz yok" (403) alıyor.
 - Davet bağlantısı 7 gün geçerli ve tek kullanımlık. Bir kez gösteriliyor; veritabanında bağlantının kendisi değil, sadece geri çevrilemeyen özeti (hash) var.
+- Yönetici bekleyen bir daveti iptal edebiliyor, bir kişinin rolünü değiştirebiliyor ve erişimini kapatabiliyor. Kendi rolünü ve erişimini değiştiremiyor, şirket yöneticisiz kalmasın diye.
+- Erişimi kapatılan kişi hemen giriş yapamaz, bütün oturumları kapanır. Elindeki giriş anahtarı en fazla 15 dakika daha çalışır. Kaydı silinmiyor, çünkü eşleşme kararlarında adı geçiyor.
+- Yeni rol, kişinin bir sonraki giriş anahtarıyla, en geç 15 dakikada geçerli olur.
 
 ## Şirketlerin birbirinden ayrılması
 
@@ -54,6 +61,7 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - Banka 10 saniyede cevap vermezse "kapalı" sayılıyor. Hata bağlantı kartında görünüyor, sonraki çekim telafi ediyor.
 - Bankada rıza iptal edilirse bağlantı "Yeniden bağlanmalı" oluyor. Yeniden bağlanınca eski hesaplar ve geçmiş korunuyor.
 - Bağlantı kaldırılınca anahtarlar ve şifre siliniyor, bankadaki rıza iptal ediliyor. Gelmiş hareketler kalıyor; onlar şirketin kaydı.
+- Kaldırılan banka yeniden bağlanınca eski bağlantı ve hesaplar kullanılıyor; daha önce gelmiş hareketler ikinci kez kaydedilmiyor, ERP'ye ikinci fiş gitmiyor.
 - Bankaların gönderdiği ham cevaplar ayrıca saklanıyor ("banka o gün tam olarak ne gönderdi?" sorusu için). 90 gün sonra kendiliğinden siliniyor.
 
 ## Eşleştirme
@@ -75,6 +83,8 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - ERP kapalıysa fiş kaybolmuyor: 10 saniye arayla 5 kez deneniyor. Hâlâ olmazsa hareket "Aktarılamadı" oluyor.
 - ERP fişi reddederse (örneğin cari ERP'de silinmişse) boşuna tekrar denenmiyor, hemen "Aktarılamadı" oluyor.
 - "Aktarılamadı" olan hareket Eşleşmeyenler ekranında görünüyor. Kişi düzeltip yeniden gönderebiliyor.
+- Aynı cariye "Tekrar gönder" eski anahtarla gidiyor. ERP fişi yazıp cevabı kaybetmişse, yeni fiş yazmıyor, eskisini döndürüyor. Başka bir cari seçilirse yeni bir istek sayılıyor.
+- Kasa'nın o an kaydedemediği bir ERP sonucu (örneğin SQL Server kısa süre kapalıysa) kuyrukta bekliyor, silinmiyor.
 - Aynı fiş isteği iki kez giderse ERP ikinci fişi yazmıyor, ilkini döndürüyor. ERP fişi yazıp cevap veremeden bağlantı kopsa bile tek fiş oluşuyor.
 - Eşleşme kaydı ile "ERP'ye gönder" isteği aynı anda kaydediliyor. Biri olup diğeri olmayamaz.
 
@@ -115,7 +125,7 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - **RabbitMQ kapalı:** ERP'ye gidecek işler veritabanında bekliyor, açılınca gidiyor.
 - **Aktarım servisi kapalı:** işler kuyrukta bekliyor.
 - **SQL Server kapalı:** sistem çalışmıyor. Asıl veri orada; bu bilinçli.
-- 18 hata senaryosunun her birinin otomatik testi var. Toplam 85 test, gerçek veritabanlarına karşı çalışıyor.
+- 18 hata senaryosunun her birinin otomatik testi var. Toplam 90 test, gerçek veritabanlarına karşı çalışıyor.
 - İzleme panelinde tek bir tıklamanın API, kuyruk, aktarım servisi ve ERP'deki yolu tek bir iz olarak görünüyor.
 
 ## Demo için
@@ -124,7 +134,8 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 - Hazır şirketin girişleri: demo@kasa.test, muhasebe@kasa.test, izleyici@kasa.test; şifre `.demo/demo-sifresi` dosyasında (`cat .demo/demo-sifresi`), repoda değil.
 - Test bankası girişi: kullanıcı `kasa`, şifre `klasik-dev-pass`. Bunlar test değerleri.
 - kasa.surakaraali.dev senin bilgisayarında çalışıyor. Bu adreste yeni şirket açmak kayıt kodu istiyor; kod `.demo/kayit-kodu` dosyasında (her başlatmada aynı kalıyor). Bilgisayarında (localhost) kod sorulmuyor.
-- Kayıt kodu tahminle bulunamasın diye denemeler internet adresi başına dakikada 10 ile sınırlı.
+- Kayıt kodu 12 karakter ve denemeler internet adresi başına dakikada 10 ile sınırlı; tahminle bulunamıyor.
+- Tünel sadece demo genel modda çalışıyorsa açılıyor (`scripts/tunnel.sh` kontrol ediyor); yoksa repodaki geliştirme anahtarı internete açılırdı.
 - Repo herkese açık; genel adreste kullanılan gizli değerler repoda değil, `.demo/` klasöründe: kayıt kodu (`kayit-kodu`), demo şifresi (`demo-sifresi`), giriş anahtarlarını imzalayan anahtar (`jwt-key`). Repodaki geliştirme anahtarıyla üretilmiş bir giriş anahtarı genel adreste reddediliyor.
 - Veritabanları, Redis ve RabbitMQ sadece bu bilgisayardan erişilebiliyor. Repodaki `LocalDev_2026_pw` gibi geliştirme şifreleri bu yüzden dışarıdan işe yaramıyor.
 - Demodan sonra tüneli kapat.
@@ -140,6 +151,7 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 
 ## Bilerek bırakılan eksikler (sorulursa dürüstçe)
 
+- Döviz hesapları şimdilik alınmıyor, sadece TL hesaplar. Fişte para birimi yok ve toplamlar TL; dövizi almak için fişe para birimi ve döviz başına toplam gerekir.
 - İki adımlı doğrulama (SMS/uygulama) ve "şifremi unuttum" yok. E-posta gönderimi yok.
 - Banka şifrelerini ve anahtarlarını şifreleyen anahtar halkası şu an aynı veritabanında; gerçek kullanımda ayrı bir anahtar kasasına alınmalı. (Kullanıcı şifreleri zaten geri çevrilemeyen özet olarak saklanıyor.)
 - Gönderilmiş ERP mesajlarının kayıtları silinmiyor; zamanla temizlik işi gerekir.

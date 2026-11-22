@@ -101,10 +101,12 @@ Sınır atlanır, giriş çalışmaya devam eder (fail-open), logda uyarı çık
 (5 hatalı denemede 15 dakika) ve o SQL'de. Önbellek çöktü diye giriş sayfasının kapanması daha kötü olurdu (karar 0005).
 </details>
 
-**9. Kilitli hesap neden 401 değil de 423 dönüyor? Bunun bir bedeli var mı?**
+**9. Kilitli hesap neden 423 değil de 401 dönüyor? Bunun bir bedeli var mı?**
 <details><summary>İpucu</summary>
-Kullanıcıya neden giremediğini ve ne kadar bekleyeceğini söylemek için. Bedeli: 423 o e-postanın kayıtlı olduğunu belli eder.
-Kullanılabilirlik için kabul edilmiş bir ödünleşim; karar notunda yazılı.
+İlk sürüm 423 dönüyordu: kullanıcıya neden giremediğini söylemek için. Kod denetiminde iki sorun çıktı: 423 o e-postanın
+kayıtlı olduğunu belli ediyordu, ve herkese açık demo hesapları beş yanlış denemeyle kilitlenebiliyordu. Şimdi kilitli
+hesap da yanlış şifreyle aynı cevabı aynı sürede veriyor. Bedeli: kullanıcı kilitli olduğunu ekrandan anlamıyor. Karar
+notu 0003'te ikisi de yazılı; bir kararın gerekçesiyle değiştiğini göstermek de iyi bir cevap.
 </details>
 
 **10. Yeni bir uç nokta yazıp `[Authorize]` eklemeyi unutursan ne olur?**

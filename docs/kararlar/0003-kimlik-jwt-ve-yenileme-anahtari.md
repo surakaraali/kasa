@@ -33,8 +33,11 @@ ile SignalR'ın kullanabileceği bir yapıda olmalı. Şifreleri saklamak, kilit
 ## Sonuçları
 - JWT 15 dakika geçerli ve geri alınamaz. Bir kullanıcının rolü değişirse yeni rol en geç 15 dakika sonra geçerli olur.
   Kabul ettiğimiz bir gecikme.
-- Kilitli hesap 423 dönüyor. Bu, e-postanın kayıtlı olduğunu açığa çıkarır. Kullanıcıya ne olduğunu söylemek daha
-  önemli bulundu.
+- Kilitli hesap önce 423 dönüyordu: kullanıcıya ne olduğunu söylemek, e-postanın kayıtlı olduğunu belli etmesine
+  değer görülmüştü. Kod denetiminde (2026-11-22) karar değişti. Demo hesaplarının e-postaları herkese açık ve beş
+  yanlış denemeyle kilitlenip sunumda kullanılamaz hale getirilebiliyordu; 423 ayrıca hangi e-postanın kayıtlı olduğunu
+  söylüyordu. Artık kilitli hesap da yanlış şifreyle aynı cevabı, aynı sürede veriyor (401). Bedeli: kullanıcı kilitli
+  olduğunu ekrandan anlamıyor; bunu belgeler ve 15 dakikalık süre söylüyor.
 - İmzalama anahtarı yapılandırmada. Gerçek bir kurulumda bir sır kasasında olmalı ve döndürülmeli.
 
 ## Mülakatta
