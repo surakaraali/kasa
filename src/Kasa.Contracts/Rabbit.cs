@@ -63,7 +63,13 @@ public sealed class Topology(RabbitOptions options)
     public async Task DeclareAsync(IChannel channel, CancellationToken ct)
     {
         await channel.ExchangeDeclareAsync(Exchange, ExchangeType.Direct, durable: true, autoDelete: false, cancellationToken: ct);
-        await DeclareQueueAsync(channel, ExportQueue, ExportKey, null, ct);
+        // A message the exporter keeps failing on (past RabbitMQ's 20 deliveries) goes to the dead-letter queue, where a
+        // person can see it, instead of being dropped.
+        await DeclareQueueAsync(channel, ExportQueue, ExportKey, new Dictionary<string, object?>
+        {
+            ["x-dead-letter-exchange"] = Exchange,
+            ["x-dead-letter-routing-key"] = DeadKey,
+        }, ct);
         await DeclareQueueAsync(channel, RetryQueue, RetryKey, new Dictionary<string, object?>
         {
             ["x-message-ttl"] = (int)options.RetryDelay.TotalMilliseconds,
@@ -71,7 +77,9 @@ public sealed class Topology(RabbitOptions options)
             ["x-dead-letter-routing-key"] = ExportKey,
         }, ct);
         await DeclareQueueAsync(channel, DeadQueue, DeadKey, null, ct);
-        await DeclareQueueAsync(channel, ResultsQueue, ResultKey, null, ct);
+        // A result Kasa cannot store yet (SQL Server down) must wait, not be dropped after 20 tries: the ERP already
+        // has the voucher. A million deliveries, one a second, is eleven days.
+        await DeclareQueueAsync(channel, ResultsQueue, ResultKey, new Dictionary<string, object?> { ["x-delivery-limit"] = 1_000_000 }, ct);
     }
 
     private async Task DeclareQueueAsync(IChannel channel, string queue, string key, Dictionary<string, object?>? arguments, CancellationToken ct)

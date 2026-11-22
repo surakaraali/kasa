@@ -76,8 +76,21 @@ public sealed class ErpClient(HttpClient http, IOptions<ErpOptions> options)
         {
             if (response.IsSuccessStatusCode)
             {
-                var voucher = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
-                return new ErpCallResult(ErpCallOutcome.Created, voucher.GetProperty("voucherNo").GetString(), null);
+                // A 2xx without a readable voucher number is retried with the same key: the ERP replays what it wrote.
+                try
+                {
+                    var voucher = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+                    if (voucher.ValueKind == JsonValueKind.Object && voucher.TryGetProperty("voucherNo", out var no) && no.GetString() is { Length: > 0 } voucherNo)
+                    {
+                        return new ErpCallResult(ErpCallOutcome.Created, voucherNo, null);
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Falls through to the retry below.
+                }
+
+                return new ErpCallResult(ErpCallOutcome.Transient, null, "ERP okunamayan bir cevap verdi");
             }
 
             var body = await response.Content.ReadAsStringAsync(ct);

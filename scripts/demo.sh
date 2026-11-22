@@ -49,7 +49,7 @@ case "${1:-start}" in
       -Q "IF DB_ID('Kasa') IS NOT NULL BEGIN ALTER DATABASE Kasa SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE Kasa; END"
     docker compose exec -T redis redis-cli --scan --pattern 'kasa:*' | xargs -r docker compose exec -T redis redis-cli del >/dev/null || true
     echo "Veritabanı ve Redis temizlendi." ;;
-  start) ;;
+  start) stop ;;   # a demo already running would keep its ports and serve the old code
   *) echo "kullanım: scripts/demo.sh [start|reset|stop|web]"; exit 1 ;;
 esac
 
@@ -60,7 +60,7 @@ if [[ -n "${KASA_PUBLIC_URL:-}" ]]; then
   export Banks__AcikBank__RedirectUri="$KASA_PUBLIC_URL/api/bank-connections/acikbank/callback"
   export MockBanks__RedirectUris__2="$KASA_PUBLIC_URL/api/bank-connections/acikbank/callback"
   # Anyone who knows the address could open a company there; sign-up needs this code. Made once, kept across restarts.
-  [[ -s .demo/kayit-kodu ]] || openssl rand -hex 3 > .demo/kayit-kodu
+  [[ -s .demo/kayit-kodu ]] || openssl rand -hex 6 > .demo/kayit-kodu
   export Auth__SignUpCode="$(cat .demo/kayit-kodu)"
   # The development signing key is in the public repo; behind the public address tokens are signed with one that is not.
   [[ -s .demo/jwt-key ]] || openssl rand -base64 48 > .demo/jwt-key
