@@ -17,10 +17,10 @@
   /* Same family as the interview deck: a quiet page, mono labels, sideways slides. Each technical idea is a small machine that runs. */
   :root {
     --paper: #ffffff; --ink: #111111; --body: #2a2a2a; --soft: #4d4d4d; --rule: #d9d9d9; --tint: #f3f3f1;
-    --accent: #752092; --accent-t: #f3e9f7; --selection: #ffe3b3;
+    --accent: #0f5c4c; --accent-t: #e3f0eb; --selection: #ffe3b3;
     --good: #16794a; --good-t: #e2f3e9; --warn: #8a5a00; --warn-t: #fbf0d9; --bad: #b42318; --bad-t: #fbe6e3;
     --sheet: #f7f8f5; --sheet-ink: #171717; --sheet-soft: #5f5f5f; --stamp: #1f7a5a;
-    --glow-a: 0.1; --glow-b: 0.14;
+    --glow-a: 0.14; --glow-b: 0.1; --glow-1: #0f7a62; --glow-2: #2fbf8f;
     --margin: clamp(1rem, 4vw, 4rem);
     --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -28,18 +28,18 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #15121c; --ink: #ffffff; --body: #f4f1f7; --soft: #d9d3e0; --rule: #2f2938; --tint: #1e1a27;
-      --accent: #de8fd0; --accent-t: #33233f; --selection: #5a2d7a;
+      --paper: #101614; --ink: #ffffff; --body: #f1f5f3; --soft: #d3dcd8; --rule: #2a3430; --tint: #18201d;
+      --accent: #63d6b4; --accent-t: #16372f; --selection: #5c4514;
       --good: #6fd3a0; --good-t: #17352a; --warn: #f1c26b; --warn-t: #3a2e14; --bad: #ff9d8f; --bad-t: #3f2020;
-      --glow-a: 0.2; --glow-b: 0.1;
+      --glow-a: 0.34; --glow-b: 0.12;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --paper: #15121c; --ink: #ffffff; --body: #f4f1f7; --soft: #d9d3e0; --rule: #2f2938; --tint: #1e1a27;
-    --accent: #de8fd0; --accent-t: #33233f; --selection: #5a2d7a;
+    --paper: #101614; --ink: #ffffff; --body: #f1f5f3; --soft: #d3dcd8; --rule: #2a3430; --tint: #18201d;
+    --accent: #63d6b4; --accent-t: #16372f; --selection: #5c4514;
     --good: #6fd3a0; --good-t: #17352a; --warn: #f1c26b; --warn-t: #3a2e14; --bad: #ff9d8f; --bad-t: #3f2020;
-    --glow-a: 0.2; --glow-b: 0.1;
+    --glow-a: 0.34; --glow-b: 0.12;
     color-scheme: dark;
   }
 
@@ -80,8 +80,8 @@
   main.deck { position: relative; overflow: hidden; }
   .glow { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
   .glow i { position: absolute; left: 0; top: 0; width: 70vmax; height: 70vmax; border-radius: 50%; filter: blur(90px); transition: transform 1600ms var(--ease); }
-  .glow .g1 { background: radial-gradient(circle, #752092 0%, transparent 65%); opacity: var(--glow-a); }
-  .glow .g2 { background: radial-gradient(circle, #ffc872 0%, transparent 65%); opacity: var(--glow-b); }
+  .glow .g1 { background: radial-gradient(circle, var(--glow-1) 0%, transparent 65%); opacity: var(--glow-a); }
+  .glow .g2 { background: radial-gradient(circle, var(--glow-2) 0%, transparent 65%); opacity: var(--glow-b); }
 
   /* Slides travel sideways: the next waits on the right, the last leaves to the left. */
   .slide { position: absolute; inset: 0; overflow-y: auto; padding-block: clamp(14px, 2.6vh, 32px);
@@ -130,7 +130,8 @@
   .pill.ok { background: var(--good-t); color: var(--good); }
   .pill.warn { background: var(--warn-t); color: var(--warn); }
   .pill.bad { background: var(--bad-t); color: var(--bad); }
-  .pill.acc { background: var(--accent-t); color: var(--accent); }
+  /* Outlined: "in progress" must not read as the filled green of "done". */
+  .pill.acc { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
   .off { opacity: 0; transform: translateX(-6px); }
   .fade { transition: opacity 320ms var(--ease), transform 320ms var(--ease); }
   pre.code { margin: 8px 0 0; padding: 8px 10px; background: var(--tint); border-radius: 4px; font: 400 12.5px/1.5 var(--mono); color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -140,7 +141,7 @@
   .cover { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: center; }
   @media (max-width: 900px) { .cover { grid-template-columns: minmax(0, 1fr); } }
   .paper { position: relative; margin: 0; padding: 16px 40px 18px; color: var(--sheet-ink); background: var(--sheet); border-radius: 4px; box-shadow: 0 18px 40px rgb(0 0 0 / 0.2), 0 2px 6px rgb(0 0 0 / 0.12); }
-  .paper::before, .paper::after { content: ""; position: absolute; top: 10px; bottom: 10px; width: 8px; background: radial-gradient(circle, #752092 2.4px, transparent 2.8px) center top / 8px 20px repeat-y; opacity: 0.55; }
+  .paper::before, .paper::after { content: ""; position: absolute; top: 10px; bottom: 10px; width: 8px; background: radial-gradient(circle, #0b4a3e 2.4px, transparent 2.8px) center top / 8px 20px repeat-y; opacity: 0.55; }
   .paper::before { left: 12px; } .paper::after { right: 12px; }
   .paper-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--sheet-soft); padding-bottom: 8px; border-bottom: 1px dashed rgb(23 23 23 / 0.22); }
   .lines { list-style: none; margin: 0; padding: 0; }
@@ -173,7 +174,7 @@
   .sv-l { stroke: var(--soft); stroke-width: 1.4; fill: none; }
   .sv-h { fill: var(--soft); }
   .pk { fill: var(--accent); }
-  .pk2 { fill: var(--good); }
+  .pk2 { fill: var(--soft); }
   .life { stroke: var(--rule); stroke-dasharray: 3 4; }
   .st { opacity: 0; transition: opacity 180ms; }
   .st.on { opacity: 1; }
