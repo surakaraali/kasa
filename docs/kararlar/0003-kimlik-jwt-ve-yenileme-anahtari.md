@@ -25,8 +25,8 @@ ile SignalR'ın kullanabileceği bir yapıda olmalı. Şifreleri saklamak, kilit
   başka bir site onu gönderemiyor. Erişim anahtarı tarayıcıda yalnızca bellekte.
 - Bilinmeyen e-posta için de sahte bir şifre doğrulaması yapılıyor: "böyle bir kullanıcı yok" cevabı, "şifre yanlış"
   cevabıyla aynı sürede ve aynı mesajla dönüyor. Böylece hangi e-postanın kayıtlı olduğu tahmin edilemiyor.
-- **Giriş denemesi sınırı:** IP başına dakikada 10 deneme, sayaç Redis'te. Redis kapalıysa sınır atlanıyor, giriş değil
-  (bkz. 0005). Hesap kilitleme ayrıca koruyor.
+- **Giriş denemesi sınırı:** IP başına dakikada 10 deneme, sayaç Redis'te. Redis kapalıysa aynı sınır süreç içinde
+  sayılıyor (bkz. 0005). Hesap kilitleme ayrıca koruyor.
 - **Roller:** Yönetici, Muhasebeci, İzleyici. JWT'deki `role` alanından politika ile kontrol ediliyor. Varsayılan politika
   "giriş yapmış olmak": yeni bir uç nokta yanlışlıkla açık kalamaz.
 

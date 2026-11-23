@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.Json;
@@ -38,22 +39,22 @@ public sealed class KasaHub : Hub
 
 /// <summary>
 /// "Something changed for this company": the dashboard cache is dropped (by moving its version on) and the web app
-/// is told to refresh. Both are best effort: a missed message only means the screen refreshes a little later.
+/// is told to refresh. The change is already saved here, so neither step may fail the caller.
 /// </summary>
-public sealed class CompanyEvents(IHubContext<KasaHub> hub, KasaRedis redis, ILogger<CompanyEvents> log)
+public sealed class CompanyEvents(IHubContext<KasaHub> hub, IServiceScopeFactory scopes, ILogger<CompanyEvents> log)
 {
     public async Task ChangedAsync(Guid companyId, string what)
     {
         try
         {
-            var key = DashboardController.VersionKey(companyId);
-            await redis.Db.StringIncrementAsync(key);
-            await redis.Db.KeyExpireAsync(key, TimeSpan.FromDays(7));
+            await using var scope = scopes.CreateAsyncScope();
+            await scope.ServiceProvider.GetRequiredService<AppDbContext>().Companies.Where(c => c.Id == companyId)
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.DashboardVersion, c => c.DashboardVersion + 1));
         }
-        catch (Exception ex) when (KasaRedis.IsUnavailable(ex))
+        catch (DbException ex)
         {
             // The cache entry expires within minutes anyway.
-            log.LogWarning("Redis is not reachable; the dashboard cache of {CompanyId} was not invalidated", companyId);
+            log.LogWarning(ex, "The dashboard cache of {CompanyId} was not invalidated", companyId);
         }
 
         await hub.Clients.Group(KasaHub.Group(companyId)).SendAsync("changed", what);
@@ -75,22 +76,19 @@ public sealed class DashboardController(
 {
     private static readonly TimeSpan CacheFor = TimeSpan.FromMinutes(10);
 
-    public static string VersionKey(Guid companyId) => $"dashboard-version:{companyId}";
-
     /// <summary>
-    /// Cached in Redis per company. Any change moves the company's version on, so a cached answer is never stale;
-    /// the key includes the version and old ones simply expire. X-Cache says hit or miss, for measuring.
+    /// Cached in Redis per company. Any change moves the company's version on in SQL, also while Redis is away; the
+    /// key includes the version and old ones simply expire. X-Cache says hit or miss, for measuring.
     /// </summary>
     [HttpGet]
     public async Task<ActionResult<DashboardDto>> Get([FromQuery] int days = 30, CancellationToken ct = default)
     {
         days = Math.Clamp(days, 7, 90);
         var companyId = tenant.CompanyId!.Value;
-        string? cacheKey = null;
+        var version = await db.Companies.Where(c => c.Id == companyId).Select(c => c.DashboardVersion).SingleAsync(ct);
+        string? cacheKey = $"dashboard:{companyId}:v{version}:{days}";
         try
         {
-            var version = (long?)await redis.Db.StringGetAsync(VersionKey(companyId)) ?? 0;
-            cacheKey = $"dashboard:{companyId}:v{version}:{days}";
             var cached = await redis.Db.StringGetAsync(cacheKey);
             if (cached.HasValue)
             {

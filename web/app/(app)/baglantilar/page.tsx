@@ -84,13 +84,15 @@ function Connections() {
               </div>
             )}
           </div>
-          <table>
-            <tbody>
-              {c.accounts.map((a) => (
-                <tr key={a.id}><td>{a.name}</td><td className="num">{iban(a.iban)}</td><td className="right num">{tl(a.balance)}</td></tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="stacked">
+              <tbody>
+                {c.accounts.map((a) => (
+                  <tr key={a.id}><td>{a.name}</td><td className="num">{iban(a.iban)}</td><td className="right num">{tl(a.balance)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       ))}
 

@@ -42,10 +42,10 @@ Her birinin testi var. Canlı: ERP'yi kapat, Redis'i kapat.
 
 | | Süre |
 |---|---|
-| Hareketler, ilk sayfa | 4,9 ms |
-| 250 bininci satırdan sonraki sayfa (keyset) | 6,1 ms |
-| Aynı sayfa, yalnız SQL: OFFSET / keyset | 55 ms / 1,8 ms |
-| Panel: önbelleksiz / önbellekten | 253 ms / 1,2 ms |
+| Hareketler, ilk sayfa | 3,3 ms |
+| 250 bininci satırdan sonraki sayfa (keyset) | 3,4 ms |
+| Aynı sayfa, yalnız SQL: OFFSET / keyset | 47 ms / 1,3 ms |
+| Panel: önbelleksiz / önbellekten | 325 ms / 2,9 ms |
 
 500 bin hareket, yerel makine, ortanca.
 
@@ -58,7 +58,7 @@ Bilinen eksikler listesi (guvenlik.md): eksikleri bilmek de işin parçası.
 14 karar notu; her birinde seçenekler ve bedel. Örnek: Serilog yerine OpenTelemetry, çünkü sorun süreçler arasındaydı.
 
 ## 8. Nasıl çalıştım (1 dk)
-Plan ve hata senaryoları önce; her sprint bir kilometre taşı, kartlar commit'lerle kapanıyor; gerçek altyapıya karşı 77 test;
+Plan ve hata senaryoları önce; her sprint bir kilometre taşı, kartlar commit'lerle kapanıyor; gerçek altyapıya karşı 93 test;
 yapay zekâ ile birlikte geliştirildi, kararlar ve doğrulama bende (ai-assisted-development.md).
 
 ## Olası sorular

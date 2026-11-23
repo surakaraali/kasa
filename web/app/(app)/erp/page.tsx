@@ -70,10 +70,10 @@ export default function Erp() {
       </div>
       <section className="card table-wrap">
         <h2>Cari kartlar {data && <span className="muted">({data.length})</span>}</h2>
-        <table>
+        <table className="stacked">
           <thead><tr><th>Kod</th><th>Unvan</th><th>Vergi no</th><th>IBAN</th></tr></thead>
           <tbody>
-            {data?.map((c) => <tr key={c.id}><td className="num">{c.code}</td><td>{c.title}</td><td className="num">{c.taxNumber ?? "—"}</td><td className="num">{iban(c.iban)}</td></tr>)}
+            {data?.map((c) => <tr key={c.id}><td className="num">{c.code}</td><td>{c.title}</td><td className="num pin">{c.taxNumber ?? "—"}</td><td className="num">{iban(c.iban)}</td></tr>)}
             {data?.length === 0 && <tr><td colSpan={4} className="muted">Henüz cari kart yok.</td></tr>}
           </tbody>
         </table>

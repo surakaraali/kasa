@@ -264,7 +264,7 @@ public sealed class AssistantController(IServiceProvider services, IOptions<Assi
         }
 
         var userId = User.FindFirstValue(KasaClaims.UserId)!;
-        // Per user per hour; fail-open without Redis like the other limits, while the per-question round cap still holds.
+        // Per user per hour; without Redis the count is kept in this process, like the other limits.
         if (await limiter.CheckAsync($"assistant:{userId}", options.Value.QuestionsPerHour, TimeSpan.FromHours(1)) is not null)
         {
             return Problem($"Saatte en fazla {options.Value.QuestionsPerHour} soru sorulabilir. Biraz sonra tekrar deneyin.", statusCode: StatusCodes.Status429TooManyRequests);

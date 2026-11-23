@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Kasa.IntegrationTests;
 
@@ -46,6 +47,22 @@ public sealed class DashboardTests(KasaFixture fixture)
 
         await response.EnsureOkAsync();
         Assert.Equal("miss", response.Headers.GetValues("X-Cache").Single());
+    }
+
+    [Fact]
+    public async Task A_change_made_while_Redis_is_away_still_retires_the_cached_dashboard()
+    {
+        await using var api = new KasaApiFactory(fixture);
+        // A second API over the same database that cannot reach Redis when the change happens.
+        await using var cutOff = new KasaApiFactory(fixture, b => b.UseSetting("Redis:Configuration", "localhost:6390"));
+        var admin = await api.RegisterAsync();
+        var me = await (await admin.Client.GetAsync("/api/me")).JsonAsync();
+        await admin.Client.GetAsync("/api/dashboard");
+        Assert.Equal("hit", (await admin.Client.GetAsync("/api/dashboard")).Headers.GetValues("X-Cache").Single());
+
+        await cutOff.Services.GetRequiredService<Kasa.Api.Dashboard.CompanyEvents>().ChangedAsync(me.GetProperty("companyId").GetGuid(), "test");
+
+        Assert.Equal("miss", (await admin.Client.GetAsync("/api/dashboard")).Headers.GetValues("X-Cache").Single());
     }
 
     [Fact]

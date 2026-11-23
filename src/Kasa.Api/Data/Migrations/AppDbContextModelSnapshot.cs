@@ -366,6 +366,9 @@ namespace Kasa.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<long>("DashboardVersion")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("ErpFirmCode")
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");

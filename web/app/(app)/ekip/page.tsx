@@ -81,7 +81,7 @@ export default function Team() {
       </section>
       <section className="card table-wrap">
         <h2>Kullanıcılar</h2>
-        <table>
+        <table className="stacked">
           <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th><th /></tr></thead>
           <tbody>
             {users.data?.map((u) => {
@@ -107,7 +107,7 @@ export default function Team() {
       </section>
       <section className="card table-wrap">
         <h2>Davetler</h2>
-        <table>
+        <table className="stacked">
           <thead><tr><th>E-posta</th><th>Rol</th><th>Durum</th><th /></tr></thead>
           <tbody>
             {invitations.data?.map((i) => (
