@@ -25,6 +25,8 @@
     --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
     --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --fs-label: clamp(13px, 1.6vh, 15px); --fs-body: clamp(14px, 1.9vh, 18px); --fs-lead: clamp(16px, 2.3vh, 22px);
+    --fs-title: clamp(28px, 4.8vh, 48px); --fs-display: clamp(56px, 10vh, 96px);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -45,7 +47,7 @@
 
   * { box-sizing: border-box; }
   html, body { height: 100%; }
-  body { margin: 0; font: 16px/1.45 var(--sans); color: var(--ink); background: var(--paper); -webkit-font-smoothing: antialiased;
+  body { margin: 0; font: 400 var(--fs-body)/1.45 var(--sans); color: var(--ink); background: var(--paper); -webkit-font-smoothing: antialiased;
     display: grid; grid-template-rows: 52px minmax(0, 1fr) 44px; overflow: hidden; }
   ::selection { background: var(--selection); }
   a { color: inherit; }
@@ -54,22 +56,22 @@
   button { font: inherit; color: inherit; }
   .gutter { padding-left: max(var(--margin), env(safe-area-inset-left, 0px)); padding-right: max(var(--margin), env(safe-area-inset-right, 0px)); }
 
-  .eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--soft); margin: 0; }
-  .mono-link { font: 500 12px/1.4 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
-  .m { font-family: var(--mono); font-size: 0.92em; font-variant-numeric: tabular-nums; }
+  .eyebrow { font: 500 var(--fs-label)/1.4 var(--sans); color: var(--soft); margin: 0; }
+  .mono-link { font: 500 var(--fs-body)/1.4 var(--sans); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .m { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
   header.bar { display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--rule); }
-  .home { font: 500 12px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; text-decoration: none; }
+  .home { font: 600 var(--fs-body)/1 var(--sans); white-space: nowrap; text-decoration: none; }
   nav.chapters { display: flex; gap: 18px; min-width: 0; }
-  nav.chapters a { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; color: var(--soft); padding: 8px 0; white-space: nowrap; }
+  nav.chapters a { font: 500 var(--fs-label)/1 var(--sans); text-decoration: none; color: var(--soft); padding: 8px 0; white-space: nowrap; }
   nav.chapters a[aria-current="true"] { color: var(--accent); }
   .toggle { margin-left: auto; border: 1px solid var(--rule); border-radius: 4px; background: transparent; width: 32px; height: 32px; cursor: pointer; flex: none; }
   .toggle:hover { color: var(--accent); }
   @media (max-width: 980px) { nav.chapters { display: none; } }
 
   footer.controls { position: relative; display: flex; align-items: center; gap: 16px; border-top: 1px solid var(--rule); }
-  .counter { font: 500 12px/1 var(--mono); letter-spacing: 0.14em; color: var(--soft); font-variant-numeric: tabular-nums; }
-  .hint { font: 500 12px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); }
+  .counter { font: 500 var(--fs-label)/1 var(--mono); color: var(--soft); font-variant-numeric: tabular-nums; }
+  .hint { font: 400 var(--fs-label)/1 var(--sans); color: var(--soft); }
   @media (hover: none) { .hint { display: none; } }
   .arrows { margin-left: auto; display: flex; gap: 8px; }
   .arrows button { width: 36px; height: 30px; border: 1px solid var(--rule); border-radius: 4px; background: transparent; cursor: pointer; }
@@ -95,46 +97,53 @@
   .rise { opacity: 0; transform: translateY(12px); transition: opacity 480ms var(--ease), transform 480ms var(--ease); }
   .active .rise { opacity: 1; transform: none; transition-delay: calc(120ms + var(--i, 0) * 70ms); }
 
-  h1.title { font-weight: 400; font-size: clamp(3rem, 7vw, 5.5rem); line-height: 1; letter-spacing: -0.025em; margin: 12px 0 0; }
-  h2.title { font-weight: 400; font-size: clamp(1.625rem, 2.9vw, 2.625rem); line-height: 1.1; letter-spacing: -0.015em; margin: 8px 0 0; text-wrap: balance; }
-  .sub { margin: 6px 0 0; font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem); color: var(--soft); max-width: 70ch; }
-  .block { margin-top: clamp(14px, 2.4vh, 26px); }
+  h1.title { font-weight: 400; font-size: var(--fs-display); line-height: 1; letter-spacing: -0.025em; margin: 12px 0 0; }
+  h2.title { font-weight: 400; font-size: var(--fs-title); line-height: 1.1; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+  .sub { margin: 8px 0 0; font-size: var(--fs-lead); line-height: 1.35; color: var(--soft); max-width: 72ch; }
+  .block { margin-top: clamp(16px, 3.2vh, 32px); }
   .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
   .wide-left { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
   .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
   @media (max-width: 900px) { .two, .wide-left, .three { grid-template-columns: minmax(0, 1fr); } }
   .tile { border-top: 1px solid var(--rule); padding-top: 8px; min-width: 0; }
   .tile b { display: block; font-weight: 500; }
-  .tile span { display: block; margin-top: 2px; color: var(--soft); font-size: 14px; line-height: 1.4; }
+  .tile span { display: block; margin-top: 4px; color: var(--soft); font-size: var(--fs-label); line-height: 1.4; }
 
   /* A figure is a small machine with a title bar, the way a log viewer looks. */
   .fig { margin: 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--paper); min-width: 0; }
+  .fig.block { margin-top: clamp(16px, 3.2vh, 32px); }
   .fig-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 36px; padding: 4px 12px; background: var(--tint);
-    border-bottom: 1px solid var(--rule); font: 500 11px/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); }
+    border-bottom: 1px solid var(--rule); font: 500 var(--fs-label)/1.3 var(--sans); color: var(--soft); }
   .replay, .opt { border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); padding: 4px 10px; cursor: pointer;
-    font: 500 11px/1.4 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; color: var(--ink); }
+    font: 500 var(--fs-label)/1.4 var(--sans); white-space: nowrap; color: var(--ink); }
   .replay:hover, .opt:hover { color: var(--accent); border-color: var(--accent); }
   .opt[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
   .opts { display: flex; flex-wrap: wrap; gap: 6px; }
-  .fig-body { padding: 10px 12px; min-width: 0; }
+  .fig-body { padding: 12px 16px; min-width: 0; overflow-x: auto; }
   .scroll { overflow-x: auto; }
-  .cap { margin: 8px 0 0; min-height: 2.9em; color: var(--body); font-size: 15px; }
-  .cap b { color: var(--accent); font: 500 13px/1 var(--mono); margin-right: 8px; }
+  .cap { margin: 8px 0 0; min-height: 2.9em; color: var(--body); }
+  .cap b { color: var(--accent); font: 500 var(--fs-label)/1 var(--mono); margin-right: 8px; }
 
-  table.t { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
-  .t th { text-align: left; font: 500 11px/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); padding: 6px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
-  .t td { padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; transition: background-color 280ms ease-out; }
+  table.t { width: 100%; border-collapse: collapse; font-size: var(--fs-body); font-variant-numeric: tabular-nums; }
+  .t th { text-align: left; font: 500 var(--fs-label)/1.3 var(--sans); color: var(--soft); padding: 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  .t td { padding: clamp(4px, 0.9vh, 8px) 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; transition: background-color 280ms ease-out; }
   .t tr:last-child td { border-bottom: 0; }
   .t td.lit { background: var(--accent-t); }
-  .pill { display: inline-flex; align-items: center; font: 500 12px/1.2 var(--mono); padding: 4px 7px; border-radius: 4px; background: var(--tint); color: var(--soft); transition: background-color 260ms, color 260ms; }
-  .pill.ok { background: var(--good-t); color: var(--good); }
-  .pill.warn { background: var(--warn-t); color: var(--warn); }
-  .pill.bad { background: var(--bad-t); color: var(--bad); }
-  /* Outlined: "in progress" must not read as the filled green of "done". */
-  .pill.acc { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  /* A state is a dot and a word, the way Kasa itself shows status. A ring means still in progress. */
+  .pill { display: inline-flex; align-items: center; gap: 8px; color: var(--body); white-space: nowrap; }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--soft); flex: none; transition: background-color 260ms, box-shadow 260ms; }
+  .pill.ok::before { background: var(--good); }
+  .pill.warn::before { background: var(--warn); }
+  .pill.bad::before { background: var(--bad); }
+  .pill.bad { color: var(--bad); }
+  .pill.acc::before { background: transparent; box-shadow: inset 0 0 0 2px var(--accent); }
+  /* The signature: the rubber stamp of a voucher that was really written to the ERP. */
+  .kase { display: inline-block; font: 500 var(--fs-label)/1.5 var(--mono); color: var(--good); border: 1.5px solid currentColor; border-radius: 4px; padding: 0 8px; transform: rotate(-3deg); animation: kaseIn 200ms var(--ease) both; }
+  .kase.bad { color: var(--bad); }
+  @keyframes kaseIn { from { opacity: 0; transform: rotate(-3deg) scale(1.3); } to { opacity: 1; transform: rotate(-3deg); } }
   .off { opacity: 0; transform: translateX(-6px); }
   .fade { transition: opacity 320ms var(--ease), transform 320ms var(--ease); }
-  pre.code { margin: 8px 0 0; padding: 8px 10px; background: var(--tint); border-radius: 4px; font: 400 12.5px/1.5 var(--mono); color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
+  pre.code { margin: 8px 0 0; padding: 8px 12px; background: var(--tint); border-radius: 4px; font: 400 var(--fs-label)/1.5 var(--mono); color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
   pre.code i { font-style: normal; color: var(--accent); }
 
   /* Cover: the statement on continuous form paper, stamped as it is processed. */
@@ -143,23 +152,23 @@
   .paper { position: relative; margin: 0; padding: 16px 40px 18px; color: var(--sheet-ink); background: var(--sheet); border-radius: 4px; box-shadow: 0 18px 40px rgb(0 0 0 / 0.2), 0 2px 6px rgb(0 0 0 / 0.12); }
   .paper::before, .paper::after { content: ""; position: absolute; top: 10px; bottom: 10px; width: 8px; background: radial-gradient(circle, #0b4a3e 2.4px, transparent 2.8px) center top / 8px 20px repeat-y; opacity: 0.55; }
   .paper::before { left: 12px; } .paper::after { right: 12px; }
-  .paper-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--sheet-soft); padding-bottom: 8px; border-bottom: 1px dashed rgb(23 23 23 / 0.22); }
+  .paper-head { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--sheet-soft); padding-bottom: 8px; border-bottom: 1px dashed rgb(23 23 23 / 0.22); }
   .lines { list-style: none; margin: 0; padding: 0; }
   .lines li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 2px; align-items: baseline; min-height: 56px; padding: 8px 0; border-bottom: 1px dashed rgb(23 23 23 / 0.13); opacity: 0; transform: translateY(4px); transition: opacity 320ms var(--ease), transform 320ms var(--ease); }
   .lines li:last-child { border-bottom: 0; }
   .lines li.on { opacity: 1; transform: none; }
-  .lines .d { font-size: 12px; color: var(--sheet-soft); }
-  .lines .who { font-weight: 500; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .lines .amt { font-size: 13px; text-align: right; }
-  .lines .res { grid-column: 2; font-size: 12px; color: var(--sheet-soft); opacity: 0; transition: opacity 260ms; }
+  .lines .d { font-size: 13px; color: var(--sheet-soft); }
+  .lines .who { font-weight: 500; font-size: var(--fs-label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lines .amt { font-size: var(--fs-label); text-align: right; }
+  .lines .res { grid-column: 2; font-size: 13px; color: var(--sheet-soft); opacity: 0; transition: opacity 260ms; }
   .lines .res.ask { grid-column: 2 / -1; color: #8a5a00; }
-  .lines .stamp { grid-column: 3; justify-self: end; font: 500 12px/18px var(--mono); color: var(--stamp); border: 1.5px solid var(--stamp); border-radius: 4px; padding: 0 5px; transform: rotate(-4deg) scale(1.5); opacity: 0; transition: opacity 180ms, transform 240ms cubic-bezier(0.3, 1.4, 0.5, 1); }
+  .lines .stamp { grid-column: 3; justify-self: end; font: 500 13px/20px var(--mono); color: var(--stamp); border: 1.5px solid var(--stamp); border-radius: 4px; padding: 0 5px; transform: rotate(-4deg) scale(1.5); opacity: 0; transition: opacity 160ms, transform 200ms var(--ease); }
   .lines li.done .res { opacity: 1; }
   .lines li.done .stamp { opacity: 0.9; transform: rotate(-4deg); }
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
   @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .stat b { display: block; font-weight: 500; font-size: clamp(1.5rem, 2.5vw, 2.125rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .stat span { display: block; margin-top: 4px; color: var(--soft); font-size: 14px; }
+  .stat b { display: block; font-weight: 500; font-size: var(--fs-title); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat span { display: block; margin-top: 4px; color: var(--soft); font-size: var(--fs-label); }
 
   /* Diagrams */
   svg.dia { display: block; width: 100%; height: auto; }
@@ -168,8 +177,8 @@
   .sv-b { fill: var(--tint); stroke: var(--rule); }
   .sv-p { fill: var(--paper); stroke: var(--rule); }
   .sv-a { fill: var(--accent-t); stroke: var(--accent); stroke-width: 1.5; }
-  .sv-t { font: 500 15px var(--sans); fill: var(--ink); }
-  .sv-s { font: 400 12px var(--mono); fill: var(--soft); }
+  .sv-t { font: 500 17px var(--sans); fill: var(--ink); }
+  .sv-s { font: 400 14px var(--mono); fill: var(--soft); }
   .sv-c { text-anchor: middle; }
   .sv-l { stroke: var(--soft); stroke-width: 1.4; fill: none; }
   .sv-h { fill: var(--soft); }
@@ -182,7 +191,7 @@
   .st.on line { stroke-dashoffset: 0; }
   .st path { fill: var(--soft); opacity: 0; transition: opacity 120ms 380ms, fill 200ms; }
   .st.on path { opacity: 1; }
-  .st text { font: 400 12.5px var(--mono); fill: var(--soft); text-anchor: middle; paint-order: stroke; stroke: var(--paper); stroke-width: 6px; transition: fill 200ms; }
+  .st text { font: 400 14px var(--mono); fill: var(--soft); text-anchor: middle; paint-order: stroke; stroke: var(--paper); stroke-width: 6px; transition: fill 200ms; }
   .st.cur line { stroke: var(--accent); stroke-width: 2.2; }
   .st.cur path { fill: var(--accent); }
   .st.cur text { fill: var(--accent); font-weight: 500; }
@@ -191,47 +200,47 @@
   .qn.good rect { fill: var(--good-t); stroke: var(--good); }
   .qn.dead rect { fill: var(--bad-t); stroke: var(--bad); }
   .tok { fill: var(--accent); opacity: 0; }
-  .log { list-style: none; margin: 0; padding: 0; font: 400 12.5px/1.5 var(--mono); color: var(--body); height: 100%; min-height: 216px; }
+  .log { list-style: none; margin: 0; padding: 0; font: 400 var(--fs-label)/1.5 var(--mono); color: var(--body); height: 100%; min-height: 216px; }
   .log li { padding: 3px 0; border-bottom: 1px solid var(--rule); animation: logIn 220ms var(--ease) both; }
   .log li:last-child { border-bottom: 0; }
   .log b { font-weight: 500; }
   .log .g { color: var(--good); } .log .w { color: var(--warn); } .log .r { color: var(--bad); }
   @keyframes logIn { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
 
-  .bignum { font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1.05; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .bignum { font-size: var(--fs-title); line-height: 1.05; font-variant-numeric: tabular-nums; font-weight: 500; }
   .vouchers { display: flex; flex-wrap: wrap; gap: 8px; min-height: 30px; margin-top: 8px; }
   .matrix td { height: 44px; }
-  .proof { margin: 8px 0 0; font: 400 12.5px/1.5 var(--mono); color: var(--soft); overflow-wrap: anywhere; }
+  .proof { margin: 8px 0 0; font: 400 var(--fs-label)/1.45 var(--mono); color: var(--soft); overflow-wrap: anywhere; }
 
-  .bar-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 84px; gap: 8px; align-items: center; margin-top: 6px; font-size: 14px; }
+  .bar-row { display: grid; grid-template-columns: 112px minmax(0, 1fr) 96px; gap: 8px; align-items: center; margin-top: 4px; }
   .bar-row .track { height: 14px; background: var(--tint); border-radius: 2px; overflow: hidden; }
   .bar-row .track i { display: block; height: 100%; width: 0; background: var(--soft); transition: width 900ms var(--ease); min-width: 2px; }
   .bar-row.win .track i { background: var(--accent); }
   .bar-row .v { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
   .perf-h { font-weight: 500; margin: 0; }
-  .perf-h + p { margin: 0 0 4px; color: var(--soft); font-size: 13px; }
+  .perf-h + p { margin: 0 0 4px; color: var(--soft); font-size: var(--fs-label); }
 
   .chain { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 40px; }
-  .tk { font: 500 13px/1 var(--mono); padding: 8px 10px; border-radius: 4px; border: 1px solid var(--rule); color: var(--soft); background: var(--tint); transition: background-color 240ms, color 240ms, border-color 240ms, opacity 240ms; }
+  .tk { font: 500 var(--fs-label)/1 var(--mono); padding: 8px 10px; border-radius: 4px; border: 1px solid var(--rule); color: var(--soft); background: var(--tint); transition: background-color 240ms, color 240ms, border-color 240ms, opacity 240ms; }
   .tk.live { background: var(--good-t); color: var(--good); border-color: var(--good); }
   .tk.used { opacity: 0.7; text-decoration: line-through; }
   .tk.hit { background: var(--bad-t); color: var(--bad); border-color: var(--bad); text-decoration: none; opacity: 1; }
   .loop { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
   @media (max-width: 720px) { .loop { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  .lp { border: 1px solid var(--rule); border-radius: 4px; padding: 6px; text-align: center; font-size: 13px; line-height: 1.25; background: var(--tint); transition: background-color 200ms, border-color 200ms, color 200ms; min-height: 48px; display: grid; place-items: center; }
+  .lp { border: 1px solid var(--rule); border-radius: 4px; padding: 6px; text-align: center; font-size: var(--fs-label); line-height: 1.25; background: var(--tint); transition: background-color 200ms, border-color 200ms, color 200ms; min-height: 48px; display: grid; place-items: center; }
   .lp.cur { background: var(--accent-t); border-color: var(--accent); color: var(--accent); }
-  .json { margin: 8px 0 0; padding: 8px 10px; background: var(--tint); border-radius: 4px; font: 400 12.5px/1.55 var(--mono); color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .json { margin: 8px 0 0; padding: 8px 10px; background: var(--tint); border-radius: 4px; font: 400 var(--fs-label)/1.5 var(--mono); color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
   .json mark { background: var(--selection); color: var(--ink); padding: 0 2px; }
   .links { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 20px; }
-  .fine { margin-top: 24px; font-size: 14px; color: var(--soft); max-width: 72ch; }
+  .fine { margin-top: 24px; font-size: var(--fs-label); color: var(--soft); max-width: 72ch; }
   .card { background: var(--tint); border-radius: 8px; padding: 16px 20px; text-decoration: none; display: block; min-width: 0; }
   a.card:hover { color: var(--ink); background: var(--accent-t); }
-  .card h3 { margin: 4px 0 0; font-size: 19px; font-weight: 500; line-height: 1.25; }
-  .card p { margin: 4px 0 0; color: var(--soft); font-size: 14px; }
+  .card h3 { margin: 4px 0 0; font-size: var(--fs-lead); font-weight: 500; line-height: 1.25; }
+  .card p { margin: 4px 0 0; color: var(--soft); font-size: var(--fs-label); }
 
   @media (max-width: 640px) {
-    .t { font-size: 13px; }
-    .bar-row { grid-template-columns: 72px minmax(0, 1fr) 72px; }
+    :root { --fs-body: 14px; --fs-label: 13px; --fs-lead: 16px; --fs-title: 28px; --fs-display: 56px; }
+    .bar-row { grid-template-columns: 88px minmax(0, 1fr) 80px; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -262,7 +271,7 @@
     <div class="inner">
       <div class="cover">
         <div>
-          <p class="eyebrow rise">Teknik sunum · Şura Karaali</p>
+          <p class="eyebrow rise">Şura Karaali, teknik sunum</p>
           <h1 class="title rise">Kasa</h1>
           <p class="sub rise" style="margin-top:14px">Bankadaki her kuruş, doğru cariye ve ERP’ye</p>
           <p class="rise" style="color:var(--body);max-width:48ch;margin:14px 0 0">Birkaç bankadaki hareketleri toplayan, cariyle eşleştiren, emin olamadığını kişiye bırakan ve ERP’ye tek fiş yazan çok şirketli bir .NET uygulaması.</p>
@@ -289,13 +298,12 @@
   <!-- 2 Problem -->
   <section class="slide" aria-label="Problem">
     <div class="inner">
-      <p class="eyebrow rise">Problem</p>
       <h2 class="title rise">Para birkaç bankada, kayıt tek ERP’de</h2>
-      <p class="sub rise">Muhasebeci her sabah aynı dört işi elle yapıyor. Asıl risk yavaşlık değil, yanlış cariye yazılan para.</p>
+      <p class="sub rise">Muhasebeci her sabah aynı işleri elle yapıyor. En pahalı hata, paranın yanlış cariye yazılması.</p>
       <figure class="fig block rise" data-scene="compare">
         <div class="fig-bar"><span>Bir sabah, iki yöntem</span><button class="replay" type="button">Tekrar oynat</button></div>
         <div class="fig-body scroll">
-          <table class="t" style="font-size:15px">
+          <table class="t">
             <thead><tr><th>Adım</th><th>Elle</th><th>Kasa</th><th>Nasıl</th></tr></thead>
             <tbody>
               <tr><td><b style="font-weight:500">Hareketi almak</b></td><td>Her bankadan ekstre indir</td><td class="fade" data-k>15 dakikada bir kendiliğinden çeker</td><td class="fade m" data-k>Quartz, SOAP, OAuth</td></tr>
@@ -313,7 +321,6 @@
   <!-- 3 Mimari -->
   <section class="slide" aria-label="Mimari">
     <div class="inner">
-      <p class="eyebrow rise">Mimari</p>
       <h2 class="title rise">Modüler monolit, tek mikroservis</h2>
       <p class="sub rise">Yalnızca ayrı olması gerçekten fayda getiren parçayı ayırdım: yavaş ve kapanabilen ERP’ye yazan kısmı.</p>
       <div class="dia-wrap block rise">
@@ -332,7 +339,7 @@
           <g><rect class="sv-b" x="230" y="0" width="158" height="54" rx="6"/><text class="sv-t sv-c" x="309" y="24">KlasikBank</text><text class="sv-s sv-c" x="309" y="42">SOAP, XML</text>
              <rect class="sv-b" x="402" y="0" width="158" height="54" rx="6"/><text class="sv-t sv-c" x="481" y="24">AcikBank</text><text class="sv-s sv-c" x="481" y="42">REST, OAuth+PKCE</text></g>
           <g><rect class="sv-b" x="10" y="160" width="150" height="84" rx="6"/><text class="sv-t sv-c" x="85" y="196">Web</text><text class="sv-s sv-c" x="85" y="216">Next.js 16</text></g>
-          <g><rect class="sv-p" x="230" y="84" width="330" height="236" rx="8"/><text class="sv-t" x="250" y="114" style="font-size:17px">Kasa.Api</text><text class="sv-s" x="250" y="134">.NET 10, modüller net sınırlı</text>
+          <g><rect class="sv-p" x="230" y="84" width="330" height="236" rx="8"/><text class="sv-t" x="250" y="114" style="font-size:19px">Kasa.Api</text><text class="sv-s" x="250" y="134">.NET 10, modüller net sınırlı</text>
             <g><rect class="sv-b" x="250" y="150" width="92" height="44" rx="4"/><text class="sv-s sv-c" x="296" y="176">Kimlik</text>
                <rect class="sv-b" x="349" y="150" width="92" height="44" rx="4"/><text class="sv-s sv-c" x="395" y="176">Bankacılık</text>
                <rect class="sv-b" x="448" y="150" width="92" height="44" rx="4"/><text class="sv-s sv-c" x="494" y="176">Eşleştirme</text>
@@ -342,7 +349,7 @@
             <text class="sv-s" x="250" y="284">Quartz, SignalR, OpenTelemetry</text></g>
           <g><rect class="sv-b" x="640" y="160" width="160" height="84" rx="6"/><text class="sv-t sv-c" x="720" y="196">RabbitMQ</text><text class="sv-s sv-c" x="720" y="216">4 quorum kuyruk</text></g>
           <g><rect class="sv-a" x="860" y="160" width="160" height="84" rx="6"/><text class="sv-t sv-c" x="940" y="196">Kasa.ErpExporter</text><text class="sv-s sv-c" x="940" y="216">tek ayrı servis</text></g>
-          <g><rect class="sv-b" x="1060" y="160" width="116" height="84" rx="6"/><text class="sv-t sv-c" x="1118" y="196">ERP</text><text class="sv-s sv-c" x="1118" y="216">yavaş olabilir</text></g>
+          <g><rect class="sv-b" x="1060" y="160" width="116" height="84" rx="6"/><text class="sv-t sv-c" x="1118" y="196">ERP</text><text class="sv-s sv-c" x="1118" y="216">kapanabilir</text></g>
           <g><rect class="sv-b" x="176" y="356" width="140" height="62" rx="6"/><text class="sv-t sv-c" x="246" y="384">SQL Server</text><text class="sv-s sv-c" x="246" y="404">asıl veri</text>
              <rect class="sv-b" x="326" y="356" width="140" height="62" rx="6"/><text class="sv-t sv-c" x="396" y="384">Redis</text><text class="sv-s sv-c" x="396" y="404">hızlandırıcı</text>
              <rect class="sv-b" x="476" y="356" width="140" height="62" rx="6"/><text class="sv-t sv-c" x="546" y="384">MongoDB</text><text class="sv-s sv-c" x="546" y="404">ham cevap arşivi</text></g>
@@ -361,7 +368,6 @@
   <!-- 4 Bir hareketin yolu -->
   <section class="slide" aria-label="Bir hareketin yolu">
     <div class="inner">
-      <p class="eyebrow rise">Mimari</p>
       <h2 class="title rise">Bir hareketin bankadan ERP’ye yolu</h2>
       <figure class="fig block rise" data-scene="seq">
         <div class="fig-bar"><span>Dokuz adım, dört süreç, tek iz</span><button class="replay" type="button">Tekrar oynat</button></div>
@@ -376,9 +382,8 @@
   <!-- 5 İki banka, tek kayıt -->
   <section class="slide" aria-label="İki banka, tek kayıt">
     <div class="inner">
-      <p class="eyebrow rise">Veri</p>
       <h2 class="title rise">Bozuk veri girmez, aynı hareket iki kez yazılmaz</h2>
-      <p class="sub rise">Her banka kendi katı kalıbıyla okunuyor. Çift kaydı kilit değil, veritabanı kuralı engelliyor.</p>
+      <p class="sub rise">Her banka kendi katı kalıbıyla okunuyor. Çift kaydı veritabanındaki benzersiz indeks engelliyor.</p>
       <div class="two block">
         <figure class="fig rise" data-scene="parse">
           <div class="fig-bar"><span>Tutar okuma</span><button class="replay" type="button">Tekrar oynat</button></div>
@@ -393,7 +398,8 @@
             </table>
             <p class="cap fade" data-v style="min-height:0">Bir satır bozuksa hesabın <b style="all:unset;font-weight:500">bütün cevabı</b> reddedilir, hiçbir satır yazılmaz. Ham cevap incelemek için MongoDB’de 90 gün durur.</p>
             <pre class="code">// Sunucunun kültürü işe karışmaz, tutar her zaman decimal.
-decimal.Parse(digits, NumberStyles.AllowDecimalPoint, <i>CultureInfo.InvariantCulture</i>);</pre>
+decimal.Parse(digits, NumberStyles.AllowDecimalPoint,
+    <i>CultureInfo.InvariantCulture</i>);</pre>
           </div>
         </figure>
         <figure class="fig rise" data-scene="dedupe">
@@ -409,19 +415,20 @@ decimal.Parse(digits, NumberStyles.AllowDecimalPoint, <i>CultureInfo.InvariantCu
               </tbody>
             </table>
             <p class="cap" style="min-height:0"><b id="dedupe-n">0 satır</b><span id="dedupe-t">veritabanında</span></p>
-            <pre class="code">e.HasIndex(t =&gt; new { t.BankAccountId, t.BankReference }).<i>IsUnique()</i>;
-e.Property(t =&gt; t.BankReference).UseCollation(<i>"Latin1_General_100_BIN2"</i>);</pre>
+            <pre class="code">e.HasIndex(t =&gt; new { t.BankAccountId, t.BankReference })
+    .<i>IsUnique()</i>;
+e.Property(t =&gt; t.BankReference)
+    .UseCollation(<i>"Latin1_General_100_BIN2"</i>);</pre>
           </div>
         </figure>
       </div>
-      <p class="sub rise" style="font-size:15px;max-width:none;margin-top:10px">Redis kilidi yalnızca boşa iş yapılmasını önler. Redis kapalıyken de çift kayıt oluşmaz, bunun testi var.</p>
+      <p class="sub rise" style="font-size:var(--fs-label);max-width:none;margin-top:12px">Redis kilidi yalnızca boşa iş yapılmasını önler. Redis kapalıyken de çift kayıt oluşmaz, bunun testi var.</p>
     </div>
   </section>
 
   <!-- 6 Eşleştirme -->
   <section class="slide" aria-label="Eşleştirme kuralları">
     <div class="inner">
-      <p class="eyebrow rise">Veri</p>
       <h2 class="title rise">Kural emin değilse karar vermez</h2>
       <p class="sub rise">Yanlış cariye yazılan para, henüz yazılmamış paradan daha kötü. Bu yüzden kapsam yerine doğruluğu seçtim.</p>
       <figure class="fig block rise" data-scene="match">
@@ -450,7 +457,6 @@ e.Property(t =&gt; t.BankReference).UseCollation(<i>"Latin1_General_100_BIN2"</i
   <!-- 7 Outbox -->
   <section class="slide" aria-label="Outbox">
     <div class="inner">
-      <p class="eyebrow rise">Aktarım</p>
       <h2 class="title rise">Kaydet ve yayınla iki ayrı işlemdir</h2>
       <p class="sub rise">Arada süreç düşerse veritabanı ile kuyruk tutarsız kalır. Outbox mesajı eşleşmeyle aynı işleme koyuyor.</p>
       <div class="two wide-left block" style="grid-template-columns:minmax(0,5fr) minmax(0,7fr)">
@@ -472,7 +478,7 @@ işlemi desteklemiyor.</pre>
         <figure class="fig rise" data-scene="outbox">
           <div class="fig-bar"><span>Outbox, iki API örneği</span><button class="replay" type="button">Tekrar oynat</button></div>
           <div class="fig-body">
-            <div class="opts" style="gap:6px;margin-bottom:6px"><span class="pill" id="tx1">Eşleşme</span><span class="pill" id="tx2">Denetim kaydı</span><span class="pill" id="tx3">OutboxMessages</span><span class="pill" id="txc">tek COMMIT bekleniyor</span></div>
+            <div class="opts" style="gap:8px 16px;margin-bottom:8px"><span class="pill" id="tx1">Eşleşme</span><span class="pill" id="tx2">Denetim kaydı</span><span class="pill" id="tx3">OutboxMessages</span><span class="pill" id="txc">tek COMMIT bekleniyor</span></div>
             <table class="t">
               <thead><tr><th>Satır</th><th>API A</th><th>API B</th><th>Durum</th></tr></thead>
               <tbody id="ob"></tbody>
@@ -488,7 +494,6 @@ WITH (<i>UPDLOCK, READPAST, ROWLOCK</i>) WHERE PublishedAt IS NULL</pre>
   <!-- 8 Kuyruklar -->
   <section class="slide" aria-label="Kuyruklar">
     <div class="inner">
-      <p class="eyebrow rise">Aktarım</p>
       <h2 class="title rise">Geçici hata bekler, kalıcı hata kişiye gider</h2>
       <figure class="fig block rise" data-scene="queue">
         <div class="fig-bar"><span>Bir fiş mesajı</span>
@@ -527,7 +532,6 @@ WITH (<i>UPDLOCK, READPAST, ROWLOCK</i>) WHERE PublishedAt IS NULL</pre>
   <!-- 9 Idempotency -->
   <section class="slide" aria-label="Idempotency">
     <div class="inner">
-      <p class="eyebrow rise">Aktarım</p>
       <h2 class="title rise">ERP fişi yazdı, cevap yolda kayboldu</h2>
       <p class="sub rise">Exporter bunu “başarısız” sanıp tekrar dener. “En az bir kez” teslimin bedeli tek satırla ödeniyor.</p>
       <figure class="fig block rise" data-scene="idem">
@@ -558,7 +562,6 @@ request.Headers.Add(<i>"Idempotency-Key"</i>, message.ExportId.ToString());</pre
   <!-- 10 Hata matrisi -->
   <section class="slide" aria-label="Hata senaryoları">
     <div class="inner">
-      <p class="eyebrow rise">Hata ve ölçüm</p>
       <h2 class="title rise">Bir parçayı kapatalım</h2>
       <p class="sub rise">18 hata senaryosunun her biri, gerçek SQL Server, Redis, MongoDB ve RabbitMQ’ya karşı çalışan bir testle kanıtlı.</p>
       <figure class="fig block rise" id="fail">
@@ -585,7 +588,6 @@ request.Headers.Add(<i>"Idempotency-Key"</i>, message.ExportId.ToString());</pre
   <!-- 11 Ölçümler -->
   <section class="slide" aria-label="Ölçümler">
     <div class="inner">
-      <p class="eyebrow rise">Hata ve ölçüm</p>
       <h2 class="title rise">500 bin hareketle ölçtüm</h2>
       <p class="sub rise">Tahmin yerine ölçüm: 7 çalıştırmanın ortancası, 8 GB dizüstü, SQL Server Docker’da.</p>
       <div class="two wide-left block">
@@ -599,7 +601,8 @@ request.Headers.Add(<i>"Idempotency-Key"</i>, message.ExportId.ToString());</pre
             <div class="bar-row"><span>Önbelleksiz</span><div class="track"><i data-w="100"></i></div><span class="v" data-n="324.6">0</span></div>
             <div class="bar-row win"><span>Redis</span><div class="track"><i data-w="0.89"></i></div><span class="v" data-n="2.9">0</span></div>
             <pre class="code">// Satır atlamaz, indekste son görülen satırın ardına konumlanır.
-rows.Where(t =&gt; t.BookedAt &lt; afterAt || (t.BookedAt == afterAt &amp;&amp; <i>t.Id &lt; afterId</i>));</pre>
+rows.Where(t =&gt; t.BookedAt &lt; afterAt
+    || (t.BookedAt == afterAt &amp;&amp; <i>t.Id &lt; afterId</i>));</pre>
           </div>
         </figure>
         <div class="fig rise">
@@ -625,7 +628,6 @@ rows.Where(t =&gt; t.BookedAt &lt; afterAt || (t.BookedAt == afterAt &amp;&amp; 
   <!-- 12 Güvenlik -->
   <section class="slide" aria-label="Güvenlik">
     <div class="inner">
-      <p class="eyebrow rise">Güvenlik</p>
       <h2 class="title rise">İzolasyonu geliştiricinin hafızasına bırakmadım</h2>
       <div class="two block">
         <figure class="fig rise">
@@ -641,7 +643,8 @@ rows.Where(t =&gt; t.BookedAt &lt; afterAt || (t.BookedAt == afterAt &amp;&amp; 
               </tbody>
             </table>
             <pre class="code">// Her ITenantEntity için, sonradan eklenenler dahil.
-type.<i>SetQueryFilter</i>(Expression.Lambda(Expression.Equal(companyId, current), row));</pre>
+type.<i>SetQueryFilter</i>(Expression.Lambda(
+    Expression.Equal(companyId, current), row));</pre>
           </div>
         </figure>
         <figure class="fig rise" data-scene="token">
@@ -666,9 +669,8 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(Expression.Equal(companyId, current
   <!-- 13 Sayman -->
   <section class="slide" aria-label="Sayman">
     <div class="inner">
-      <p class="eyebrow rise">Güvenlik</p>
       <h2 class="title rise">Sayman: modele SQL yazdırmadım</h2>
-      <p class="sub rise">Model ne istediğini söylüyor, sorguyu Kasa yazıp çalıştırıyor. Asıl koruma modelin iyi niyeti değil, mimari.</p>
+      <p class="sub rise">Model ne istediğini söylüyor, sorguyu Kasa yazıp çalıştırıyor. Güvenlik modelin davranışına bağlı kalmıyor.</p>
       <div class="two wide-left block">
         <figure class="fig rise" data-scene="sayman">
           <div class="fig-bar"><span>Araç döngüsü, örnek sonuç</span><button class="replay" type="button">Tekrar oynat</button></div>
@@ -707,7 +709,6 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(Expression.Equal(companyId, current
   <!-- 14 Kararlar -->
   <section class="slide" aria-label="Kararlar ve bedelleri">
     <div class="inner">
-      <p class="eyebrow rise">Kararlar</p>
       <h2 class="title rise">Her kararın bir bedeli var</h2>
       <p class="sub rise">14 karar notunda seçenekler, seçim ve bedel yazılı. Bilerek ertelediklerim kodda <span class="m">shortcut:</span> yorumuyla işaretli.</p>
       <div class="fig block rise">
@@ -733,8 +734,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(Expression.Equal(companyId, current
   <!-- 15 Kapanış -->
   <section class="slide" aria-label="Teşekkürler">
     <div class="inner">
-      <p class="eyebrow rise">Kapanış</p>
-      <h2 class="title rise" style="font-size:clamp(2.25rem,5vw,4rem)">Teşekkürler</h2>
+      <h2 class="title rise" style="font-size:var(--fs-display)">Teşekkürler</h2>
       <p class="sub rise">Sorularınız için buradayım. İsterseniz ERP’yi birlikte kapatalım.</p>
       <div class="three block">
         <a class="card rise" href="https://kasa.surakaraali.dev" target="_blank" rel="noopener"><span class="eyebrow">Canlı demo</span><h3>kasa.surakaraali.dev</h3><p>Banka ve ERP test sunucularıyla çalışıyor</p></a>
@@ -806,7 +806,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(Expression.Equal(companyId, current
     var h = "";
     actors.forEach(function (a, i) {
       h += '<line class="life" x1="' + x(i) + '" y1="36" x2="' + x(i) + '" y2="368"/>';
-      h += '<rect class="sv-b" x="' + (x(i) - 62) + '" y="2" width="124" height="34" rx="4"/><text class="sv-t sv-c" style="font-size:14px" x="' + x(i) + '" y="24">' + a + "</text>";
+      h += '<rect class="sv-b" x="' + (x(i) - 62) + '" y="2" width="124" height="34" rx="4"/><text class="sv-t sv-c" x="' + x(i) + '" y="24">' + a + "</text>";
     });
     steps.forEach(function (s, i) {
       var y = 70 + i * 35, a = x(s[0]), b = x(s[1]), dir = b > a ? 1 : -1, end = b - dir * 2;
@@ -934,7 +934,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(Expression.Equal(companyId, current
         await go("exp", "wrk", 520);
         await go("wrk", "erp", 520);
         if (mode === "ok") {
-          say('<span class="g">201 fiş TH000041</span>');
+          say('201, fiş yazıldı <span class="kase">TH000041</span>');
           await go("erp", "wrk", 420);
           say("sonuç yayınlandı, ack");
           await go("wrk", "res", 520);
@@ -978,7 +978,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(Expression.Equal(companyId, current
       var on = mode !== "off", rows = $("#idem-rows"), n = $("#idem-n"), v = $("#idem-v"), c = $("#idem-c");
       rows.innerHTML = ""; v.innerHTML = ""; n.textContent = "0"; n.style.color = ""; c.textContent = "";
       function add(s, a, b) { rows.insertAdjacentHTML("beforeend", '<tr style="animation:logIn 240ms both"><td class="m">' + s + "</td><td>" + a + "</td><td>" + b + "</td></tr>"); }
-      function voucher(no, bad) { v.insertAdjacentHTML("beforeend", '<span class="pill ' + (bad ? "bad" : "ok") + '">' + no + "</span>"); n.textContent = v.children.length; }
+      function voucher(no, bad) { v.insertAdjacentHTML("beforeend", '<span class="kase' + (bad ? " bad" : "") + '">' + no + "</span>"); n.textContent = v.children.length; }
       await wait(550);
       add("1", "POST /vouchers", '<span class="pill ok">fiş yazıldı</span>');
       voucher("TH000041");
@@ -1029,7 +1029,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(Expression.Equal(companyId, current
       var text = ["“Bu ay en büyük tahsilat hangisi?”", "Model search_transactions aracını ister. SQL yazamaz.",
         "Tarih, aralık ve uzunluk Kasa’da doğrulanır; hatalı girdi modele hata olarak döner.",
         "Sorgu şirket filtreli DbContext’ten geçer. Şirket JWT’den gelir, modelden değil.",
-        "Bankadan gelen açıklama talimat olarak değil, JSON alanı olarak gider. IBAN ve vergi no modele maskeli ulaşır.",
+        "Bankadan gelen açıklama veri olarak, bir JSON alanında gider. IBAN ve vergi no modele maskeli ulaşır.",
         "Model talimata uysa bile yapabileceği tek şey kendi şirketinin verisini okumaktır."];
       l.forEach(function (x) { x.classList.remove("cur"); });
       cap.textContent = "";

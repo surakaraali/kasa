@@ -1,5 +1,7 @@
 # Redis düşerse Kasa'da ne oluyor?
 
+![Redis kapalıyken her kullanımın kendi devam yolu var](gorseller/6-redis.png)
+
 Kasa'nın bazı testlerinde Redis adresini `localhost:6390` yapıyorum. O portta dinleyen bir şey yok. Sonra ayrı testlerde giriş
 yapıyorum, paneli açıyorum, aynı banka bağlantısı için altı senkronu aynı anda başlatıyorum. Hepsi çalışıyor.
 
@@ -79,3 +81,5 @@ ayrı bir testim yok.
   kilidin de süresi var. Kilit erken giderse ikinci bir senkron başlayabilir. Çift kaydı yine indeks engeller.
 - **Her çağrı gecikebilir.** Redis kapalıyken bir komut 1 saniyeye kadar bekleyebilir. Bu gecikmeyi ölçmedim.
 - **Kimse uyarılmıyor.** `Degraded` durumu panelde görünüyor, ama bunun için bir uyarı kuralı kurmadım.
+
+Kodun tamamı, karar notları ve testler GitHub'da: [github.com/surakaraali/kasa](https://github.com/surakaraali/kasa)

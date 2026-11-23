@@ -1,5 +1,7 @@
 # Yenileme anahtarı ikinci kez gelirse: rotasyon ve aile iptali
 
+![Kullanılmış anahtar ikinci kez gelince bütün aile iptal edilir](gorseller/5-rotasyon.png)
+
 Kasa'da kullanıcı giriş yaptığında iki anahtar alıyor. Erişim anahtarı 15 dakika geçerli bir JWT. Süresi dolunca tarayıcı arka
 planda yenisini istiyor. Bunu yapan yenileme anahtarı ise 14 gün yaşıyor.
 
@@ -74,3 +76,5 @@ kontrol ediyor.
 - **Sayfaya sızan betik oturumu yine kullanabilir.** Çerezi okuyamasa da `/api/auth/refresh` adresine istek atıp cevaptaki
   erişim anahtarını alabilir. Bu yüzden XSS'i ayrıca önlemek gerekiyor. Web tarafının CSP'sinde hâlâ
   `'unsafe-inline'` var ve bunu eksik olarak not ettim.
+
+Kodun tamamı, karar notları ve testler GitHub'da: [github.com/surakaraali/kasa](https://github.com/surakaraali/kasa)

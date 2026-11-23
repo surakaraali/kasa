@@ -1,5 +1,7 @@
 # 5.000. sayfa neden yavaştı: OFFSET ve keyset sayfalama
 
+![OFFSET atladığı satırları okur, keyset son görülen satırdan devam eder](gorseller/3-offset-keyset.png)
+
 Kasa adlı pratik projem, şirketlerin banka hareketlerini tek ekranda listeliyor. Hareketler iki test bankasından geliyor.
 Listenin büyük veride nasıl davrandığını görmek için tek bir şirkete 500.000 hareket yükledim. Satırlar üç hesaba ve iki
 yıla yayılmıştı.
@@ -80,3 +82,5 @@ Keyset bazı şeyleri elimden alıyor:
   hareketlerini tarayabilir. Daha büyük veride tam metin araması gerekecek.
 
 OFFSET'i de tek derinlikte ölçtüm. Derinlikle büyüdüğünü mekanizmadan biliyorum, farklı derinliklerde bir eğri çıkarmadım.
+
+Kodun tamamı, karar notları ve testler GitHub'da: [github.com/surakaraali/kasa](https://github.com/surakaraali/kasa)

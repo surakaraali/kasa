@@ -1,5 +1,7 @@
 # Ortak veritabanında bir şirketin verisini diğerinden ayırmak
 
+![Şirket kimliği token'dan gelir, okuma ve yazma ayrı ayrı korunur](gorseller/4-izolasyon.png)
+
 Kasa'yı birden çok şirket kullanıyor ve hepsinin verisi aynı SQL Server veritabanında duruyor. `BankTransactions` tablosunda
 iki şirketin hareketleri yan yana. Bankalar bu projede test sunucuları, ama kuralı gerçek para varmış gibi kurdum.
 
@@ -89,3 +91,5 @@ Eşleme ve hareket geçmişi için aynı kontrolü `Another_company_cannot_see_c
 - Koruma satırın bellekteki `CompanyId` değerine bakıyor. Veritabanından okunan ilk değerle karşılaştırma yapmıyor.
 - Filtre her sorguya bir şart ekliyor. Bu yüzden `CompanyId` sütunlarında indeks gerekiyor.
 - Bir şirketin verisini topluca dışarı almak ya da silmek, ayrı veritabanına göre daha zor.
+
+Kodun tamamı, karar notları ve testler GitHub'da: [github.com/surakaraali/kasa](https://github.com/surakaraali/kasa)
