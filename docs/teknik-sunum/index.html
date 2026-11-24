@@ -103,8 +103,11 @@
   .block { margin-top: clamp(16px, 3.2vh, 32px); }
   .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
   .wide-left { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .wide-right { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .stack { display: grid; gap: clamp(8px, 1.6vh, 16px); }
+  .jump { display: inline-block; padding: 2px 0; font: 500 var(--fs-label)/1.4 var(--mono); white-space: nowrap; text-underline-offset: 3px; }
   .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-  @media (max-width: 900px) { .two, .wide-left, .three { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 900px) { .two, .wide-left, .wide-right, .three { grid-template-columns: minmax(0, 1fr); } }
   .tile { border-top: 1px solid var(--rule); padding-top: 8px; min-width: 0; }
   .tile b { display: block; font-weight: 500; }
   .tile span { display: block; margin-top: 4px; color: var(--soft); font-size: var(--fs-label); line-height: 1.4; }
@@ -250,15 +253,16 @@
 </style>
 
 <header class="bar gutter">
-  <a class="home" href="#slayt-1">Kasa</a>
+  <a class="home" href="#slayt-2">Kasa</a>
   <nav class="chapters" aria-label="Bölümler">
-    <a href="#slayt-2" data-from="2" data-to="2">Problem</a>
-    <a href="#slayt-3" data-from="3" data-to="4">Mimari</a>
-    <a href="#slayt-5" data-from="5" data-to="6">Veri</a>
-    <a href="#slayt-7" data-from="7" data-to="9">Aktarım</a>
-    <a href="#slayt-10" data-from="10" data-to="11">Hata ve ölçüm</a>
-    <a href="#slayt-12" data-from="12" data-to="13">Güvenlik</a>
-    <a href="#slayt-14" data-from="14" data-to="15">Kararlar</a>
+    <a href="#slayt-1" data-from="1" data-to="1">Ben</a>
+    <a href="#slayt-3" data-from="3" data-to="3">Problem</a>
+    <a href="#slayt-4" data-from="4" data-to="5">Mimari</a>
+    <a href="#slayt-6" data-from="6" data-to="7">Veri</a>
+    <a href="#slayt-8" data-from="8" data-to="10">Aktarım</a>
+    <a href="#slayt-11" data-from="11" data-to="12">Hata ve ölçüm</a>
+    <a href="#slayt-13" data-from="13" data-to="14">Güvenlik</a>
+    <a href="#slayt-15" data-from="15" data-to="16">Kararlar</a>
   </nav>
   <button class="toggle" type="button" aria-label="Açık ya da koyu tema">◐</button>
 </header>
@@ -266,12 +270,47 @@
 <main class="deck" aria-roledescription="sunum">
   <div class="glow" aria-hidden="true"><i class="g1"></i><i class="g2"></i></div>
 
-  <!-- 1 Kapak -->
+  <!-- 1 Ben -->
+  <section class="slide" aria-label="Kısaca ben">
+    <div class="inner">
+      <h2 class="title rise">Mobil ve web’den, para kaydı tutan yazılımlara</h2>
+      <p class="sub rise">Ben Şura Karaali. Hesap özeti gibi, hatası doğrudan paraya dokunan işlerde backend geliştirmek istiyorum.</p>
+      <div class="two wide-right block">
+        <div class="stack">
+          <div class="tile rise"><b>Bilgisayar Mühendisliği</b><span>Doğuş Üniversitesi, 2026</span></div>
+          <div class="tile rise"><b>Dört staj</b><span>İkisi ürün geliştirmede, biri mobil ekipte</span></div>
+          <div class="tile rise"><b>Şu an .NET backend</b><span>Banka ve ERP entegrasyonu üzerine projeler</span></div>
+          <div class="tile rise"><b>Hatası pahalı sistemler</b><span>Canlı ortamda sorunu bulup kökünden çözmek ilgimi çekiyor</span></div>
+        </div>
+        <div>
+          <figure class="fig rise">
+            <div class="fig-bar"><span>İlanın istedikleri, bu sunumda nerede</span></div>
+            <div class="fig-body scroll">
+              <table class="t">
+                <thead><tr><th>İlanda</th><th>Kasa’da</th><th>Slayt</th></tr></thead>
+                <tbody>
+                  <tr><td>C#, .NET, Web API, SQL Server</td><td>Modüler monolit, tek mikroservis</td><td><a class="jump" href="#slayt-4" aria-label="Slayt 4">4</a></td></tr>
+                  <tr><td>Banka ve ERP entegrasyonu</td><td>REST ve SOAP bankalar, tek fiş</td><td><a class="jump" href="#slayt-6" aria-label="Slayt 6">6</a></td></tr>
+                  <tr><td>xUnit ile test</td><td>93 test, 18 hata senaryosu</td><td><a class="jump" href="#slayt-11" aria-label="Slayt 11">11</a></td></tr>
+                  <tr><td>EF Core ve sorgu performansı</td><td>500 bin hareketle ölçüldü</td><td><a class="jump" href="#slayt-12" aria-label="Slayt 12">12</a></td></tr>
+                  <tr><td>Güvenli kod</td><td>Şirket izolasyonu, token rotasyonu</td><td><a class="jump" href="#slayt-13" aria-label="Slayt 13">13</a></td></tr>
+                  <tr><td>Yapay zekâ ajanları</td><td>Sayman, 5 salt okunur araç</td><td><a class="jump" href="#slayt-14" aria-label="Slayt 14">14</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </figure>
+          <p class="rise" style="margin:12px 0 0;color:var(--body)">Öğrenmek istediğim Redis, MongoDB, SignalR ve mikroservis tarafını da Kasa projesinde kurup denedim.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 Kapak -->
   <section class="slide" aria-label="Kapak">
     <div class="inner">
       <div class="cover">
         <div>
-          <p class="eyebrow rise">Şura Karaali, teknik sunum</p>
+          <p class="eyebrow rise">Teknik sunum</p>
           <h1 class="title rise">Kasa</h1>
           <p class="sub rise" style="margin-top:14px">Bankadaki her kuruş, doğru cariye ve ERP’ye</p>
           <p class="rise" style="color:var(--body);max-width:48ch;margin:14px 0 0">Birkaç bankadaki hareketleri toplayan, cariyle eşleştiren, emin olamadığını kişiye bırakan ve ERP’ye tek fiş yazan çok şirketli bir .NET uygulaması.</p>
@@ -295,7 +334,7 @@
     </div>
   </section>
 
-  <!-- 2 Problem -->
+  <!-- 3 Problem -->
   <section class="slide" aria-label="Problem">
     <div class="inner">
       <h2 class="title rise">Para birkaç bankada, kayıt tek ERP’de</h2>
@@ -318,7 +357,7 @@
     </div>
   </section>
 
-  <!-- 3 Mimari -->
+  <!-- 4 Mimari -->
   <section class="slide" aria-label="Mimari">
     <div class="inner">
       <h2 class="title rise">Modüler monolit, tek mikroservis</h2>
@@ -365,7 +404,7 @@
     </div>
   </section>
 
-  <!-- 4 Bir hareketin yolu -->
+  <!-- 5 Bir hareketin yolu -->
   <section class="slide" aria-label="Bir hareketin yolu">
     <div class="inner">
       <h2 class="title rise">Bir hareketin bankadan ERP’ye yolu</h2>
@@ -379,7 +418,7 @@
     </div>
   </section>
 
-  <!-- 5 İki banka, tek kayıt -->
+  <!-- 6 İki banka, tek kayıt -->
   <section class="slide" aria-label="İki banka, tek kayıt">
     <div class="inner">
       <h2 class="title rise">Bozuk veri girmez, aynı hareket iki kez yazılmaz</h2>
@@ -426,7 +465,7 @@ e.Property(t =&gt; t.BankReference)
     </div>
   </section>
 
-  <!-- 6 Eşleştirme -->
+  <!-- 7 Eşleştirme -->
   <section class="slide" aria-label="Eşleştirme kuralları">
     <div class="inner">
       <h2 class="title rise">Kural emin değilse karar vermez</h2>
@@ -454,7 +493,7 @@ e.Property(t =&gt; t.BankReference)
     </div>
   </section>
 
-  <!-- 7 Outbox -->
+  <!-- 8 Outbox -->
   <section class="slide" aria-label="Outbox">
     <div class="inner">
       <h2 class="title rise">Kaydet ve yayınla iki ayrı işlemdir</h2>
@@ -491,7 +530,7 @@ WITH (<i>UPDLOCK, READPAST, ROWLOCK</i>) WHERE PublishedAt IS NULL</pre>
     </div>
   </section>
 
-  <!-- 8 Kuyruklar -->
+  <!-- 9 Kuyruklar -->
   <section class="slide" aria-label="Kuyruklar">
     <div class="inner">
       <h2 class="title rise">Geçici hata bekler, kalıcı hata kişiye gider</h2>
@@ -529,7 +568,7 @@ WITH (<i>UPDLOCK, READPAST, ROWLOCK</i>) WHERE PublishedAt IS NULL</pre>
     </div>
   </section>
 
-  <!-- 9 Idempotency -->
+  <!-- 10 Idempotency -->
   <section class="slide" aria-label="Idempotency">
     <div class="inner">
       <h2 class="title rise">ERP fişi yazdı, cevap yolda kayboldu</h2>
@@ -559,7 +598,7 @@ request.Headers.Add(<i>"Idempotency-Key"</i>, message.ExportId.ToString());</pre
     </div>
   </section>
 
-  <!-- 10 Hata matrisi -->
+  <!-- 11 Hata matrisi -->
   <section class="slide" aria-label="Hata senaryoları">
     <div class="inner">
       <h2 class="title rise">Bir parçayı kapatalım</h2>
@@ -585,7 +624,7 @@ request.Headers.Add(<i>"Idempotency-Key"</i>, message.ExportId.ToString());</pre
     </div>
   </section>
 
-  <!-- 11 Ölçümler -->
+  <!-- 12 Ölçümler -->
   <section class="slide" aria-label="Ölçümler">
     <div class="inner">
       <h2 class="title rise">500 bin hareketle ölçtüm</h2>
@@ -625,7 +664,7 @@ rows.Where(t =&gt; t.BookedAt &lt; afterAt
     </div>
   </section>
 
-  <!-- 12 Güvenlik -->
+  <!-- 13 Güvenlik -->
   <section class="slide" aria-label="Güvenlik">
     <div class="inner">
       <h2 class="title rise">İzolasyonu geliştiricinin hafızasına bırakmadım</h2>
@@ -666,7 +705,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
     </div>
   </section>
 
-  <!-- 13 Sayman -->
+  <!-- 14 Sayman -->
   <section class="slide" aria-label="Sayman">
     <div class="inner">
       <h2 class="title rise">Sayman: modele SQL yazdırmadım</h2>
@@ -706,7 +745,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
     </div>
   </section>
 
-  <!-- 14 Kararlar -->
+  <!-- 15 Kararlar -->
   <section class="slide" aria-label="Kararlar ve bedelleri">
     <div class="inner">
       <h2 class="title rise">Her kararın bir bedeli var</h2>
@@ -723,7 +762,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
               <tr class="rise"><td>Ortak DB, sorgu filtresi</td><td>Şirket başına veritabanı</td><td>Bir şirketin verisini topluca taşımak daha zor</td></tr>
               <tr class="rise"><td>Redis hızlandırıcı</td><td>Redis zorunlu</td><td>Redis kapalıyken deneme sınırları sunucu başına sayılır</td></tr>
               <tr class="rise"><td>Modele salt okunur araçlar</td><td>Modele SQL yazdırmak</td><td>Araçların kapsamadığı soruya cevap veremez</td></tr>
-              <tr class="rise"><td>OpenTelemetry</td><td>Serilog</td><td>Serilog’un zengin log hedefleri yok; gerekirse eklenir</td></tr>
+              <tr class="rise"><td>OpenTelemetry</td><td>Serilog</td><td>Serilog’un hazır log hedeflerinden vazgeçtim; gerekirse eklenir</td></tr>
             </tbody>
           </table>
         </div>
@@ -731,7 +770,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
     </div>
   </section>
 
-  <!-- 15 Kapanış -->
+  <!-- 16 Kapanış -->
   <section class="slide" aria-label="Teşekkürler">
     <div class="inner">
       <h2 class="title rise" style="font-size:var(--fs-display)">Teşekkürler</h2>
@@ -739,7 +778,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
       <div class="three block">
         <a class="card rise" href="https://kasa.surakaraali.dev" target="_blank" rel="noopener"><span class="eyebrow">Canlı demo</span><h3>kasa.surakaraali.dev</h3><p>Banka ve ERP test sunucularıyla çalışıyor</p></a>
         <a class="card rise" href="https://github.com/surakaraali/kasa" target="_blank" rel="noopener"><span class="eyebrow">Kod</span><h3>github.com/surakaraali/kasa</h3><p>Kod, testler ve 14 karar notu</p></a>
-        <div class="card rise"><span class="eyebrow">Nasıl çalıştım</span><h3>Önce hata senaryoları</h3><p>Yapay zekâ ile geliştirdim; kararlar ve doğrulama bende</p></div>
+        <div class="card rise"><span class="eyebrow">Nasıl çalıştım</span><h3>Önce hata senaryoları</h3><p>Yapay zekâ ile geliştirdim. Kararların gerekçesi karar notlarında, doğruluğu testlerde.</p></div>
       </div>
       <div class="links rise">
         <a class="mono-link" href="https://medium.com/p/6993870c0bd1" target="_blank" rel="noopener">Yazı: Bir kuruşun bankadan ERP’ye yolculuğu ↗</a>
@@ -752,7 +791,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
 
 <footer class="controls gutter">
   <div class="progress" aria-hidden="true"></div>
-  <span class="counter" aria-live="polite">01 / 15</span>
+  <span class="counter" aria-live="polite">01 / 16</span>
   <span class="hint">← → ile gezin</span>
   <div class="arrows">
     <button type="button" class="prev" aria-label="Önceki slayt">←</button>
