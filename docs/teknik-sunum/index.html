@@ -206,12 +206,16 @@
   .note { margin: 12px 0 0; color: var(--body); }
 
   /* Side projects: a screenshot of the live site, then what it is. */
+  .projs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 24px); align-items: start; }
+  @media (max-width: 1100px) { .projs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .projs { grid-template-columns: minmax(0, 1fr); } }
   .proj { display: grid; align-content: start; gap: 8px; min-width: 0; color: var(--body); text-decoration: none; }
   .proj img { display: block; width: 100%; height: auto; max-height: calc(100svh - 440px); aspect-ratio: 1200 / 750; object-fit: cover; object-position: top;
     border: 1px solid var(--rule); border-radius: 8px; }
   .proj b { margin-top: 4px; font-weight: 500; font-size: var(--fs-lead); color: var(--ink); }
   .proj span { font-size: var(--fs-label); line-height: 1.45; color: var(--soft); max-width: 60ch; }
-  .proj .url { color: var(--accent); }
+  .proj .tech { color: var(--body); font-size: 13px; }
+  .proj .url { color: var(--accent); font-size: 13px; }
   .proj:hover b { color: var(--accent); }
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
   @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -876,19 +880,35 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
   <section class="slide" aria-label="Kasa dışında yaptıklarım">
     <div class="inner">
       <h2 class="title rise">Kasa dışında yaptıklarım</h2>
-      <p class="sub rise">İkisi de yayında, tarayıcıdan açılabilir.</p>
-      <div class="two block">
+      <p class="sub rise">Dördü de yayında, tarayıcıdan açılabilir.</p>
+      <div class="projs block">
         <a class="proj rise" href="https://ozgec.surakaraali.dev/?ornek" target="_blank" rel="noopener">
           <img src="projeler/ozgec.jpg" width="1200" height="750" alt="özgeç: örnek bir ilan ve CV karşılaştırması, ilandaki 17 zorunlu becerinin 9’u CV’de var">
           <b>özgeç</b>
-          <span>“CV’n bu ilana geçer mi?” İlanı ve CV’yi karşılaştırır; eksik becerileri ve ATS’nin yanlış okuyacağı yerleri gösterir. Her şey tarayıcıda çalışır, CV hiçbir yere yüklenmez.</span>
+          <span>İlanı ve CV’yi karşılaştırır; eksik becerileri ve ATS sorunlarını gösterir. CV hiçbir yere yüklenmez.</span>
+          <span class="m tech">JavaScript, sunucusuz, Cloudflare</span>
           <span class="m url">ozgec.surakaraali.dev ↗</span>
         </a>
         <a class="proj rise" href="https://wishes.surakaraali.dev" target="_blank" rel="noopener">
           <img src="projeler/dilek.jpg" width="1200" height="750" alt="Dilek Galaksisi açılış ekranı: gece göğünde dilek yazma formu ve arkada galaksi">
           <b>Dilek Galaksisi</b>
-          <span>Kayıt olmadan dilek yazılan, her dileğin dönen bir galakside yıldıza dönüştüğü küçük bir sosyal site. Küfür ve spam filtresi var, IP adresi saklanmaz. Cloudflare Workers ve D1 üzerinde.</span>
+          <span>Kayıt olmadan yazılan her dilek, dönen bir galakside yıldız olur. Küfür ve spam filtresi var, IP saklanmaz.</span>
+          <span class="m tech">Cloudflare Workers, D1 (SQLite)</span>
           <span class="m url">wishes.surakaraali.dev ↗</span>
+        </a>
+        <a class="proj rise" href="https://www.gediklilaw.com" target="_blank" rel="noopener">
+          <img src="projeler/gedikli.jpg" width="1200" height="750" alt="Gedikli Hukuk ana sayfası: “Hukuki çözüm ortağınız GEDİKLİ” başlığı ve iletişim düğmeleri">
+          <b>Gedikli Hukuk</b>
+          <span>Bir hukuk bürosunun Türkçe ve İngilizce sitesi: hizmetler, ekip, kariyer, makaleler ve iletişim formu.</span>
+          <span class="m tech">Next.js, Vercel, Resend ile e-posta</span>
+          <span class="m url">www.gediklilaw.com ↗</span>
+        </a>
+        <a class="proj rise" href="https://www.fladv.art" target="_blank" rel="noopener">
+          <img src="projeler/fladv.jpg" width="1200" height="750" alt="FLADVart ana sayfası: suda yüzen eski televizyonlar ve “We’re all sinking in what’s seen.” cümlesi">
+          <b>FLADVart</b>
+          <span>Bir yaratıcı ajansın iki dilli sitesi. İçerik, girişle korunan bir yönetim panelinden güncellenir.</span>
+          <span class="m tech">Next.js, NextAuth, PostgreSQL, Resend</span>
+          <span class="m url">fladv.art ↗</span>
         </a>
       </div>
     </div>

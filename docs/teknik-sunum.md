@@ -156,12 +156,16 @@ Dürüst ol, sorulursa:
   ilerlediğim için sprintler kısa sürdü. Amaç takvim değil, işi küçük ve test edilebilir parçalara bölmekti."
 - Pano gizli; isterlerse ekranından açıp gösterebilirsin.
 
-## 18. Kasa dışında yaptıklarım (30 sn)
+## 18. Kasa dışında yaptıklarım (45 sn)
 İki cümle yeter, ayrıntıya soru gelirse in.
 - **özgeç:** "İlanı ve CV'yi tarayıcıda karşılaştırıyor, eksik becerileri ve ATS'nin yanlış okuyacağı yerleri gösteriyor.
   Sunucu yok, CV hiçbir yere yüklenmiyor; gizliliği tasarımın başına koydum."
 - **Dilek Galaksisi:** "Kayıt olmadan dilek yazılan küçük bir sosyal site. Herkese açık olduğu için küfür ve spam filtresi,
   günlük sınır var; IP adresini saklamıyorum. Cloudflare Workers ve D1 üzerinde."
+- **Gedikli Hukuk ve FLADVart:** "İkisi de Next.js ile yaptığım, yayında olan siteler. İletişim formlarından gelen e-postalar
+  Resend ile gidiyor. FLADVart'ta içerik, NextAuth ile korunan bir yönetim panelinden PostgreSQL'e yazılıyor."
+  Bu iki satır ilandaki web ve entegrasyon tarafına bağlanıyor; soru gelirse formdan gelen isteğin sunucuda doğrulanıp
+  Resend API'sine nasıl gittiğini anlat.
 
 ## 19. Teşekkürler (30 sn)
 "İsterseniz ERP'yi birlikte kapatalım." Demoya ya da sorulara geç.
