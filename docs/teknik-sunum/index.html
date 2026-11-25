@@ -168,6 +168,51 @@
   .lines .stamp { grid-column: 3; justify-self: end; font: 500 13px/20px var(--mono); color: var(--stamp); border: 1.5px solid var(--stamp); border-radius: 4px; padding: 0 5px; transform: rotate(-4deg) scale(1.5); opacity: 0; transition: opacity 160ms, transform 200ms var(--ease); }
   .lines li.done .res { opacity: 1; }
   .lines li.done .stamp { opacity: 0.9; transform: rotate(-4deg); }
+  .facts { display: grid; gap: 6px; margin: clamp(12px, 2.4vh, 24px) 0 0; max-width: 56ch; font-size: var(--fs-label); line-height: 1.4; }
+  .facts div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 12px; padding-top: 6px; border-top: 1px solid var(--rule); }
+  .facts dt { color: var(--soft); }
+  .facts dd { margin: 0; color: var(--body); }
+  .facts dd.m { font-size: 13px; }
+
+  /* Usage: numbered steps beside a short screen recording from the running demo. */
+  .tour { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(16px, 2.4vw, 32px); align-items: start; }
+  .tour-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .tour-step { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 8px; row-gap: 2px; width: 100%; padding: 10px 12px 12px;
+    text-align: left; font: inherit; color: var(--ink); background: none; border: 1px solid transparent; border-radius: 8px; cursor: pointer; overflow: hidden; }
+  .tour-step .n { grid-row: span 2; color: var(--soft); font-size: var(--fs-label); line-height: 1.6; }
+  .tour-step b { font-weight: 500; }
+  .tour-step .d { grid-column: 2; color: var(--soft); font-size: var(--fs-label); line-height: 1.4; }
+  .tour-step:hover b { color: var(--accent); }
+  .tour-step[aria-pressed="true"] { background: var(--paper); border-color: var(--rule); }
+  .tour-step[aria-pressed="true"] .n { color: var(--accent); }
+  .tour-step::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); transform-origin: left; transform: scaleX(var(--p, 0)); opacity: 0; }
+  .tour-step[aria-pressed="true"]::after { opacity: 1; }
+  .tour-screen { width: 100%; max-width: calc((100svh - 330px) * 1.6); justify-self: end; }
+  .tour-frame { aspect-ratio: 1200 / 750; background: var(--tint); }
+  .tour-frame video { display: block; width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+  .tour-frame video[hidden] { display: none; }
+  @media (max-width: 900px) { .tour { grid-template-columns: minmax(0, 1fr); } .tour-screen { max-width: none; } }
+  /* Board: the real GitHub Projects columns; the cards are the real issues of one sprint. */
+  .sprints { margin-bottom: 12px; }
+  .kanban { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .kcol { min-width: 0; min-height: clamp(150px, 26vh, 250px); padding: 8px; background: var(--tint); border-radius: 8px; }
+  .khead { display: flex; justify-content: space-between; gap: 8px; padding: 2px 4px 8px; font: 500 var(--fs-label)/1.3 var(--sans); color: var(--soft); white-space: nowrap; }
+  .kcards { display: grid; gap: 6px; }
+  .kcard { min-width: 0; padding: 6px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 1.35;
+    color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; transition: transform 380ms var(--ease); }
+  .kcard .m { margin-right: 6px; color: var(--soft); }
+  .kcol[data-col="Done"] .kcard { border-color: var(--good); }
+  @media (max-width: 900px) { .kanban { grid-template-columns: repeat(5, minmax(128px, 1fr)); } }
+  .note { margin: 12px 0 0; color: var(--body); }
+
+  /* Side projects: a screenshot of the live site, then what it is. */
+  .proj { display: grid; align-content: start; gap: 8px; min-width: 0; color: var(--body); text-decoration: none; }
+  .proj img { display: block; width: 100%; height: auto; max-height: calc(100svh - 440px); aspect-ratio: 1200 / 750; object-fit: cover; object-position: top;
+    border: 1px solid var(--rule); border-radius: 8px; }
+  .proj b { margin-top: 4px; font-weight: 500; font-size: var(--fs-lead); color: var(--ink); }
+  .proj span { font-size: var(--fs-label); line-height: 1.45; color: var(--soft); max-width: 60ch; }
+  .proj .url { color: var(--accent); }
+  .proj:hover b { color: var(--accent); }
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
   @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .stat b { display: block; font-weight: 500; font-size: var(--fs-title); line-height: 1.1; font-variant-numeric: tabular-nums; }
@@ -257,12 +302,14 @@
   <nav class="chapters" aria-label="Bölümler">
     <a href="#slayt-1" data-from="1" data-to="1">Ben</a>
     <a href="#slayt-3" data-from="3" data-to="3">Problem</a>
-    <a href="#slayt-4" data-from="4" data-to="5">Mimari</a>
-    <a href="#slayt-6" data-from="6" data-to="7">Veri</a>
-    <a href="#slayt-8" data-from="8" data-to="10">Aktarım</a>
-    <a href="#slayt-11" data-from="11" data-to="12">Hata ve ölçüm</a>
-    <a href="#slayt-13" data-from="13" data-to="14">Güvenlik</a>
-    <a href="#slayt-15" data-from="15" data-to="16">Kararlar</a>
+    <a href="#slayt-4" data-from="4" data-to="4">Kullanım</a>
+    <a href="#slayt-5" data-from="5" data-to="6">Mimari</a>
+    <a href="#slayt-7" data-from="7" data-to="8">Veri</a>
+    <a href="#slayt-9" data-from="9" data-to="11">Aktarım</a>
+    <a href="#slayt-12" data-from="12" data-to="13">Hata ve ölçüm</a>
+    <a href="#slayt-14" data-from="14" data-to="15">Güvenlik</a>
+    <a href="#slayt-16" data-from="16" data-to="16">Kararlar</a>
+    <a href="#slayt-17" data-from="17" data-to="18">Çalışma</a>
   </nav>
   <button class="toggle" type="button" aria-label="Açık ya da koyu tema">◐</button>
 </header>
@@ -274,27 +321,29 @@
   <section class="slide" aria-label="Kısaca ben">
     <div class="inner">
       <h2 class="title rise">Mobil ve web’den, para kaydı tutan yazılımlara</h2>
-      <p class="sub rise">Ben Şura Karaali. Hesap özeti gibi, hatası doğrudan paraya dokunan işlerde backend geliştirmek istiyorum.</p>
+      <p class="sub rise">Ben Şura Karaali. Hatası doğrudan paraya dokunan işlerde backend geliştirmek istiyorum.</p>
       <div class="two wide-right block">
         <div class="stack">
           <div class="tile rise"><b>Bilgisayar Mühendisliği</b><span>Doğuş Üniversitesi, 2026</span></div>
           <div class="tile rise"><b>Dört staj</b><span>İkisi ürün geliştirmede, biri mobil ekipte</span></div>
           <div class="tile rise"><b>Şu an .NET backend</b><span>Banka ve ERP entegrasyonu üzerine projeler</span></div>
-          <div class="tile rise"><b>Hatası pahalı sistemler</b><span>Canlı ortamda sorunu bulup kökünden çözmek ilgimi çekiyor</span></div>
+          <div class="tile rise"><b>Yapay zekâ ve mimari odaklı</b><span>Yapay zekâyı ve ajanları verimli kullanıyorum; geliştirmeye tasarım ve mimariden başlıyorum</span></div>
         </div>
         <div>
           <figure class="fig rise">
-            <div class="fig-bar"><span>İlanın istedikleri, bu sunumda nerede</span></div>
+            <div class="fig-bar"><span>Bu sunumda</span></div>
             <div class="fig-body scroll">
               <table class="t">
-                <thead><tr><th>İlanda</th><th>Kasa’da</th><th>Slayt</th></tr></thead>
                 <tbody>
-                  <tr><td>C#, .NET, Web API, SQL Server</td><td>Modüler monolit, tek mikroservis</td><td><a class="jump" href="#slayt-4" aria-label="Slayt 4">4</a></td></tr>
-                  <tr><td>Banka ve ERP entegrasyonu</td><td>REST ve SOAP bankalar, tek fiş</td><td><a class="jump" href="#slayt-6" aria-label="Slayt 6">6</a></td></tr>
-                  <tr><td>xUnit ile test</td><td>93 test, 18 hata senaryosu</td><td><a class="jump" href="#slayt-11" aria-label="Slayt 11">11</a></td></tr>
-                  <tr><td>EF Core ve sorgu performansı</td><td>500 bin hareketle ölçüldü</td><td><a class="jump" href="#slayt-12" aria-label="Slayt 12">12</a></td></tr>
-                  <tr><td>Güvenli kod</td><td>Şirket izolasyonu, token rotasyonu</td><td><a class="jump" href="#slayt-13" aria-label="Slayt 13">13</a></td></tr>
-                  <tr><td>Yapay zekâ ajanları</td><td>Sayman, 5 salt okunur araç</td><td><a class="jump" href="#slayt-14" aria-label="Slayt 14">14</a></td></tr>
+                  <tr><td><b>Problem</b></td><td>Muhasebecinin her sabahı</td><td><a class="jump" href="#slayt-3" aria-label="Slayt 3">3</a></td></tr>
+                  <tr><td><b>Kullanım</b></td><td>Uygulamadan dört kısa kayıt</td><td><a class="jump" href="#slayt-4" aria-label="Slayt 4">4</a></td></tr>
+                  <tr><td><b>Mimari</b></td><td>Modüler monolit ve tek ayrı servis</td><td><a class="jump" href="#slayt-5" aria-label="Slayt 5">5</a></td></tr>
+                  <tr><td><b>Veri</b></td><td>İki banka tek kayıt, eşleştirme</td><td><a class="jump" href="#slayt-7" aria-label="Slayt 7">7</a></td></tr>
+                  <tr><td><b>Aktarım</b></td><td>Outbox, kuyruklar, idempotency</td><td><a class="jump" href="#slayt-9" aria-label="Slayt 9">9</a></td></tr>
+                  <tr><td><b>Hata ve ölçüm</b></td><td>Bir parçayı kapatalım, 500 bin hareket</td><td><a class="jump" href="#slayt-12" aria-label="Slayt 12">12</a></td></tr>
+                  <tr><td><b>Güvenlik</b></td><td>Şirket izolasyonu, Sayman</td><td><a class="jump" href="#slayt-14" aria-label="Slayt 14">14</a></td></tr>
+                  <tr><td><b>Kararlar</b></td><td>Ne seçtim, bedeli ne oldu</td><td><a class="jump" href="#slayt-16" aria-label="Slayt 16">16</a></td></tr>
+                  <tr><td><b>Çalışma düzeni</b></td><td>Sprintler, pano ve diğer projelerim</td><td><a class="jump" href="#slayt-17" aria-label="Slayt 17">17</a></td></tr>
                 </tbody>
               </table>
             </div>
@@ -314,6 +363,12 @@
           <h1 class="title rise">Kasa</h1>
           <p class="sub rise" style="margin-top:14px">Bankadaki her kuruş, doğru cariye ve ERP’ye</p>
           <p class="rise" style="color:var(--body);max-width:48ch;margin:14px 0 0">Birkaç bankadaki hareketleri toplayan, cariyle eşleştiren, emin olamadığını kişiye bırakan ve ERP’ye tek fiş yazan çok şirketli bir .NET uygulaması.</p>
+          <dl class="facts rise">
+            <div><dt>Bankalar</dt><dd>AcikBank REST ve açık bankacılık izniyle, KlasikBank SOAP ile; 15 dakikada bir çekilir</dd></div>
+            <div><dt>ERP</dt><dd>Cariler ERP’den gelir, eşleşen hareket ERP’ye fiş olarak yazılır</dd></div>
+            <div><dt>Ekip</dt><dd>Çok şirketli; yönetici, muhasebeci ve izleyici rolleri</dd></div>
+            <div><dt>Teknoloji</dt><dd class="m">.NET 10, EF Core, SQL Server, RabbitMQ, Redis, MongoDB, SignalR, Next.js</dd></div>
+          </dl>
         </div>
         <figure class="paper rise" data-scene="statement" aria-label="Banka ekstresi işlenirken: eşleşen satırlar ERP fiş numarası alıyor, çelişen satır kişiye kalıyor.">
           <div class="paper-head"><span>KlasikBank, Ticari Hesap</span><span class="m">TR69 … 0003</span></div>
@@ -357,7 +412,32 @@
     </div>
   </section>
 
-  <!-- 4 Mimari -->
+  <!-- 4 Kullanım -->
+  <section class="slide" aria-label="Kasa’yı kullanırken">
+    <div class="inner">
+      <h2 class="title rise">Kasa’yı kullanırken</h2>
+      <p class="sub rise">Çalışan uygulamadan, demo şirketiyle çekilmiş dört kısa kayıt.</p>
+      <div class="tour block rise" data-tour>
+        <ol class="tour-steps">
+          <li><button class="tour-step" type="button" aria-pressed="true" data-url="localhost:3000/baglantilar"><span class="n m">1</span><b>Bankadan gelir, kendiliğinden eşleşir</b><span class="d">“Şimdi çek” yeni tahsilatı alır. IBAN, ABC Tekstil’i gösterir; hareket ERP fiş numarasını alır.</span></button></li>
+          <li><button class="tour-step" type="button" aria-pressed="false" data-url="localhost:3000/eslesmeyenler"><span class="n m">2</span><b>Emin olamadığını sana sorar</b><span class="d">Kuzey Lojistik’in IBAN’ı ve vergi numarası iki ayrı cariyi gösteriyor. Kural seçmiyor, muhasebeci seçiyor.</span></button></li>
+          <li><button class="tour-step" type="button" aria-pressed="false" data-url="localhost:3000/hareketler"><span class="n m">3</span><b>ERP’de tek fiş</b><span class="d">Elle eşlenen hareket de fiş numarasını alır. Test ERP’sinde fiş bir kez yazılmış.</span></button></li>
+          <li><button class="tour-step" type="button" aria-pressed="false" data-url="localhost:3000/panel"><span class="n m">4</span><b>Sayman’a sor</b><span class="d">Türkçe soru, salt okunur araçlarla cevap. Model veriyi okuyabilir, değiştiremez.</span></button></li>
+        </ol>
+        <figure class="fig tour-screen">
+          <div class="fig-bar"><span class="m" id="tour-url">localhost:3000/baglantilar</span><button class="replay" type="button" id="tour-pause">Durdur</button></div>
+          <div class="tour-frame">
+            <video src="kullanim/1-cek.webm#t=2.1" data-start="2.1" data-dur="12.3" muted playsinline preload="auto" aria-label="Bankadan gelir, kendiliğinden eşleşir"></video>
+            <video src="kullanim/2-esle.webm#t=1.8" data-start="1.8" data-dur="10.5" muted playsinline preload="auto" hidden aria-label="Emin olamadığını sana sorar"></video>
+            <video src="kullanim/3-fis.webm#t=1.7" data-start="1.7" data-dur="12.8" muted playsinline preload="auto" hidden aria-label="ERP’de tek fiş"></video>
+            <video src="kullanim/4-sayman.webm#t=4.2" data-start="4.2" data-dur="25.2" muted playsinline preload="auto" hidden aria-label="Sayman’a sor"></video>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 Mimari -->
   <section class="slide" aria-label="Mimari">
     <div class="inner">
       <h2 class="title rise">Modüler monolit, tek mikroservis</h2>
@@ -404,7 +484,7 @@
     </div>
   </section>
 
-  <!-- 5 Bir hareketin yolu -->
+  <!-- 6 Bir hareketin yolu -->
   <section class="slide" aria-label="Bir hareketin yolu">
     <div class="inner">
       <h2 class="title rise">Bir hareketin bankadan ERP’ye yolu</h2>
@@ -418,7 +498,7 @@
     </div>
   </section>
 
-  <!-- 6 İki banka, tek kayıt -->
+  <!-- 7 İki banka, tek kayıt -->
   <section class="slide" aria-label="İki banka, tek kayıt">
     <div class="inner">
       <h2 class="title rise">Bozuk veri girmez, aynı hareket iki kez yazılmaz</h2>
@@ -465,7 +545,7 @@ e.Property(t =&gt; t.BankReference)
     </div>
   </section>
 
-  <!-- 7 Eşleştirme -->
+  <!-- 8 Eşleştirme -->
   <section class="slide" aria-label="Eşleştirme kuralları">
     <div class="inner">
       <h2 class="title rise">Kural emin değilse karar vermez</h2>
@@ -493,7 +573,7 @@ e.Property(t =&gt; t.BankReference)
     </div>
   </section>
 
-  <!-- 8 Outbox -->
+  <!-- 9 Outbox -->
   <section class="slide" aria-label="Outbox">
     <div class="inner">
       <h2 class="title rise">Kaydet ve yayınla iki ayrı işlemdir</h2>
@@ -530,7 +610,7 @@ WITH (<i>UPDLOCK, READPAST, ROWLOCK</i>) WHERE PublishedAt IS NULL</pre>
     </div>
   </section>
 
-  <!-- 9 Kuyruklar -->
+  <!-- 10 Kuyruklar -->
   <section class="slide" aria-label="Kuyruklar">
     <div class="inner">
       <h2 class="title rise">Geçici hata bekler, kalıcı hata kişiye gider</h2>
@@ -568,7 +648,7 @@ WITH (<i>UPDLOCK, READPAST, ROWLOCK</i>) WHERE PublishedAt IS NULL</pre>
     </div>
   </section>
 
-  <!-- 10 Idempotency -->
+  <!-- 11 Idempotency -->
   <section class="slide" aria-label="Idempotency">
     <div class="inner">
       <h2 class="title rise">ERP fişi yazdı, cevap yolda kayboldu</h2>
@@ -598,7 +678,7 @@ request.Headers.Add(<i>"Idempotency-Key"</i>, message.ExportId.ToString());</pre
     </div>
   </section>
 
-  <!-- 11 Hata matrisi -->
+  <!-- 12 Hata matrisi -->
   <section class="slide" aria-label="Hata senaryoları">
     <div class="inner">
       <h2 class="title rise">Bir parçayı kapatalım</h2>
@@ -624,7 +704,7 @@ request.Headers.Add(<i>"Idempotency-Key"</i>, message.ExportId.ToString());</pre
     </div>
   </section>
 
-  <!-- 12 Ölçümler -->
+  <!-- 13 Ölçümler -->
   <section class="slide" aria-label="Ölçümler">
     <div class="inner">
       <h2 class="title rise">500 bin hareketle ölçtüm</h2>
@@ -664,7 +744,7 @@ rows.Where(t =&gt; t.BookedAt &lt; afterAt
     </div>
   </section>
 
-  <!-- 13 Güvenlik -->
+  <!-- 14 Güvenlik -->
   <section class="slide" aria-label="Güvenlik">
     <div class="inner">
       <h2 class="title rise">İzolasyonu geliştiricinin hafızasına bırakmadım</h2>
@@ -705,7 +785,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
     </div>
   </section>
 
-  <!-- 14 Sayman -->
+  <!-- 15 Sayman -->
   <section class="slide" aria-label="Sayman">
     <div class="inner">
       <h2 class="title rise">Sayman: modele SQL yazdırmadım</h2>
@@ -745,7 +825,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
     </div>
   </section>
 
-  <!-- 15 Kararlar -->
+  <!-- 16 Kararlar -->
   <section class="slide" aria-label="Kararlar ve bedelleri">
     <div class="inner">
       <h2 class="title rise">Her kararın bir bedeli var</h2>
@@ -770,7 +850,51 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
     </div>
   </section>
 
-  <!-- 16 Kapanış -->
+  <!-- 17 Çalışma düzeni -->
+  <section class="slide" aria-label="Çalışma düzeni">
+    <div class="inner">
+      <h2 class="title rise">İşi sprintlere bölüp panodan izledim</h2>
+      <p class="sub rise">Kasa’yı tek başıma geliştirdim ama işi takımdaki gibi planladım: 8 sprint, 40 kart, beş sütunlu bir GitHub Projects panosu.</p>
+      <figure class="fig block rise" data-scene="board" aria-label="Kasa panosu: seçili sprintin kartları Backlog, Ready, In Progress, In Review ve Done sütunlarından geçiyor.">
+        <div class="fig-bar"><span id="board-name">Sprint 3: Eşleştirme ve ERP aktarımı</span><button class="replay" type="button">Tekrar oynat</button></div>
+        <div class="fig-body">
+          <div class="opts sprints"><button class="opt" type="button" data-s="0" aria-pressed="false">Sprint 0</button><button class="opt" type="button" data-s="1" aria-pressed="false">Sprint 1</button><button class="opt" type="button" data-s="2" aria-pressed="false">Sprint 2</button><button class="opt" type="button" data-s="3" aria-pressed="true">Sprint 3</button><button class="opt" type="button" data-s="4" aria-pressed="false">Sprint 4</button><button class="opt" type="button" data-s="5" aria-pressed="false">Sprint 5</button><button class="opt" type="button" data-s="6" aria-pressed="false">Sprint 6</button><button class="opt" type="button" data-s="7" aria-pressed="false">Sprint 7</button></div>
+          <div class="kanban">
+            <div class="kcol" data-col="Backlog"><div class="khead"><span>Backlog</span><span class="m">0</span></div><div class="kcards"></div></div>
+            <div class="kcol" data-col="Ready"><div class="khead"><span>Ready</span><span class="m">0</span></div><div class="kcards"></div></div>
+            <div class="kcol" data-col="In Progress"><div class="khead"><span>In Progress</span><span class="m">0</span></div><div class="kcards"></div></div>
+            <div class="kcol" data-col="In Review"><div class="khead"><span>In Review</span><span class="m">0</span></div><div class="kcards"></div></div>
+            <div class="kcol" data-col="Done"><div class="khead"><span>Done</span><span class="m">0</span></div><div class="kcards"></div></div>
+          </div>
+        </div>
+      </figure>
+      <p class="note rise">Stajımda mobil ekipte de Jira’da benzer bir panoyla çalıştım: backlog, sprint ve kartlar.</p>
+    </div>
+  </section>
+
+  <!-- 18 Diğer projeler -->
+  <section class="slide" aria-label="Kasa dışında yaptıklarım">
+    <div class="inner">
+      <h2 class="title rise">Kasa dışında yaptıklarım</h2>
+      <p class="sub rise">İkisi de yayında, tarayıcıdan açılabilir.</p>
+      <div class="two block">
+        <a class="proj rise" href="https://ozgec.surakaraali.dev/?ornek" target="_blank" rel="noopener">
+          <img src="projeler/ozgec.jpg" width="1200" height="750" alt="özgeç: örnek bir ilan ve CV karşılaştırması, ilandaki 17 zorunlu becerinin 9’u CV’de var">
+          <b>özgeç</b>
+          <span>“CV’n bu ilana geçer mi?” İlanı ve CV’yi karşılaştırır; eksik becerileri ve ATS’nin yanlış okuyacağı yerleri gösterir. Her şey tarayıcıda çalışır, CV hiçbir yere yüklenmez.</span>
+          <span class="m url">ozgec.surakaraali.dev ↗</span>
+        </a>
+        <a class="proj rise" href="https://wishes.surakaraali.dev" target="_blank" rel="noopener">
+          <img src="projeler/dilek.jpg" width="1200" height="750" alt="Dilek Galaksisi açılış ekranı: gece göğünde dilek yazma formu ve arkada galaksi">
+          <b>Dilek Galaksisi</b>
+          <span>Kayıt olmadan dilek yazılan, her dileğin dönen bir galakside yıldıza dönüştüğü küçük bir sosyal site. Küfür ve spam filtresi var, IP adresi saklanmaz. Cloudflare Workers ve D1 üzerinde.</span>
+          <span class="m url">wishes.surakaraali.dev ↗</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 19 Kapanış -->
   <section class="slide" aria-label="Teşekkürler">
     <div class="inner">
       <h2 class="title rise" style="font-size:var(--fs-display)">Teşekkürler</h2>
@@ -791,7 +915,7 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
 
 <footer class="controls gutter">
   <div class="progress" aria-hidden="true"></div>
-  <span class="counter" aria-live="polite">01 / 16</span>
+  <span class="counter" aria-live="polite">01 / 19</span>
   <span class="hint">← → ile gezin</span>
   <div class="arrows">
     <button type="button" class="prev" aria-label="Önceki slayt">←</button>
@@ -1081,6 +1205,55 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
     }
   };
 
+  /* The Kasa board on GitHub Projects: one sprint's real cards go through the columns and end in their real state. */
+  var SPRINTS = [
+    ["Sprint 0: Hazırlık", [[1, "Disk temizliği"], [2, "Çözüm iskeleti"], [3, "Docker altyapısı"], [4, "CI: build ve test"], [5, "Karar notu şablonu ve README"]]],
+    ["Sprint 1: Kimlik ve şirketler", [[6, "Kayıt: şirket ve ilk yönetici"], [7, "JWT ve yenileme anahtarı"], [8, "Roller ve davet"], [9, "Şirket izolasyonu"], [10, "Giriş denemesi sınırı"], [11, "Testler ve karar notları"]]],
+    ["Sprint 2: Banka entegrasyonu", [[12, "Test bankaları: REST ve SOAP"], [13, "Banka bağlama akışı"], [14, "Quartz ile senkron"], [15, "Tek kayıt garantisi"], [16, "Redis senkron kilidi"], [17, "Ham cevap arşivi"], [18, "Banka hata senaryoları"]]],
+    ["Sprint 3: Eşleştirme ve ERP aktarımı", [[19, "Test ERP’si ve cariler"], [20, "Otomatik ve elle eşleştirme"], [21, "Outbox ve RabbitMQ"], [22, "ErpExporter: tekrar dene"]]],
+    ["Sprint 4: Web arayüzü ve canlı panel", [[23, "Web: kayıt ve giriş"], [24, "Panel ve grafikler"], [25, "Hareket ekranları"], [26, "SignalR ile canlı güncelleme"], [27, "Panel önbelleği"]]],
+    ["Sprint 5: Yapay zekâ asistanı", [[28, "Sohbet paneli"], [29, "Salt okunur araçlar"], [30, "Prompt injection koruması"]]],
+    ["Sprint 6: Kalite ve dayanıklılık", [[31, "OpenTelemetry izleri"], [32, "Sağlık kontrolleri"], [33, "18 hata senaryosu"], [34, "500 bin hareket ölçümü"], [35, "OWASP güvenlik turu"]]],
+    ["Sprint 7: Sunum ve prova", [[36, "Demo betiği"], [37, "Sprint soruları"], [38, "Teknik sunum", "In Progress"], [39, "Cloudflare Tunnel"], [40, "Medium yazıları", "In Progress"]]]
+  ];
+  defs.board = async function (el, wait, arg) {
+    var sp = SPRINTS[arg == null ? 3 : +arg], cols = {};
+    $$(".kcol", el).forEach(function (c) { cols[c.dataset.col] = c; $(".kcards", c).innerHTML = ""; });
+    $("#board-name", el).textContent = sp[0];
+    function count() { $$(".kcol", el).forEach(function (c) { $(".khead .m", c).textContent = $(".kcards", c).children.length; }); }
+    /* Moves cards to a column and slides them from where they were. */
+    function move(list, col) {
+      var before = list.map(function (d) { return d.getBoundingClientRect(); });
+      list.forEach(function (d) { $(".kcards", cols[col]).appendChild(d); });
+      list.forEach(function (d, i) {
+        var b = d.getBoundingClientRect();
+        d.style.transition = "none";
+        d.style.transform = "translate(" + (before[i].left - b.left) + "px, " + (before[i].top - b.top) + "px)";
+      });
+      void el.offsetWidth;
+      list.forEach(function (d) { d.style.transition = ""; d.style.transform = ""; });
+      count();
+    }
+    var cards = sp[1].map(function (c) {
+      var d = document.createElement("div");
+      d.className = "kcard"; d.title = "#" + c[0] + " " + c[1];
+      d.innerHTML = '<span class="m">#' + c[0] + "</span>";
+      d.appendChild(document.createTextNode(c[1]));
+      $(".kcards", cols.Backlog).appendChild(d);
+      return { el: d, end: c[2] || "Done" };
+    });
+    count();
+    await wait(700);
+    move(cards.map(function (c) { return c.el; }), "Ready");
+    await wait(900);
+    for (var i = 0; i < cards.length; i++) {
+      move([cards[i].el], "In Progress"); await wait(520);
+      if (cards[i].end === "In Progress") continue;
+      move([cards[i].el], "In Review"); await wait(460);
+      move([cards[i].el], "Done"); await wait(320);
+    }
+  };
+
   var players = $$("[data-scene]").map(function (el) { return scene(el, defs[el.dataset.scene]); });
   function byName(n) { return players.filter(function (p) { return p.el.dataset.scene === n; })[0]; }
 
@@ -1096,6 +1269,39 @@ type.<i>SetQueryFilter</i>(Expression.Lambda(
   }
   options(byName("queue"), "q");
   options(byName("idem"), "i");
+  options(byName("board"), "s");
+
+  /* Usage tour: each step is a short recording from the running demo; on the slide they play in turn. */
+  var tour = $("[data-tour]"), tSteps = $$(".tour-step", tour), tVids = $$("video", tour), tUrl = $("#tour-url"), tPause = $("#tour-pause");
+  var tourOn = false, tourAt = 0;
+  function tourLabel() { tPause.textContent = tVids[tourAt].paused ? "Oynat" : "Durdur"; }
+  function tourShow(i, run) {
+    tourAt = i;
+    tSteps.forEach(function (b, j) { b.setAttribute("aria-pressed", String(j === i)); b.style.setProperty("--p", 0); });
+    tVids.forEach(function (v, j) { v.hidden = j !== i; if (j !== i) v.pause(); });
+    tUrl.textContent = tSteps[i].dataset.url;
+    var v = tVids[i];
+    try { v.currentTime = +v.dataset.start; } catch (e) {}
+    if (run) { var r = v.play(); if (r && r.catch) r.catch(function () {}); }
+    tourLabel();
+  }
+  function tourToggle() {
+    var v = tVids[tourAt];
+    if (v.paused) { if (v.ended) v.currentTime = +v.dataset.start; var r = v.play(); if (r && r.catch) r.catch(function () {}); } else v.pause();
+  }
+  tVids.forEach(function (v, j) {
+    v.addEventListener("timeupdate", function () {
+      var s = +v.dataset.start, d = +v.dataset.dur;
+      tSteps[j].style.setProperty("--p", Math.max(0, Math.min(1, (v.currentTime - s) / (d - s))));
+    });
+    v.addEventListener("play", tourLabel);
+    v.addEventListener("pause", tourLabel);
+    v.addEventListener("ended", function () { if (tourOn && !reduced) tourShow((j + 1) % tVids.length, true); });
+    v.addEventListener("click", tourToggle);
+  });
+  tSteps.forEach(function (b, j) { b.addEventListener("click", function () { tourShow(j, true); }); });
+  tPause.addEventListener("click", tourToggle);
+  players.push({ el: tour, play: function () { tourOn = true; tourShow(0, !reduced); }, stop: function () { tourOn = false; tVids.forEach(function (v) { v.pause(); }); } });
 
   /* Failure matrix: what keeps working when one part is off. */
   var ok = ["ok", "Çalışır"];
