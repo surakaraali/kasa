@@ -28,7 +28,7 @@ services:
   redis:
     image: redis:8-alpine
     # A cache and short-lived locks: nothing here needs to survive a restart, so persistence is off.
-    # volatile-lru evicts only keys that have an expiry, so a full cache never evicts a lock early.
+    # volatile-lru evicts keys that have an expiry, and all of ours do: a full Redis may drop a lock early. The unique index still stops duplicates.
     command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-lru"]
     mem_limit: 256m
     ports:

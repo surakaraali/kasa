@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr">
+<head><meta charset="utf-8"><title>Redis düşerse</title><link rel="stylesheet" href="style.css"><script src="diagram.js"></script></head>
+<body>
+<div class="frame"></div>
+<script>
+  // Each use of Redis has its own answer to "what if it is down?".
+  const s = diagram(720, 340);
+  s.setAttribute("overflow", "visible");
+  box(s, { x: 0, y: 98, w: 140, h: 108, title: "Redis", lines: ["erişilemiyor,", "komut 1 sn'de", "vazgeçer"], kind: "dead", mono: false });
+  const rows = [
+    ["Deneme sınırları", "giriş, kayıt, şifre, asistan", "Süreç içinde sayılır", "sınır kalkmaz, sunucu başına olur"],
+    ["Senkron kilidi", "aynı anda tek çekim", "Kilitsiz devam eder", "çift kaydı benzersiz indeks önler"],
+    ["Panel önbelleği", "10 dakikalık cevap", "SQL'den hesaplanır", "daha yavaş ama doğru"],
+  ];
+  rows.forEach(([use, what, then, why], i) => {
+    const y = i * 106;
+    box(s, { x: 196, y, w: 216, h: 80, title: use, lines: [what] });
+    box(s, { x: 464, y, w: 256, h: 80, title: then, lines: [why], kind: "main" });
+    arrow(s, [[412, y + 40], [462, y + 40]], "green");
+    arrow(s, i === 1 ? [[140, 152], [194, 152]] : [[168, 152], [168, y + 40], [194, y + 40]], "red", { dashed: true });
+  });
+  label(s, 0, 324, "Sağlık ucu /health bu durumda Degraded ve HTTP 200 döner. SQL Server yoksa Unhealthy olur.");
+</script>
+</body>
+</html>

@@ -91,7 +91,7 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 ## Ekranlar
 
 - Ekranlar yenilemeden kendiliğinden güncelleniyor (yeni hareket, eşleşme, ERP sonucu).
-- Panel hızlı olsun diye hafızada tutuluyor; bir şey değişince hemen yeniden hesaplanıyor. 500 bin harekette önbelleksiz 253 ms, önbellekten 1 ms.
+- Panel hızlı olsun diye hafızada tutuluyor; bir şey değişince hemen yeniden hesaplanıyor. 500 bin harekette önbelleksiz 325 ms, önbellekten 2,9 ms.
 - Hareketler listesi 500 bin harekette de ilk sayfadaki kadar hızlı (yaklaşık 5 ms). "Daha eski hareketler" düğmesi kaldığı yerden devam ediyor.
 - Arama büyük/küçük harfe ve Türkçe harflere duyarsız: "tekstil" yazınca "TEKSTİL", "isik" yazınca "IŞIK" bulunuyor. Bankalar bazen "TAHSILATI" gibi Latin harfle yazdığı için Türkçe değil, harf farkı gözetmeyen bir karşılaştırma kullanılıyor; Sayman da aynısını kullanıyor.
 - "Eşleşmeyenler" yanındaki sayı: karar bekleyenler artı ERP'ye aktarılamayanlar.
@@ -121,12 +121,12 @@ Sunumdan önce bir kez oku. Her madde "ne oluyor" ve kısaca "neden".
 
 ## Bir şey çökerse
 
-- **Redis kapalı:** giriş, senkron ve panel çalışıyor, sadece biraz yavaşlıyor. Çift kaydı yine veritabanı engelliyor.
+- **Redis kapalı:** giriş, senkron ve panel çalışıyor, sadece biraz yavaşlıyor. Çift kaydı yine veritabanı engelliyor, deneme sınırları o süreçte sayılıyor, panelin sürümü SQL'de.
 - **MongoDB kapalı:** ham banka cevapları arşivlenmiyor, gerisi çalışıyor.
 - **RabbitMQ kapalı:** ERP'ye gidecek işler veritabanında bekliyor, açılınca gidiyor.
 - **Aktarım servisi kapalı:** işler kuyrukta bekliyor.
 - **SQL Server kapalı:** sistem çalışmıyor. Asıl veri orada; bu bilinçli.
-- 18 hata senaryosunun her birinin otomatik testi var. Toplam 91 test, gerçek veritabanlarına karşı çalışıyor.
+- 18 hata senaryosunun her birinin otomatik testi var. Toplam 93 test, gerçek veritabanlarına karşı çalışıyor.
 - İzleme panelinde tek bir tıklamanın API, kuyruk, aktarım servisi ve ERP'deki yolu tek bir iz olarak görünüyor.
 
 ## Demo için

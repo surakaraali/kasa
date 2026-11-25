@@ -12,7 +12,7 @@ const dependencyNames: Record<string, string> = { sqlserver: "SQL Server", redis
 const stateText: Record<string, string> = { Healthy: "çalışıyor", Degraded: "kısıtlı", Unhealthy: "kapalı" };
 
 // Axis figures in thousands, written out: "100 bin" cannot be misread as a hundred billion the way "100 B" can.
-const thousands = (v: number) => (v === 0 ? "0" : `${new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(Math.abs(v) / 1000)} bin`);
+const thousands = (v: number) => (v === 0 ? "0" : `${v < 0 ? "−" : ""}${new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(Math.abs(v) / 1000)} bin`);
 const GREEN = "#0f5c4c";
 const OUT = "#b8b8b8";
 const count = new Intl.NumberFormat("tr-TR");
@@ -180,7 +180,7 @@ export default function Panel() {
           </div>
           <div style={{ height: 300 }}>
             <ResponsiveContainer>
-              <BarChart data={chart} stackOffset="sign" margin={{ top: 4, right: 4, bottom: 0, left: 4 }} barCategoryGap="28%">
+              <BarChart data={chart} stackOffset="sign" margin={{ top: 4, right: 20, bottom: 0, left: 4 }} barCategoryGap="28%">
                 <CartesianGrid vertical={false} stroke="rgba(23,23,23,0.06)" />
                 <XAxis dataKey="day" tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={24}
                   tick={{ fontSize: 11, fill: "#737373", fontFamily: "var(--mono)" }} />

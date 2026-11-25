@@ -17,6 +17,8 @@ const examples = [
   "Eşleşmeyen hareketler en çok kimden?",
   "Son 4 haftanın nakit akışını haftalık özetle",
 ];
+// After an answer, the next questions to offer: the ones not asked yet in this conversation.
+const followUps = [...examples, "Bu ay en büyük ödeme hangisi?", "Geçen hafta ne kadar para girdi, ne kadar çıktı?"];
 
 /** Reads a server-sent event stream from a POST response: "event: x\ndata: {...}\n\n" blocks. */
 async function* events(response: Response) {
@@ -138,7 +140,7 @@ export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard;
   // anything but a function makes React call it as the cleanup and crash the page.
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
-  }, [turns]);
+  }, [turns, busy]);
   useEffect(() => {
     if (open) input.current?.focus();
   }, [open]);
@@ -190,6 +192,15 @@ export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard;
   };
 
   const enabled = status?.enabled ?? false;
+  const last = turns[turns.length - 1];
+  const asked = new Set(turns.filter((t) => t.role === "user").map((t) => t.text));
+  const next = !busy && enabled && last?.role === "assistant" && last.text && !last.error ? followUps.filter((q) => !asked.has(q)).slice(0, 3) : [];
+  // Back to the opening screen. Not while an answer streams in: it writes into the last turn.
+  const newChat = () => {
+    setTurns([]);
+    setDraft("");
+    input.current?.focus();
+  };
 
   return (
     <>
@@ -209,7 +220,10 @@ export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard;
               <span>Hesaplar, hareketler ve cariler hakkında sorun. Sadece okur, hiçbir şeyi değiştirmez.</span>
             </div>
           </div>
-          <button className="secondary dock-close" onClick={() => setOpen(false)} aria-label="Asistanı kapat">Kapat</button>
+          <div className="dock-actions">
+            {turns.length > 0 && <button className="secondary dock-close" onClick={newChat} disabled={busy}>Yeni sohbet</button>}
+            <button className="secondary dock-close" onClick={() => setOpen(false)} aria-label="Asistanı kapat">Kapat</button>
+          </div>
         </header>
 
         <div className="dock-body" aria-live="polite">
@@ -236,6 +250,14 @@ export function AssistantDock({ dashboard, firstName }: { dashboard?: Dashboard;
               )}
             </div>
           ))}
+          {next.length > 0 && (
+            <div className="dock-next">
+              <span className="muted">Şunları da sorabilirsiniz</span>
+              <div className="dock-examples">
+                {next.map((q) => <button key={q} className="secondary" onClick={() => ask(q)}>{q}</button>)}
+              </div>
+            </div>
+          )}
           <div ref={end} />
         </div>
 

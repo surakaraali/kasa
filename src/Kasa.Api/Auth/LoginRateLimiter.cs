@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Threading.RateLimiting;
 using Kasa.Api.Infrastructure;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -13,11 +14,15 @@ public sealed class LoginRateLimitOptions
 
 /// <summary>
 /// At most N sign-in attempts per minute from one IP address, counted in Redis so the limit holds across servers.
-/// If Redis is down the limit is skipped, not the sign-in: Identity's per-account lockout still stops password
-/// guessing, and a login page that fails whenever the cache fails would be worse.
+/// If Redis is down the same limit is counted in this process, so sign-in keeps working and guessing stays limited.
+/// shortcut: with several API instances the limit is per instance while Redis is down; a shared store would need SQL writes.
 /// </summary>
-public sealed class LoginRateLimiter(KasaRedis redis, IOptions<LoginRateLimitOptions> options, ILogger<LoginRateLimiter> logger)
+public sealed class LoginRateLimiter(KasaRedis redis, IOptions<LoginRateLimitOptions> options, ILogger<LoginRateLimiter> logger) : IDisposable
 {
+    private readonly PartitionedRateLimiter<(string Key, int Limit, TimeSpan Window)> _whileRedisIsDown =
+        PartitionedRateLimiter.Create<(string Key, int Limit, TimeSpan Window), string>(r =>
+            RateLimitPartition.GetFixedWindowLimiter(r.Key, _ => new FixedWindowRateLimiterOptions { PermitLimit = r.Limit, Window = r.Window }));
+
     // INCR and the first PEXPIRE in one step; without the script a crash between them would leave a key that never expires.
     private const string Script = """
         local count = redis.call('INCR', KEYS[1])
@@ -40,8 +45,11 @@ public sealed class LoginRateLimiter(KasaRedis redis, IOptions<LoginRateLimitOpt
         }
         catch (Exception ex) when (KasaRedis.IsUnavailable(ex))
         {
-            logger.LogWarning("Redis unavailable, rate limit {Key} skipped: {Reason}", key, ex.Message);
-            return null;
+            logger.LogWarning("Redis unavailable, rate limit {Key} counted in this process: {Reason}", key, ex.Message);
+            using var lease = _whileRedisIsDown.AttemptAcquire((key, limit, window));
+            return lease.IsAcquired ? null : lease.TryGetMetadata(MetadataName.RetryAfter, out var wait) ? wait : window;
         }
     }
+
+    public void Dispose() => _whileRedisIsDown.Dispose();
 }

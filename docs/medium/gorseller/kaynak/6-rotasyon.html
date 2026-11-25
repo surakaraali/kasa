@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="tr">
+<head><meta charset="utf-8"><title>Yenileme anahtarı rotasyonu</title><link rel="stylesheet" href="style.css"><script src="diagram.js"></script></head>
+<body>
+<div class="frame"></div>
+<script>
+  // A stolen copy shows itself: the same token reaches the server twice, and the whole family is revoked.
+  const s = diagram(720, 392);
+  s.setAttribute("overflow", "visible");
+  label(s, 0, 18, "Aynı girişten doğan anahtarlar tek aile (FamilyId)", { tone: "ink", size: 16, weight: 600 });
+  box(s, { x: 0, y: 40, w: 190, h: 72, title: "R1", lines: ["kullanıldı"], kind: "queue" });
+  box(s, { x: 265, y: 40, w: 190, h: 72, title: "R2", lines: ["kullanıldı"], kind: "queue" });
+  box(s, { x: 530, y: 40, w: 190, h: 72, title: "R3", lines: ["şu an geçerli"], kind: "main", mono: true });
+  arrow(s, [[190, 76], [263, 76]], "green");
+  arrow(s, [[455, 76], [528, 76]], "green");
+  label(s, 227, 66, "yenile", { tone: "green", anchor: "middle", size: 12 });
+  label(s, 492, 66, "yenile", { tone: "green", anchor: "middle", size: 12 });
+  box(s, { x: 0, y: 182, w: 190, h: 76, title: "Kopya R1", lines: ["ikinci kez geliyor"], kind: "retry", mono: false });
+  arrow(s, [[95, 112], [95, 180]], "amber", { dashed: true });
+  label(s, 107, 152, "çalınmış kopya", { tone: "amber", size: 12 });
+  box(s, { x: 265, y: 182, w: 455, h: 76, title: "UPDATE ... WHERE Id = @id AND UsedAt IS NULL", lines: ["0 satır değişti: bu anahtar daha önce kullanılmış"], mono: true });
+  arrow(s, [[190, 220], [263, 220]], "amber");
+  box(s, { x: 0, y: 312, w: 720, h: 72, title: "Bütün aile iptal edilir", lines: ["R1, R2 ve R3 artık çalışmaz. Sunucu hangisinin saldırgan olduğunu bilemez, iki taraf da yeniden giriş yapar."], kind: "dead", mono: false });
+  arrow(s, [[492, 258], [492, 310]], "red");
+</script>
+</body>
+</html>

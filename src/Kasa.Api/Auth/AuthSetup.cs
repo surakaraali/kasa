@@ -73,7 +73,7 @@ public static class AuthSetup
 
         services.AddScoped<TokenService>();
         services.AddScoped<RefreshTokens>();
-        services.AddScoped<LoginRateLimiter>();
+        services.AddSingleton<LoginRateLimiter>();
         return services;
     }
 }

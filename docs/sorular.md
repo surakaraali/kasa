@@ -28,9 +28,9 @@ Merkezi paket yönetimi: bütün paket sürümleri tek dosyada. Olmasa altı pro
 
 **4. Redis'te `volatile-lru` yerine `allkeys-lru` seçseydik kilitler için ne tehlike olurdu?**
 <details><summary>İpucu</summary>
-`allkeys-lru` bellek dolunca herhangi bir anahtarı silebilir; süresi dolmamış bir senkron kilidi de silinebilir, iki sunucu
-aynı bağlantıyı aynı anda çeker. `volatile-lru` sadece süresi olan anahtarları siler; bizde hepsinin süresi var ve önbellek
-anahtarları kilitlerden önce gider.
+Bizde fark yok, çünkü bütün anahtarların süresi var: `volatile-lru` de bellek dolunca bir kilidi silebilir. O zaman iki sunucu
+aynı bağlantıyı aynı anda çekebilir. Bunu güvenli yapan politika değil, veritabanındaki benzersiz indeks: çift kayıt oluşmaz,
+yalnızca bir senkron boşa çalışır.
 </details>
 
 **5. Docker'da servislere neden bellek sınırı koyduk?**
@@ -97,8 +97,9 @@ ekranı şirketi açıkça yazıyor. İstisna bilinçli ve görünür.
 
 **8. Redis çökerse giriş denemesi sınırı ne olur? Bu bir güvenlik açığı mı?**
 <details><summary>İpucu</summary>
-Sınır atlanır, giriş çalışmaya devam eder (fail-open), logda uyarı çıkar. Açık sayılmaz çünkü asıl koruma hesap başına kilitleme
-(5 hatalı denemede 15 dakika) ve o SQL'de. Önbellek çöktü diye giriş sayfasının kapanması daha kötü olurdu (karar 0005).
+Giriş çalışmaya devam eder, aynı sınır o süreçte sayılır ve logda uyarı çıkar. İlk hâlinde sınır atlanıyordu; hesap kilidi girişi
+koruyordu ama kayıt kodunu, mevcut şifreyi ve asistan sınırını korumuyordu. Bedeli: birden çok sunucuda sınır sunucu başına olur
+(karar 0005).
 </details>
 
 **9. Kilitli hesap neden 423 değil de 401 dönüyor? Bunun bir bedeli var mı?**
@@ -337,7 +338,8 @@ durum taşımadığı için kaçan mesajın içeriği önemli değil, sadece "ye
 <details><summary>İpucu</summary>
 Silme yarışı: A isteği eski veriyle hesaplamaya başlar, bu sırada değişiklik olur ve anahtar silinir, A bitince eski sonucu
 önbelleğe yazar; panel eski kalır. Sürüm anahtarında değişiklik sayacı artırır, A eski sürümün anahtarına yazar ve kimse onu
-okumaz. Eski anahtarlar süresi dolunca gider.
+okumaz. Eski anahtarlar süresi dolunca gider. Sayaç SQL'de, çünkü Redis'teyken Redis'in koptuğu anda yapılan değişiklik sayacı
+artıramıyor ve panel 10 dakikaya kadar eski kalabiliyordu.
 </details>
 
 **8. Önbelleğin faydasını nasıl ölçtün?**
@@ -469,8 +471,8 @@ gece yanlış alarma yol açardı. SQL Server ise asıl veri; o yoksa gerçekten
 
 **6. 500 bin hareketle ne ölçtün, ne çıktı?**
 <details><summary>İpucu</summary>
-İlk sayfa 4,9 ms; 250 bininci satırdan sonraki sayfa keyset ile 6,1 ms. Aynı sayfa yalnız SQL'de OFFSET ile 55 ms, keyset
-ile 1,8 ms: OFFSET atladığı satırları okuyor. Panel önbelleksiz 253 ms, önbellekten 1,2 ms. Her ölçüm ısınma + 7 çalıştırmanın
+İlk sayfa 3,3 ms; 250 bininci satırdan sonraki sayfa keyset ile 3,4 ms. Aynı sayfa yalnız SQL'de OFFSET ile 47 ms, keyset
+ile 1,3 ms: OFFSET atladığı satırları okuyor. Panel önbelleksiz 325 ms, önbellekten 2,9 ms. Her ölçüm ısınma + 7 çalıştırmanın
 ortancası; tekrar üretmek için tek komut var.
 </details>
 

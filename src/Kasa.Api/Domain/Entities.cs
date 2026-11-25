@@ -19,6 +19,9 @@ public sealed class Company
     /// <summary>The firm number in the ERP, set when the company connects its ERP.</summary>
     public string? ErpFirmCode { get; set; }
 
+    /// <summary>Moves on with every change. The cached dashboard's key includes it; in SQL so it holds while Redis is away.</summary>
+    public long DashboardVersion { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public const int NameMaxLength = 200;

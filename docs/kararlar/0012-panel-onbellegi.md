@@ -12,7 +12,7 @@ Hareket sayısı büyüdükçe bu pahalılaşır.
 1. **Süreli önbellek (örneğin 5 dakika).** Basit, ama yeni bir hareket 5 dakika görünmez; canlı güncellemenin anlamı kalmaz.
 2. **Değişince anahtarı silmek.** Silme ile yeniden yazma yarışabilir: eski sonucu hesaplayan bir istek, silmeden sonra eski
    veriyi tekrar yazabilir.
-3. **Sürüm anahtarı.** Her şirketin bir sürüm sayacı var (`dashboard-version:{şirket}`). Önbellek anahtarı sürümü içerir
+3. **Sürüm anahtarı.** Her şirketin bir sürüm sayacı var (`Companies.DashboardVersion`). Önbellek anahtarı sürümü içerir
    (`dashboard:{şirket}:v{sürüm}:{gün}`). Değişiklik sayacı artırır; eski anahtarlar kendiliğinden süresi dolarak gider.
 
 ## Karar
@@ -26,7 +26,10 @@ diliminde gönderirse göndersin gün doğru.
 ## Sonuçları
 - İlk ölçüm (yaklaşık 60 hareket, yerel makine): önbelleksiz 28 ms, önbellekten 2 ms. Asıl ölçüm 500 bin hareketle Sprint 6'da.
 - Eski sürümlerin anahtarları 10 dakika daha bellekte kalıyor; `volatile-lru` gerekirse önce onları siliyor.
-- Sayaç anahtarının da süresi var (7 gün); hepsinin süresi olması `volatile-lru` için şart.
+- Sayaç ilk hâlinde Redis'teydi. Kod incelemesinde (2026-11-23) şu durum görüldü: Redis kısa süre koparsa sayaç artmıyor,
+  Redis verisini koruyarak dönünce eski cevap 10 dakikaya kadar okunabiliyordu. Sayaç SQL Server'a taşındı; bedeli, panel
+  isteği başına birincil anahtardan tek okuma.
+- Kalan sınır: değişiklik kaydedildikten sonra, sayaç artmadan süreç düşerse önbellek en çok 10 dakika eski kalabilir.
 
 ## Mülakatta
 "Önbelleği silmek yerine sürümledim: değişiklik sayacı artırıyor, anahtar sürümü içeriyor. Silme ile yeniden yazma arasındaki

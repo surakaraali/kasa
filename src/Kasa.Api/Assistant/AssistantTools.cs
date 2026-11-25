@@ -42,7 +42,7 @@ public sealed class AssistantTools(AppDbContext db)
                     limit = new { type = "integer", minimum = 1, maximum = MaxRows },
                 },
             }, "Hareketler aranıyor"),
-        new("cash_flow", "Money in and out per day, week or month for a period, from bank movements.", new
+        new("cash_flow", "Money in and out per day, week or month for a period, from bank movements. A week runs Monday to Sunday and is labelled by its first and last day inside the period, e.g. 2026-11-02/2026-11-08.", new
         {
             type = "object",
             properties = new
@@ -224,10 +224,19 @@ public sealed class AssistantTools(AppDbContext db)
             .Select(g => new { Day = g.Key, In = g.Sum(t => t.Amount > 0 ? t.Amount : 0), Out = g.Sum(t => t.Amount < 0 ? -t.Amount : 0) })
             .ToListAsync(ct);
 
+        // A week is named by its dates, never by an ISO week number ("W45" means nothing to an accountant), cut to the
+        // period, so a week the period starts or ends in shows the days it really covers. Starts with yyyy-MM-dd, so it sorts.
+        string Week(DateOnly d)
+        {
+            var monday = d.AddDays(-(((int)d.DayOfWeek + 6) % 7));
+            var (first, last) = (monday < from ? from : monday, monday.AddDays(6) > to ? to : monday.AddDays(6));
+            return $"{first.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}/{last.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+        }
+
         Func<DateOnly, string> bucket = groupBy switch
         {
             "day" => d => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            "week" => d => $"{ISOWeek.GetYear(d.ToDateTime(TimeOnly.MinValue))}-W{ISOWeek.GetWeekOfYear(d.ToDateTime(TimeOnly.MinValue)):00}",
+            "week" => Week,
             "month" => d => d.ToString("yyyy-MM", CultureInfo.InvariantCulture),
             _ => throw new ToolInputException("group_by must be day, week or month"),
         };

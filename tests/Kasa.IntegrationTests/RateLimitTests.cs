@@ -41,6 +41,27 @@ public sealed class RateLimitTests(KasaFixture fixture)
     }
 
     [Fact]
+    public async Task With_Redis_down_the_limit_is_still_counted()
+    {
+        using var api = new KasaApiFactory(fixture, b =>
+        {
+            b.UseSetting("Redis:Configuration", "localhost:6390");
+            b.UseSetting("LoginRateLimit:AttemptsPerMinute", "3");
+        });
+        var client = api.CreateClient();
+
+        for (var i = 0; i < 3; i++)
+        {
+            var attempt = await client.PostAsJsonAsync("/api/auth/login", new { email = "nobody@test.kasa", password = "Wrong-Password-1" });
+            Assert.Equal(HttpStatusCode.Unauthorized, attempt.StatusCode);
+        }
+
+        var limited = await client.PostAsJsonAsync("/api/auth/login", new { email = "nobody@test.kasa", password = "Wrong-Password-1" });
+        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        Assert.True(int.Parse(limited.Headers.GetValues("Retry-After").Single()) is > 0 and <= 60);
+    }
+
+    [Fact]
     public async Task Guessing_the_current_password_to_change_it_is_limited_too()
     {
         using var api = new KasaApiFactory(fixture, b =>

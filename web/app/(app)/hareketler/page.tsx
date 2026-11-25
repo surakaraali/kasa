@@ -89,7 +89,7 @@ export default function Transactions() {
         </button>
       </div>
       <div className="toolbar">
-        <label>Ara<input type="search" placeholder="Açıklama ya da karşı taraf" value={filters.search} onChange={set("search")} /></label>
+        <label className="wide">Ara<input type="search" placeholder="Açıklama ya da karşı taraf" value={filters.search} onChange={set("search")} /></label>
         <label>Yön
           <select value={filters.direction} onChange={set("direction")}>
             <option value="">Hepsi</option><option value="In">Giren</option><option value="Out">Çıkan</option>
@@ -100,7 +100,7 @@ export default function Transactions() {
             <option value="">Hepsi</option><option value="Matched">Eşleşti</option><option value="Unmatched">Eşleşmedi</option><option value="Ignored">ERP&apos;ye gitmeyecek</option>
           </select>
         </label>
-        <label>Hesap
+        <label className="wide">Hesap
           <select value={filters.accountId} onChange={set("accountId")}>
             <option value="">Hepsi</option>
             {accounts?.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.bank})</option>)}
@@ -111,17 +111,17 @@ export default function Transactions() {
       </div>
       {error && <p className="error">{error}</p>}
       <div className="card table-wrap">
-        <table>
+        <table className="stacked">
           <thead><tr><th>Tarih</th><th>Karşı taraf / açıklama</th><th>Hesap</th><th>Cari</th><th className="right">Tutar</th><th>Durum</th></tr></thead>
           <tbody>
             {rows.map((t) => (
               <tr key={t.id}>
                 <td className="num">{day(t.bookedAt)}</td>
                 <td><Counterparty t={t} /></td>
-                <td>{t.accountName}<div className="cell-sub">{t.bank}</div></td>
-                <td>{t.currentAccountTitle ?? "—"}{t.currentAccountCode && <div className="cell-sub">{t.currentAccountCode}</div>}</td>
+                <td className="half">{t.accountName}<div className="cell-sub">{t.bank}</div></td>
+                <td className="half">{t.currentAccountTitle ?? "—"}{t.currentAccountCode && <div className="cell-sub">{t.currentAccountCode}</div>}</td>
                 <td className="right"><Amount value={t.amount} /></td>
-                <td style={{ display: "grid", gap: 4, justifyItems: "start" }}><MatchBadge t={t} /><ExportBadge t={t} /></td>
+                <td><div className="states"><MatchBadge t={t} /><ExportBadge t={t} /></div></td>
               </tr>
             ))}
             {rows.length === 0 && <tr><td colSpan={6} className="muted">Bu filtreye uyan hareket yok.</td></tr>}

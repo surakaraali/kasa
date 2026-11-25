@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="tr">
+<head><meta charset="utf-8"><title>Şirket izolasyonu</title><link rel="stylesheet" href="style.css"><script src="diagram.js"></script></head>
+<body>
+<div class="frame"></div>
+<script>
+  // One shared table; the company comes only from the token, and both reads and writes pass a guard.
+  const s = diagram(760, 372);
+  s.setAttribute("overflow", "visible");
+  box(s, { x: 0, y: 130, w: 150, h: 80, title: "İstek", lines: ["JWT: company_id", "= A"] });
+  box(s, { x: 190, y: 130, w: 150, h: 80, title: "TenantContext", lines: ["şirket yalnızca", "token'dan gelir"], kind: "main" });
+  arrow(s, [[150, 170], [188, 170]], "green");
+  box(s, { x: 386, y: 40, w: 196, h: 92, title: "Okuma", lines: ["sorgu filtresi:", "CompanyId == A"] });
+  box(s, { x: 386, y: 208, w: 196, h: 92, title: "Yazma", lines: ["SaveChanges başka", "şirketin satırını reddeder"] });
+  arrow(s, [[340, 170], [362, 170], [362, 86], [384, 86]], "green");
+  arrow(s, [[362, 170], [362, 254], [384, 254]], "green");
+  box(s, { x: 612, y: 16, w: 148, h: 308, title: "", kind: "container", dashed: true });
+  label(s, 626, 44, "Ortak tablo", { tone: "ink", size: 15, weight: 600 });
+  arrow(s, [[582, 86], [610, 86]], "green");
+  arrow(s, [[582, 254], [610, 254]], "green");
+  ["A", "B", "A", "B", "A"].forEach((c, i) => {
+    const y = 60 + i * 50, a = c === "A";
+    el("rect", { x: 626, y, width: 120, height: 40, rx: 6, fill: a ? "#eef6f2" : "#f4f4f5", stroke: a ? "#0f5c4c" : "rgba(23,23,23,0.18)", "stroke-dasharray": a ? "none" : "4 3" }, s);
+    label(s, 686, y + 25, a ? "A şirketi" : "B: görünmez", { tone: a ? "green" : "grey", anchor: "middle" });
+  });
+  label(s, 0, 356, "B şirketinin bir id'si denenirse filtre satırı gizler, cevap 404 olur. Kaydın varlığı bile belli olmaz.");
+</script>
+</body>
+</html>
